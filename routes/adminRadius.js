@@ -202,7 +202,7 @@ router.post('/sync-customer/:customerId', async (req, res) => {
 
         const customerId = req.params.customerId;
 
-        const [customers] = await db.promise().query(
+        const [customers] = await db.query(
             'SELECT * FROM customers WHERE id = ?',
             [customerId]
         );
@@ -237,7 +237,7 @@ router.post('/sync-customer/:customerId', async (req, res) => {
         const result = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
 
         if (result.success) {
-            await db.promise().query(
+            await db.query(
                 'UPDATE customers SET radius_enabled = 1 WHERE id = ?',
                 [customerId]
             );
@@ -256,7 +256,7 @@ router.post('/sync-all-customers', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [customers] = await db.promise().query(
+        const [customers] = await db.query(
             'SELECT * FROM customers WHERE radius_enabled = 1 AND (radius_username IS NOT NULL OR pppoe_username IS NOT NULL) AND radius_password IS NOT NULL'
         );
 
@@ -313,7 +313,7 @@ router.get('/profiles', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [profiles] = await db.promise().query(
+        const [profiles] = await db.query(
             'SELECT * FROM radius_profiles WHERE is_active = 1 ORDER BY priority'
         );
 
@@ -336,7 +336,7 @@ router.post('/profiles', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Name, download_speed, and upload_speed are required' });
         }
 
-        await db.promise().query(
+        await db.query(
             'INSERT INTO radius_profiles (name, download_speed, upload_speed, rate_limit, burst_limit, priority) VALUES (?, ?, ?, ?, ?, ?)',
             [name, download_speed, upload_speed, rate_limit, burst_limit, priority]
         );
