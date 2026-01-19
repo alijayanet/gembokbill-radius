@@ -95,8 +95,22 @@ cd gembokbill-radius
 ```bash
 npm install
 ```
+### 3. Initialize Database
+```bash
+npm run setup
+```
 
-### 3. Install and Configure RADIUS Server
+### 4. Run Database Migration (Important for New Servers)
+To ensure all required tables and columns exist in the database, run migration commands:
+
+```bash
+# Run all database migrations
+node scripts/run-all-migrations.js
+
+# Verify database structure
+node scripts/verify-production-database.js
+```
+### 5. Install and Configure RADIUS Server
 
 ```bash
 sudo bash install-freeradius.sh
@@ -110,7 +124,7 @@ Script ini akan otomatis:
 
 Untuk detail konfigurasi manual, lihat `FREERADIUS_SETUP.md`
 
-### 4. Configure Application Settings
+### 6. Configure Application Settings
 
 Edit `settings.json` and update the following RADIUS-related settings:
 
@@ -125,7 +139,7 @@ Edit `settings.json` and update the following RADIUS-related settings:
 }
 ```
 
-### 5. Configure Mikrotik RADIUS Client
+### 7. Configure Mikrotik RADIUS Client
 
 #### Add RADIUS Client in Mikrotik
 ```
@@ -143,22 +157,6 @@ PPP → Secrets → PPP Authentication & Accounting → Use Radius: Yes
 #### Configure Hotspot to use RADIUS
 ```
 IP → Hotspot → Server Profile → Login → Use Radius: Yes
-```
-
-### 6. Initialize Database
-```bash
-npm run setup
-```
-
-### 7. Run Database Migration (Important for New Servers)
-To ensure all required tables and columns exist in the database, run migration commands:
-
-```bash
-# Run all database migrations
-node scripts/run-all-migrations.js
-
-# Verify database structure
-node scripts/verify-production-database.js
 ```
 
 ### 8. Access the Application
@@ -383,4 +381,5 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
 
 
 \u003c/div\u003e
+
 
