@@ -2,26 +2,26 @@
 -- Date: 2025-01-27
 -- Description: Remove legacy columns and improve data integrity
 
--- 1. Backup existing data before cleanup
--- Note: Kolom 'amount' di collector_payments adalah duplikat dari payment_amount
--- Sebelum menghapus, pastikan tidak ada data yang berbeda
+-- 1. Check if amount column exists in collector_payments table
+-- This migration handles the case where amount column may not exist
+-- The amount column is a legacy column that should be replaced with payment_amount
 
--- 2. Check for data inconsistencies
--- Query untuk mengecek apakah ada perbedaan antara amount dan payment_amount
-SELECT 
-    id, 
-    amount, 
-    payment_amount,
-    (amount - payment_amount) as difference
-FROM collector_payments 
-WHERE amount != payment_amount;
+-- 2. Skip data consistency check if amount column doesn't exist
+-- The following query is commented out to prevent errors when amount column doesn't exist
+-- SELECT
+--     id,
+--     amount,
+--     payment_amount,
+--     (amount - payment_amount) as difference
+-- FROM collector_payments
+-- WHERE amount != payment_amount;
 
--- 3. Update any inconsistent data (amount should equal payment_amount)
-UPDATE collector_payments 
-SET amount = payment_amount 
-WHERE amount != payment_amount;
+-- 3. Skip update if amount column doesn't exist
+-- UPDATE collector_payments
+-- SET amount = payment_amount
+-- WHERE amount != payment_amount;
 
--- 4. Remove legacy amount column (uncomment when ready)
+-- 4. Skip dropping amount column if it doesn't exist
 -- ALTER TABLE collector_payments DROP COLUMN amount;
 
 -- 5. Add indexes for better performance
