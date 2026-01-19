@@ -202,7 +202,7 @@ router.post('/sync-customer/:customerId', async (req, res) => {
 
         const customerId = req.params.customerId;
 
-        const [customers] = await db.promise().query(
+        const [customers] = await db.query(
             'SELECT * FROM customers WHERE id = ?',
             [customerId]
         );
@@ -237,7 +237,7 @@ router.post('/sync-customer/:customerId', async (req, res) => {
         const result = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
 
         if (result.success) {
-            await db.promise().query(
+            await db.query(
                 'UPDATE customers SET radius_enabled = 1 WHERE id = ?',
                 [customerId]
             );
@@ -256,7 +256,7 @@ router.post('/sync-all-customers', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [customers] = await db.promise().query(
+        const [customers] = await db.query(
             'SELECT * FROM customers WHERE radius_enabled = 1 AND (radius_username IS NOT NULL OR pppoe_username IS NOT NULL) AND radius_password IS NOT NULL'
         );
 
@@ -313,7 +313,7 @@ router.get('/profiles', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [profiles] = await db.promise().query(
+        const profiles = await db.query(
             'SELECT * FROM radius_profiles WHERE is_active = 1 ORDER BY priority'
         );
 
@@ -336,7 +336,7 @@ router.post('/profiles', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Name, download_speed, and upload_speed are required' });
         }
 
-        await db.promise().query(
+        await db.query(
             'INSERT INTO radius_profiles (name, download_speed, upload_speed, rate_limit, burst_limit, priority) VALUES (?, ?, ?, ?, ?, ?)',
             [name, download_speed, upload_speed, rate_limit, burst_limit, priority]
         );
@@ -344,6 +344,78 @@ router.post('/profiles', async (req, res) => {
         res.json({ success: true, message: 'Profile created successfully' });
     } catch (error) {
         logger.error(`Error creating RADIUS profile: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.get('/profiles/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const profileId = req.params.id;
+        const profile = await db.query(
+            'SELECT * FROM radius_profiles WHERE id = ?',
+            [profileId]
+        );
+
+        if (profile.length === 0) {
+            return res.status(404).json({ success: false, message: 'Profile not found' });
+        }
+
+        res.json({ success: true, profile: profile[0] });
+    } catch (error) {
+        logger.error(`Error getting RADIUS profile: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.put('/profiles/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const profileId = req.params.id;
+        const { name, download_speed, upload_speed, rate_limit, burst_limit, priority } = req.body;
+
+        if (!name || !download_speed || !upload_speed) {
+            return res.status(400).json({ success: false, message: 'Name, download_speed, and upload_speed are required' });
+        }
+
+        await db.query(
+            'UPDATE radius_profiles SET name = ?, download_speed = ?, upload_speed = ?, rate_limit = ?, burst_limit = ?, priority = ? WHERE id = ?',
+            [name, download_speed, upload_speed, rate_limit, burst_limit, priority, profileId]
+        );
+
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (error) {
+        logger.error(`Error updating RADIUS profile: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.delete('/profiles/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const profileId = req.params.id;
+        
+        const result = await db.query(
+            'DELETE FROM radius_profiles WHERE id = ?',
+            [profileId]
+        );
+
+        if (result.changes === 0) {
+            return res.status(404).json({ success: false, message: 'Profile not found' });
+        }
+
+        res.json({ success: true, message: 'Profile deleted successfully' });
+    } catch (error) {
+        logger.error(`Error deleting RADIUS profile: ${error.message}`);
         res.status(500).json({ success: false, message: error.message });
     }
 });
