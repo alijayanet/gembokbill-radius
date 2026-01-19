@@ -1,0 +1,181 @@
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-bottom-nav">
+    <div class="nav-item" onclick="navigateTo('/technician/dashboard')">
+        <div class="nav-icon <%= currentPage === 'dashboard' ? 'active' : '' %>">
+            <i class="bx bx-home"></i>
+        </div>
+        <span class="nav-label">Dashboard</span>
+    </div>
+    
+    <div class="nav-item" onclick="navigateTo('/technician/mapping')">
+        <div class="nav-icon <%= currentPage === 'mapping' ? 'active' : '' %>">
+            <i class="bx bx-map"></i>
+        </div>
+        <span class="nav-label">Mapping</span>
+    </div>
+    
+    <div class="nav-item" onclick="navigateTo('/technician/customers')">
+        <div class="nav-icon <%= currentPage === 'customers' ? 'active' : '' %>">
+            <i class="bx bx-user"></i>
+        </div>
+        <span class="nav-label">Customer</span>
+    </div>
+    
+    <div class="nav-item" onclick="navigateTo('/technician/troubletickets')">
+        <div class="nav-icon <%= currentPage === 'troubletickets' ? 'active' : '' %>">
+            <i class="bx bx-error-circle"></i>
+        </div>
+        <span class="nav-label">Gangguan</span>
+    </div>
+    
+    <div class="nav-item" onclick="navigateTo('/technician/installations')">
+        <div class="nav-icon <%= currentPage === 'installations' ? 'active' : '' %>">
+            <i class="bx bx-wrench"></i>
+        </div>
+        <span class="nav-label">Tiket</span>
+    </div>
+</nav>
+
+<style>
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0;
+    z-index: 1000;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+}
+
+.nav-icon.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.nav-item:hover .nav-icon {
+    color: white;
+    transform: scale(1.05);
+}
+
+.nav-item:hover .nav-label {
+    color: white;
+}
+
+/* Desktop - hide mobile navbar */
+@media (min-width: 769px) {
+    .mobile-bottom-nav {
+        display: none;
+    }
+    
+    /* Add bottom padding to body when mobile navbar is hidden */
+    body {
+        padding-bottom: 0 !important;
+    }
+}
+
+/* Mobile - show navbar and add bottom padding */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 80px;
+    }
+    
+    .mobile-bottom-nav {
+        display: flex;
+    }
+}
+
+/* Ensure main content doesn't overlap with navbar */
+.main-content {
+    margin-bottom: 80px;
+}
+
+@media (min-width: 769px) {
+    .main-content {
+        margin-bottom: 0;
+    }
+}
+</style>
+
+<script>
+function navigateTo(url) {
+    // Add loading animation
+    const navItem = event.currentTarget;
+    const icon = navItem.querySelector('.nav-icon');
+    icon.style.transform = 'scale(0.9)';
+    
+    setTimeout(() => {
+        window.location.href = url;
+    }, 150);
+}
+
+// Add active state management
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    navItems.forEach(item => {
+        const icon = item.querySelector('.nav-icon');
+        const label = item.querySelector('.nav-label');
+        
+        // Reset all items
+        icon.classList.remove('active');
+        
+        // Check if current path matches this nav item
+        if (currentPath.includes('/dashboard') && label.textContent === 'Dashboard') {
+            icon.classList.add('active');
+        } else if (currentPath.includes('/mapping') && label.textContent === 'Mapping') {
+            icon.classList.add('active');
+        } else if (currentPath.includes('/customers') && label.textContent === 'Customer') {
+            icon.classList.add('active');
+        } else if (currentPath.includes('/troubletickets') && label.textContent === 'Gangguan') {
+            icon.classList.add('active');
+        } else if (currentPath.includes('/installations') && label.textContent === 'Tiket') {
+            icon.classList.add('active');
+        }
+    });
+});
+</script>
