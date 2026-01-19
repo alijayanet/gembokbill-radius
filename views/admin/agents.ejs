@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Agent - Admin Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/responsive-admin.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Admin Mobile Optimizations -->
+    <link href="/css/admin-mobile.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .agent-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #28a745;
+            transition: all 0.3s ease;
+        }
+        .agent-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .agent-item.inactive {
+            border-left-color: #dc3545;
+        }
+        .agent-item.suspended {
+            border-left-color: #ffc107;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .balance-request {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 2px solid #667eea;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Include Admin Responsive Sidebar -->
+        <%- include('../partials/admin-responsive-sidebar', { page: 'agents', settings: settings }) %>
+        
+        <!-- Main Content -->
+        <main class="col-md-10 ms-sm-auto main-content px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-user-tie me-2"></i>
+                    Kelola Agent
+                </h1>
+                <p class="text-muted mb-0">Manajemen agent dan saldo mereka</p>
+            </div>
+
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+                <div class="btn-group">
+                    <a href="/admin/voucher-pricing" class="btn btn-success">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        Price Voucher
+                    </a>
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addBalanceModal">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Add Balance
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAgentModal">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Agent
+                    </button>
+                </div>
+            </div>
+
+        <!-- Balance Requests -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Request Balance Agent
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="balanceRequests">
+                    <!-- Balance requests will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Register Agent
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="agentsList">
+                    <!-- Agents will be loaded here -->
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+</div>
+
+    <!-- Add Agent Modal -->
+    <div class="modal fade" id="addAgentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Agent Baru
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addAgentForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="agentUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="agentUsername" name="username" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="agentName" class="form-label">Name Lengkap</label>
+                                <input type="text" class="form-control" id="agentName" name="name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="agentPhone" class="form-label">Nomor HP</label>
+                                <input type="text" class="form-control" id="agentPhone" name="phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="agentEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="agentEmail" name="email">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="agentAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="agentAddress" name="address" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="agentPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="agentPassword" name="password" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="agentCommission" class="form-label">Komisi (%)</label>
+                                <input type="number" class="form-control" id="agentCommission" name="commission_rate" value="5" min="0" max="100" step="0.01">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addAgent()">
+                        <i class="fas fa-save me-2"></i>
+                        Save Agent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Agent Modal -->
+    <div class="modal fade" id="editAgentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>
+                        Edit Agent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAgentForm">
+                        <input type="hidden" id="editAgentId" name="id">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="editUsername" name="username" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editName" class="form-label">Name Lengkap</label>
+                                <input type="text" class="form-control" id="editName" name="name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhone" class="form-label">Nomor HP</label>
+                                <input type="text" class="form-control" id="editPhone" name="phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editEmail" name="email">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="editAddress" name="address" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPassword" class="form-label">Password Baru (kosongkan jika tidak diubah)</label>
+                                <input type="password" class="form-control" id="editPassword" name="password">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editStatus" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">No Active</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateAgent()">
+                        <i class="fas fa-save me-2"></i>
+                        Update Agent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Balance Modal -->
+    <div class="modal fade" id="addBalanceModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Add Balance Agent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBalanceForm">
+                        <div class="mb-3">
+                            <label for="balanceAgentSelect" class="form-label">Select Agent</label>
+                            <select class="form-select" id="balanceAgentSelect" name="agentId" required>
+                                <option value="">-- Select Agent --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="balanceAmount" class="form-label">Amount Balance</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" class="form-control" id="balanceAmount" name="amount" min="1000" step="1000" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="balanceNotes" class="form-label">Catatan</label>
+                            <textarea class="form-control" id="balanceNotes" name="notes" rows="3" placeholder="Contoh: Deposit awal, bonus performa, dll."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Info:</strong> Balance akan ditambahkan langsung ke akun agent dan transaksi akan dicatat dalam riwayat.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="addBalance()">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Add Balance
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Balance Request Modal -->
+    <div class="modal fade" id="approveRequestModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check me-2"></i>
+                        Setujui Request Balance
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="approveRequestForm">
+                        <input type="hidden" id="requestId" name="requestId">
+                        <div class="mb-3">
+                            <label for="adminNotes" class="form-label">Catatan Admin</label>
+                            <textarea class="form-control" id="adminNotes" name="adminNotes" rows="3" 
+                                      placeholder="Catatan untuk agent..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="approveRequest()">
+                        <i class="fas fa-check me-2"></i>
+                        Setujui Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Balance Request Modal -->
+    <div class="modal fade" id="rejectRequestModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-times me-2"></i>
+                        Tolak Request Balance
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="rejectRequestForm">
+                        <input type="hidden" id="rejectRequestId" name="requestId">
+                        <div class="mb-3">
+                            <label for="rejectReason" class="form-label">Alasan Penolakan</label>
+                            <textarea class="form-control" id="rejectReason" name="rejectReason" rows="3" 
+                                      placeholder="Jelaskan alasan penolakan..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="rejectRequest()">
+                        <i class="fas fa-times me-2"></i>
+                        Tolak Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load balance requests
+        function loadBalanceRequests() {
+            fetch('/admin/agents/balance-requests')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayBalanceRequests(data.requests);
+                    }
+                })
+                .catch(error => console.error('Error loading balance requests:', error));
+        }
+
+        // Load agents
+        function loadAgents() {
+            fetch('/admin/agents/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.agentsData = data.agents; // Store agents data globally
+                        displayAgents(data.agents);
+                        populateAgentDropdown(); // Populate dropdown for balance modal
+                    }
+                })
+                .catch(error => console.error('Error loading agents:', error));
+        }
+
+        // Display balance requests
+        function displayBalanceRequests(requests) {
+            const container = document.getElementById('balanceRequests');
+            
+            if (requests.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-inbox fa-2x mb-2"></i><p>No ada request saldo</p></div>';
+                return;
+            }
+
+            container.innerHTML = requests.map(request => `
+                <div class="balance-request">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-1">${request.agent_name}</h6>
+                            <p class="mb-1 text-muted">HP: ${request.agent_phone}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                ${new Date(request.requested_at).toLocaleString('id-ID')}
+                            </small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-0 text-primary">Rp ${(request.amount || 0).toLocaleString('id-ID')}</h5>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-success btn-sm me-2" onclick="showApproveModal(${request.id})">
+                                <i class="fas fa-check me-1"></i>Setujui
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="showRejectModal(${request.id})">
+                                <i class="fas fa-times me-1"></i>Tolak
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Display agents
+        function displayAgents(agents) {
+            const container = document.getElementById('agentsList');
+            
+            if (agents.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-users fa-2x mb-2"></i><p>No ada agent</p></div>';
+                return;
+            }
+
+            container.innerHTML = agents.map(agent => `
+                <div class="agent-item ${agent.status}">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-1">${agent.name}</h6>
+                            <p class="mb-1 text-muted">Username: ${agent.username} • HP: ${agent.phone}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Bergabung: ${new Date(agent.created_at).toLocaleDateString('id-ID')}
+                            </small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h6 class="mb-1">Balance</h6>
+                            <h5 class="mb-0 text-primary">Rp ${(agent.balance || 0).toLocaleString('id-ID')}</h5>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <span class="badge bg-${agent.status === 'active' ? 'success' : agent.status === 'inactive' ? 'danger' : 'warning'} mb-2">
+                                ${agent.status === 'active' ? 'Active' : agent.status === 'inactive' ? 'No Active' : 'Suspended'}
+                            </span>
+                            <br>
+                              <div class="btn-group" role="group">
+                                  <a href="/admin/agents/${agent.id}" class="btn btn-outline-primary btn-sm">
+                                      <i class="fas fa-eye me-1"></i>Detail
+                                  </a>
+                                  <button class="btn btn-outline-warning btn-sm" onclick="editAgent(${agent.id})">
+                                      <i class="fas fa-edit me-1"></i>Edit
+                                  </button>
+                                  <button class="btn btn-outline-${agent.status === 'active' ? 'danger' : 'success'} btn-sm" onclick="toggleAgentStatus(${agent.id}, '${agent.status}')">
+                                      <i class="fas fa-${agent.status === 'active' ? 'pause' : 'play'} me-1"></i>${agent.status === 'active' ? 'Nonaktifkan' : 'Activekan'}
+                                  </button>
+                                  <button class="btn btn-outline-danger btn-sm" onclick="deleteAgent(${agent.id}, '${agent.name}')">
+                                      <i class="fas fa-trash me-1"></i>Delete
+                                  </button>
+                              </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add agent
+        function addAgent() {
+            const form = document.getElementById('addAgentForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            fetch('/admin/agents/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Agent berhasil ditambahkan!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menambahkan agent');
+            });
+        }
+
+        // Show approve modal
+        function showApproveModal(requestId) {
+            document.getElementById('requestId').value = requestId;
+            const modal = new bootstrap.Modal(document.getElementById('approveRequestModal'));
+            modal.show();
+        }
+
+        // Show reject modal
+        function showRejectModal(requestId) {
+            document.getElementById('rejectRequestId').value = requestId;
+            const modal = new bootstrap.Modal(document.getElementById('rejectRequestModal'));
+            modal.show();
+        }
+
+        // Approve request
+        function approveRequest() {
+            const requestId = document.getElementById('requestId').value;
+            const adminNotes = document.getElementById('adminNotes').value;
+            
+            fetch('/admin/agents/approve-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ requestId, adminNotes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Request berhasil disetujui!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menyetujui request');
+            });
+        }
+
+        // Reject request
+        function rejectRequest() {
+            const requestId = document.getElementById('rejectRequestId').value;
+            const rejectReason = document.getElementById('rejectReason').value;
+            
+            if (!rejectReason.trim()) {
+                alert('Alasan penolakan harus diisi!');
+                return;
+            }
+            
+            fetch('/admin/agents/reject-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ requestId, rejectReason })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Request berhasil ditolak!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menolak request');
+            });
+        }
+
+        // Edit agent
+        function editAgent(agentId) {
+            // Get agent data and populate form
+            fetch(`/admin/agents/${agentId}/details`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Populate edit form
+                        document.getElementById('editAgentId').value = data.agent.id;
+                        document.getElementById('editUsername').value = data.agent.username;
+                        document.getElementById('editName').value = data.agent.name;
+                        document.getElementById('editPhone').value = data.agent.phone;
+                        document.getElementById('editEmail').value = data.agent.email || '';
+                        document.getElementById('editAddress').value = data.agent.address || '';
+                        document.getElementById('editStatus').value = data.agent.status;
+                        
+                        // Show edit modal
+                        const modal = new bootstrap.Modal(document.getElementById('editAgentModal'));
+                        modal.show();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat memuat data agent');
+                });
+        }
+
+        // Toggle agent status
+        function toggleAgentStatus(agentId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const action = newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan';
+            
+            if (confirm(`Are you sure you want to ${action} agent ini?`)) {
+                fetch(`/admin/agents/${agentId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Agent berhasil ${action}!`);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat mengubah status agent');
+                });
+            }
+        }
+
+        // Update agent
+        function updateAgent() {
+            const form = document.getElementById('editAgentForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            // Remove empty password field
+            if (!data.password) {
+                delete data.password;
+            }
+            
+            fetch('/admin/agents/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Agent berhasil diupdate!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengupdate agent');
+            });
+        }
+
+        // Add balance to agent
+        function addBalance() {
+            const form = document.getElementById('addBalanceForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            if (!data.agentId || !data.amount) {
+                alert('Mohon isi semua field yang diperlukan!');
+                return;
+            }
+            
+            if (parseInt(data.amount) < 1000) {
+                alert('Amount saldo minimal Rp 1.000!');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to menambahkan saldo Rp ${parseInt(data.amount).toLocaleString()} ke agent ini?`)) {
+                fetch('/admin/agents/add-balance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Balance berhasil ditambahkan!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menambahkan saldo');
+                });
+            }
+        }
+
+        // Populate agent dropdown for balance modal
+        function populateAgentDropdown() {
+            const select = document.getElementById('balanceAgentSelect');
+            
+            // Clear existing options except the first one
+            select.innerHTML = '<option value="">-- Select Agent --</option>';
+            
+            // Add agents from the current page data
+            if (window.agentsData) {
+                window.agentsData.forEach(agent => {
+                    const option = document.createElement('option');
+                    option.value = agent.id;
+                    option.textContent = `${agent.name} (${agent.username}) - Balance: Rp ${(agent.balance || 0).toLocaleString()}`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // View agent details
+        function viewAgentDetails(agentId) {
+            // Implement agent details view
+            alert('Fitur detail agent akan segera tersedia!');
+        }
+
+        // Delete agent
+        function deleteAgent(agentId, agentName) {
+            if (confirm(`Are you sure you want to delete agent "${agentName}"?\n\n⚠️ PERINGATAN: Tindakan ini akan menghapus:\n- Data agent\n- Balance agent\n- Riwayat transaksi\n- Data voucher sales\n\nTindakan ini TIDAK DAPAT DIBATALKAN!`)) {
+                fetch(`/admin/agents/${agentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Agent berhasil dihapus!');
+                        loadAgents(); // Reload agents list
+                    } else {
+                        alert('Failed menghapus agent: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting agent:', error);
+                    alert('Terjadi kesalahan saat menghapus agent');
+                });
+            }
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBalanceRequests();
+            loadAgents();
+        });
+
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            loadBalanceRequests();
+            loadAgents();
+        }, 30000);
+    </script>
+</body>
+</html>
