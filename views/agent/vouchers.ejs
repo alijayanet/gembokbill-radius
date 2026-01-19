@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jual Voucher - Agent Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .voucher-package {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .voucher-package:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+        }
+        .voucher-package.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .package-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-sell {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-sell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        .success-modal .modal-header {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+        .voucher-result {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 2px solid #667eea;
+            margin: 1rem 0;
+        }
+        .voucher-code {
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .mobile-container {
+                max-width: 100%;
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+            .voucher-package {
+                margin-bottom: 1rem;
+                padding: 1rem;
+            }
+            .package-price {
+                font-size: 1.25rem;
+            }
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 0.5rem 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            text-align: center;
+            padding: 0.5rem;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-item span {
+            font-size: 0.75rem;
+        }
+        
+        /* Customer Info Modal */
+        .customer-info-modal .modal-dialog {
+            margin: 1rem;
+        }
+        
+        .customer-info-modal .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+        }
+        
+        .customer-info-modal .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Print Styles */
+        @media print {
+            .navbar, .bottom-nav, .btn, .modal {
+                display: none !important;
+            }
+            .voucher-print {
+                border: 2px solid #000;
+                padding: 20px;
+                margin: 20px;
+                text-align: center;
+            }
+            .voucher-print h3 {
+                color: #000;
+                margin-bottom: 20px;
+            }
+            .voucher-print .voucher-code {
+                font-size: 24px;
+                font-weight: bold;
+                color: #000;
+                margin: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Container -->
+    <div class="mobile-container">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/agent/dashboard">
+                <i class="fas fa-user-tie me-2"></i>
+                Agent Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/dashboard">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/agent/vouchers">
+                            <i class="fas fa-ticket-alt me-1"></i>Voucher
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/payments">
+                            <i class="fas fa-credit-card me-1"></i>Payment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/balance">
+                            <i class="fas fa-wallet me-1"></i>Balance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/transactions">
+                            <i class="fas fa-history me-1"></i>Transaction
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>
+                            Agent
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/agent/profile">
+                                <i class="fas fa-user me-2"></i>Profil
+                            </a></li>
+                            <li><a class="dropdown-item" href="/agent/change-password">
+                                <i class="fas fa-key me-2"></i>Ubah Password
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/agent/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-2">
+                        <i class="fas fa-wallet me-2"></i>
+                        Balance Tersedia
+                    </h4>
+                    <h2 class="mb-0">Rp <%= balance.toLocaleString() %></h2>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="/agent/balance" class="btn btn-light">
+                        <i class="fas fa-plus me-1"></i>
+                        Request Balance
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Voucher Packages -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ticket-alt me-2"></i>
+                            Select Paket Voucher
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <% voucherPackages.forEach(package => { %>
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="voucher-package" data-package-id="<%= package.id %>" data-package-name="<%= package.name %>" data-package-price="<%= package.customerPrice %>" data-agent-price="<%= package.agentPrice %>">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0"><%= package.name %></h6>
+                                             <span class="badge bg-primary"><%= package.duration %> <%= package.durationType === 'days' ? 'hari' : 'jam' %></span>
+                                        </div>
+                                        <p class="text-muted small mb-2"><%= package.description %></p>
+                                        <div class="package-price">Rp <%= package.customerPrice.toLocaleString() %></div>
+                                        <div class="small text-muted mt-1">
+                                            <div><strong>Price Agent:</strong> Rp <%= package.agentPrice.toLocaleString() %></div>
+                                            <div class="text-success"><strong>Keuntungan:</strong> Rp <%= (package.customerPrice - package.agentPrice).toLocaleString() %></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Informasi Customer
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="voucherForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="customerName" class="form-label">Name Customer</label>
+                                    <input type="text" class="form-control" id="customerName" name="customerName" placeholder="Enter nama pelanggan">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="customerPhone" class="form-label">Nomor HP (Opsional)</label>
+                                    <input type="text" class="form-control" id="customerPhone" name="customerPhone" placeholder="Enter nomor HP">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Catatan (Opsional)</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Catatan tambahan..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Order Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            Ringkasan Pesanan
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderSummary" class="text-center text-muted py-4">
+                            <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+                            <p>Select paket voucher untuk melanjutkan</p>
+                        </div>
+                        
+                        <div id="orderDetails" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Paket:</span>
+                                <span id="selectedPackage" class="fw-bold"></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Price:</span>
+                                <span id="packagePrice" class="fw-bold text-primary"></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Keuntungan:</span>
+                                <span id="profit" class="fw-bold text-success"></span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Total:</span>
+                                <span id="totalPrice" class="fw-bold text-primary"></span>
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary btn-sell w-100" id="sellVoucherBtn">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                Jual Voucher
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Aksi Cepat
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/agent/voucher-history" class="btn btn-outline-primary">
+                                <i class="fas fa-history me-2"></i>
+                                Riwayat Voucher
+                            </a>
+                            <a href="/agent/payments" class="btn btn-outline-success">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Terima Payment
+                            </a>
+                            <a href="/agent/balance" class="btn btn-outline-warning">
+                                <i class="fas fa-wallet me-2"></i>
+                                Kelola Balance
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content success-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Voucher Successful Dijual!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="voucher-result">
+                        <h6 class="text-center mb-3">Detail Voucher</h6>
+                        <div class="text-center mb-3">
+                            <label class="form-label">Kode Voucher:</label>
+                            <div class="voucher-code" id="voucherCodeResult"></div>
+                        </div>
+                        <div class="text-center mb-3">
+                            <label class="form-label">Password:</label>
+                            <div class="voucher-code" id="voucherPasswordResult"></div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted">Paket:</small>
+                                <div id="resultPackage" class="fw-bold"></div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Price:</small>
+                                <div id="resultPrice" class="fw-bold text-primary"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Catatan:</strong> Voucher akan dikirim ke pelanggan melalui WhatsApp. Pastikan nomor HP pelanggan sudah benar.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" onclick="copyVoucherInfo()">
+                        <i class="fas fa-copy me-2"></i>
+                        Copy
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="printVoucher()">
+                        <i class="fas fa-print me-2"></i>
+                        Print
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-plus me-2"></i>
+                        Jual Lagi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedPackage = null;
+        // const balance = <%= balance %>;
+
+        // Package selection - langsung tampilkan modal customer info
+        document.querySelectorAll('.voucher-package').forEach(package => {
+            package.addEventListener('click', function() {
+                console.log('DEBUG: Voucher package clicked');
+                console.log('DEBUG: Package dataset:', this.dataset);
+                
+                // Remove previous selection
+                document.querySelectorAll('.voucher-package').forEach(p => p.classList.remove('selected'));
+                
+                // Add selection to clicked package
+                this.classList.add('selected');
+                
+                // Get package data
+                selectedPackage = {
+                    id: this.dataset.packageId,
+                    name: this.dataset.packageName,
+                    price: parseInt(this.dataset.packagePrice),
+                    agentPrice: parseInt(this.dataset.agentPrice)
+                };
+                
+                console.log('DEBUG: selectedPackage set to:', selectedPackage);
+                
+                // Update order summary
+                updateOrderSummary();
+                
+                // Show order form
+                const orderForm = document.getElementById('orderForm');
+                if (orderForm) orderForm.style.display = 'block';
+                
+                // Update modal dengan informasi paket
+                updateModalPackageInfo();
+                
+                // Set selectedPackageData untuk direct modal open
+                selectedPackageData = {
+                    id: selectedPackage.id,
+                    name: selectedPackage.name,
+                    price: selectedPackage.price,
+                    agentPrice: selectedPackage.agentPrice
+                };
+                console.log('DEBUG: selectedPackageData set in package click:', selectedPackageData);
+                
+                // Langsung tampilkan modal customer info
+                const customerInfoModalElement = document.getElementById('customerInfoModal');
+                if (customerInfoModalElement) {
+                    const customerInfoModal = new bootstrap.Modal(customerInfoModalElement, {
+                        backdrop: true,
+                        keyboard: true,
+                        focus: true
+                    });
+                    customerInfoModal.show();
+                    
+                // Proper accessibility handling
+                customerInfoModalElement.addEventListener('shown.bs.modal', function () {
+                    customerInfoModalElement.removeAttribute('aria-hidden');
+                    customerInfoModalElement.removeAttribute('inert');
+                    // Small delay to ensure modal is fully shown before focusing
+                    setTimeout(() => {
+                        const firstInput = customerInfoModalElement.querySelector('input');
+                        if (firstInput) {
+                            firstInput.focus();
+                        }
+                    }, 100);
+                });
+                
+                customerInfoModalElement.addEventListener('hidden.bs.modal', function () {
+                    // Only set attributes after modal is fully hidden
+                    setTimeout(() => {
+                        customerInfoModalElement.setAttribute('aria-hidden', 'true');
+                        customerInfoModalElement.setAttribute('inert', '');
+                    }, 100);
+                });
+                }
+            });
+        });
+
+        function updateOrderSummary() {
+            if (selectedPackage) {
+                const orderSummary = document.getElementById('orderSummary');
+                const orderDetails = document.getElementById('orderDetails');
+                
+                if (orderSummary) orderSummary.style.display = 'none';
+                if (orderDetails) orderDetails.style.display = 'block';
+                
+                const selectedPackageElement = document.getElementById('selectedPackage');
+                const packagePriceElement = document.getElementById('packagePrice');
+                const profitElement = document.getElementById('profit');
+                const totalPriceElement = document.getElementById('totalPrice');
+                
+                if (selectedPackageElement) selectedPackageElement.textContent = selectedPackage.name;
+                if (packagePriceElement) packagePriceElement.textContent = 'Rp ' + selectedPackage.price.toLocaleString();
+                const profit = selectedPackage.price - selectedPackage.agentPrice;
+                if (profitElement) profitElement.textContent = 'Rp ' + profit.toLocaleString();
+                if (totalPriceElement) totalPriceElement.textContent = 'Rp ' + selectedPackage.price.toLocaleString();
+            }
+        }
+
+        function updateModalPackageInfo() {
+            if (selectedPackage) {
+                document.getElementById('modalPackageName').textContent = selectedPackage.name;
+                document.getElementById('modalPackagePrice').textContent = 'Rp ' + selectedPackage.price.toLocaleString();
+                const profit = selectedPackage.price - selectedPackage.agentPrice;
+                document.getElementById('modalPackageProfit').textContent = 'Rp ' + profit.toLocaleString();
+            }
+        }
+
+        // Sell voucher
+        // Update event listener untuk menggunakan fungsi baru
+        const sellVoucherBtn = document.getElementById('sellVoucherBtn');
+        if (sellVoucherBtn) {
+            sellVoucherBtn.addEventListener('click', sellVoucher);
+        }
+
+        // Auto format phone number
+        const customerPhoneElement = document.getElementById('customerPhone');
+        if (customerPhoneElement) {
+            customerPhoneElement.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.startsWith('0')) {
+                    value = '62' + value.substring(1);
+                } else if (!value.startsWith('62')) {
+                    value = '62' + value;
+                }
+                e.target.value = value;
+            });
+        }
+
+        // Auto format phone number di modal
+        const modalCustomerPhoneElement = document.getElementById('modalCustomerPhone');
+        if (modalCustomerPhoneElement) {
+            modalCustomerPhoneElement.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.startsWith('0')) {
+                    value = '62' + value.substring(1);
+                } else if (!value.startsWith('62')) {
+                    value = '62' + value;
+                }
+                e.target.value = value;
+            });
+        }
+
+
+        // Global variable to store selected package
+        let selectedPackageData = null;
+
+        // Show alert function
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Modified sellVoucher function to show customer info modal first
+        function sellVoucher() {
+            if (!selectedPackage) {
+                showAlert('Select paket voucher terlebih dahulu!', 'warning');
+                return;
+            }
+
+            // Store selected package data (ensure it's always set)
+            selectedPackageData = {
+                id: selectedPackage.id,
+                name: selectedPackage.name,
+                price: selectedPackage.price,
+                agentPrice: selectedPackage.agentPrice
+            };
+            
+            console.log('DEBUG: selectedPackageData set in sellVoucher:', selectedPackageData);
+
+            // Show customer info modal
+            const customerInfoModalElement = document.getElementById('customerInfoModal');
+            if (customerInfoModalElement) {
+                const customerInfoModal = new bootstrap.Modal(customerInfoModalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                customerInfoModal.show();
+                
+                // Proper accessibility handling
+                customerInfoModalElement.addEventListener('shown.bs.modal', function () {
+                    customerInfoModalElement.removeAttribute('aria-hidden');
+                    customerInfoModalElement.removeAttribute('inert');
+                    // Small delay to ensure modal is fully shown before focusing
+                    setTimeout(() => {
+                        const firstInput = customerInfoModalElement.querySelector('input');
+                        if (firstInput) {
+                            firstInput.focus();
+                        }
+                    }, 100);
+                });
+                
+                customerInfoModalElement.addEventListener('hidden.bs.modal', function () {
+                    // Only set attributes after modal is fully hidden
+                    setTimeout(() => {
+                        customerInfoModalElement.setAttribute('aria-hidden', 'true');
+                        customerInfoModalElement.setAttribute('inert', '');
+                    }, 100);
+                });
+            }
+        }
+
+        // Proceed with customer info
+        function proceedWithCustomerInfo() {
+            // Debug: Log current state
+            console.log('DEBUG: proceedWithCustomerInfo called');
+            console.log('DEBUG: selectedPackage:', selectedPackage);
+            console.log('DEBUG: selectedPackageData:', selectedPackageData);
+            
+            // Ensure selectedPackage exists
+            if (!selectedPackage && selectedPackageData) {
+                console.log('DEBUG: Using selectedPackageData as fallback');
+                selectedPackage = selectedPackageData;
+            }
+            
+            if (!selectedPackage) {
+                console.log('DEBUG: No package selected, showing alert');
+                showAlert('Select paket voucher terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            console.log('DEBUG: Proceeding with selectedPackage:', selectedPackage);
+
+            const customerNameElement = document.getElementById('modalCustomerName');
+            const customerPhoneElement = document.getElementById('modalCustomerPhone');
+            const sendWhatsAppElement = document.getElementById('sendWhatsApp');
+            
+            const customerName = customerNameElement ? customerNameElement.value : '';
+            const customerPhone = customerPhoneElement ? customerPhoneElement.value : '';
+            const sendWhatsApp = sendWhatsAppElement ? sendWhatsAppElement.checked : false;
+
+            // Update form fields
+            const customerNameForm = document.getElementById('customerName');
+            const customerPhoneForm = document.getElementById('customerPhone');
+            const sendNotificationForm = document.getElementById('sendNotification');
+            
+            if (customerNameForm) customerNameForm.value = customerName;
+            if (customerPhoneForm) customerPhoneForm.value = customerPhone;
+            if (sendNotificationForm) sendNotificationForm.checked = sendWhatsApp;
+
+            // Close modal
+            const customerInfoModalElement = document.getElementById('customerInfoModal');
+            if (customerInfoModalElement) {
+                const customerInfoModal = bootstrap.Modal.getInstance(customerInfoModalElement);
+                if (customerInfoModal) {
+                    customerInfoModal.hide();
+                }
+            }
+
+            // Proceed with original sell logic
+            sellVoucherOriginal();
+        }
+
+        // Original sell voucher function (renamed)
+        function sellVoucherOriginal() {
+            if (!selectedPackageData) {
+                showAlert('Select paket voucher terlebih dahulu!', 'warning');
+                return;
+            }
+
+            const customerNameElement = document.getElementById('customerName');
+            const customerPhoneElement = document.getElementById('customerPhone');
+            const sendNotificationElement = document.getElementById('sendNotification');
+            
+            const customerName = customerNameElement ? customerNameElement.value : '';
+            const customerPhone = customerPhoneElement ? customerPhoneElement.value : '';
+            const sendNotification = sendNotificationElement ? sendNotificationElement.checked : false;
+
+            const sellBtn = document.querySelector('.btn-sell');
+            if (sellBtn) {
+                sellBtn.disabled = true;
+                sellBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+            }
+
+            fetch('/agent/sell-voucher', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    packageId: selectedPackageData ? selectedPackageData.id : null,
+                    packageName: selectedPackageData ? selectedPackageData.name : null,
+                    packagePrice: selectedPackageData ? selectedPackageData.price : 0,
+                    agentPrice: selectedPackageData ? selectedPackageData.agentPrice : 0,
+                    customerName: customerName || null,
+                    customerPhone: customerPhone || null,
+                    sendNotification: sendNotification
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success modal
+                    const voucherCodeElement = document.getElementById('voucherCodeResult');
+                    const voucherPasswordElement = document.getElementById('voucherPasswordResult');
+                    const resultPackageElement = document.getElementById('resultPackage');
+                    const resultPriceElement = document.getElementById('resultPrice');
+                    
+                    // Use Mikrotik username and password if available, fallback to voucher code
+                    const displayUsername = data.mikrotikUsername || data.voucherCode;
+                    const displayPassword = data.mikrotikPassword || data.voucherPassword || data.voucherCode;
+                    
+                    if (voucherCodeElement) voucherCodeElement.textContent = displayUsername;
+                    if (voucherPasswordElement) voucherPasswordElement.textContent = displayPassword;
+                    if (resultPackageElement && selectedPackageData) resultPackageElement.textContent = selectedPackageData.name;
+                    if (resultPriceElement && selectedPackageData) resultPriceElement.textContent = 'Rp ' + selectedPackageData.price.toLocaleString();
+                    
+                    const successModalElement = document.getElementById('successModal');
+                    if (successModalElement) {
+                        const successModal = new bootstrap.Modal(successModalElement);
+                        successModal.show();
+                    }
+                } else {
+                    showAlert(data.message || 'Failed menjual voucher', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Terjadi kesalahan saat menjual voucher', 'danger');
+            })
+            .finally(() => {
+                if (sellBtn) {
+                    sellBtn.disabled = false;
+                    sellBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Jual Voucher';
+                }
+            });
+        }
+
+        // Print voucher function
+        function printVoucher() {
+            const voucherCode = document.getElementById('voucherCodeResult') ? document.getElementById('voucherCodeResult').textContent : '';
+            const voucherPassword = document.getElementById('voucherPasswordResult') ? document.getElementById('voucherPasswordResult').textContent : '';
+            const packageName = document.getElementById('resultPackage') ? document.getElementById('resultPackage').textContent : '';
+            const price = document.getElementById('resultPrice') ? document.getElementById('resultPrice').textContent : '';
+            const mikrotikUsername = document.getElementById('mikrotikUsernameResult') ? document.getElementById('mikrotikUsernameResult').textContent : '';
+            const mikrotikPassword = document.getElementById('mikrotikPasswordResult') ? document.getElementById('mikrotikPasswordResult').textContent : '';
+            
+            // Use mikrotik credentials if available, otherwise use voucher code
+            const username = mikrotikUsername || voucherCode;
+            const password = mikrotikPassword || voucherPassword;
+            
+            const printWindow = window.open('', '_blank');
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Voucher Hotspot</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+                        
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Roboto', sans-serif;
+                            background: white;
+                            padding: 0;
+                            margin: 0;
+                            width: 58mm;
+                            font-size: 8px;
+                        }
+                        
+                        .voucher-container {
+                            width: 58mm;
+                            padding: 2mm;
+                            background: white;
+                        }
+                        
+                        .voucher-header {
+                            text-align: center;
+                            border-bottom: 1px dashed #333;
+                            padding-bottom: 2mm;
+                            margin-bottom: 2mm;
+                        }
+                        
+                        .company-name {
+                            font-size: 12px;
+                            font-weight: 700;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .voucher-title {
+                            font-size: 9px;
+                            font-weight: 400;
+                        }
+                        
+                        .voucher-body {
+                            text-align: center;
+                            margin: 2mm 0;
+                        }
+                        
+                        .credential-section {
+                            margin: 2mm 0;
+                            padding: 1.5mm;
+                            border: 1px solid #ddd;
+                        }
+                        
+                        .credential-label {
+                            font-size: 7px;
+                            font-weight: 500;
+                            text-transform: uppercase;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .credential-value {
+                            font-size: 11px;
+                            font-weight: 700;
+                            letter-spacing: 1px;
+                            word-break: break-all;
+                            margin: 1mm 0;
+                        }
+                        
+                        .credential-value.password {
+                            color: #e74c3c;
+                        }
+                        
+                        .package-info {
+                            background: #f0f0f0;
+                            padding: 1.5mm;
+                            margin: 2mm 0;
+                        }
+                        
+                        .package-name {
+                            font-size: 9px;
+                            font-weight: 500;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .package-price {
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: #27ae60;
+                        }
+                        
+                        .instructions {
+                            font-size: 7px;
+                            line-height: 1.3;
+                            margin: 2mm 0;
+                            text-align: left;
+                        }
+                        
+                        .instructions ol {
+                            padding-left: 3mm;
+                            margin: 1mm 0;
+                        }
+                        
+                        .instructions li {
+                            margin-bottom: 0.5mm;
+                        }
+                        
+                        .contact-info {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 2mm;
+                            padding-top: 1mm;
+                            border-top: 1px dashed #333;
+                        }
+                        
+                        .validity {
+                            font-size: 7px;
+                            text-align: center;
+                            margin: 1mm 0;
+                            font-weight: 500;
+                        }
+                        
+                        .divider {
+                            border-top: 1px dashed #333;
+                            margin: 2mm 0;
+                        }
+                        
+                        .footer-note {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 1mm;
+                        }
+                        
+                        @media print {
+                            body {
+                                width: 58mm;
+                                padding: 0;
+                                margin: 0;
+                            }
+                            
+                            .voucher-container {
+                                width: 58mm;
+                                padding: 2mm;
+                                box-shadow: none;
+                            }
+                            
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="voucher-container">
+                        <div class="voucher-header">
+                            <div class="company-name"><%= appSettings.company_header || 'VOUCHER HOTSPOT' %></div>
+                            <div class="voucher-title">Internet Access Voucher</div>
+                        </div>
+                        
+                        <div class="voucher-body">
+                            <div class="credential-section">
+                                <div class="credential-label">Username</div>
+                                <div class="credential-value">${username}</div>
+                                
+                                <div class="credential-label">Password</div>
+                                <div class="credential-value password">${password}</div>
+                            </div>
+                            
+                            <div class="package-info">
+                                <div class="package-name">${packageName}</div>
+                                <div class="package-price">${price}</div>
+                            </div>
+                            
+                            <div class="validity">
+                                Valid until used • Single device
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="instructions">
+                                <strong>How to connect:</strong>
+                                <ol>
+                                    <li>Connect to WiFi network</li>
+                                    <li>Open browser/login page</li>
+                                    <li>Enter username & password</li>
+                                    <li>Click Login to browse</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="contact-info">
+                                Support: <%= appSettings.contact_phone || appSettings['admins.0'] || 'support@company.com' %>
+                            </div>
+                            
+                            <div class="footer-note">
+                                Thank you for choosing our service!
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Copy voucher info to clipboard
+        function copyVoucherInfo() {
+            const voucherCode = document.getElementById('voucherCodeResult') ? document.getElementById('voucherCodeResult').textContent : '';
+            const voucherPassword = document.getElementById('voucherPasswordResult') ? document.getElementById('voucherPasswordResult').textContent : '';
+            const packageName = document.getElementById('resultPackage') ? document.getElementById('resultPackage').textContent : '';
+            const price = document.getElementById('resultPrice') ? document.getElementById('resultPrice').textContent : '';
+            
+            const voucherInfo = `Voucher Hotspot Successful!\n\n` +
+                `📱 Username: ${voucherCode}\n` +
+                `🔑 Password: ${voucherPassword}\n` +
+                `📦 Paket: ${packageName}\n` +
+                `💰 Price: ${price}\n\n` +
+                `Silakan gunakan kredensial di atas untuk mengakses WiFi hotspot.`;
+            
+            navigator.clipboard.writeText(voucherInfo).then(function() {
+                showAlert('Informasi voucher berhasil disalin!', 'success');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+                showAlert('Failed menyalin informasi voucher', 'danger');
+            });
+        }
+    </script>
+
+    <!-- Customer Info Modal -->
+    <div class="modal fade customer-info-modal" id="customerInfoModal" tabindex="-1" aria-labelledby="customerInfoModalLabel" aria-hidden="true" inert>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customerInfoModalLabel">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Jual Voucher
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-primary mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong id="modalPackageName">Paket Voucher</strong>
+                                <div class="small text-muted" id="modalPackagePrice">Rp 0</div>
+                            </div>
+                            <div class="text-success">
+                                <div class="small">Keuntungan</div>
+                                <strong id="modalPackageProfit">Rp 0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modalCustomerName" class="form-label">Name Pembeli</label>
+                        <input type="text" class="form-control" id="modalCustomerName" placeholder="Name pembeli (opsional)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalCustomerPhone" class="form-label">Nomor WhatsApp</label>
+                        <input type="text" class="form-control" id="modalCustomerPhone" placeholder="62xxxxxxxxxx (opsional)">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sendWhatsApp">
+                            <label class="form-check-label" for="sendWhatsApp">
+                                Send voucher via WhatsApp
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="proceedWithCustomerInfo()">
+                        <i class="fas fa-shopping-cart me-2"></i>Jual Voucher
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav d-md-none">
+        <div class="row">
+            <div class="col-3">
+                <a href="/agent/dashboard" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/vouchers" class="nav-item active">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Voucher</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/payments" class="nav-item">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Bayar</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/transactions" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Riwayat</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    </div> <!-- End Mobile Container -->
+</body>
+</html>
+
