@@ -1,0 +1,35 @@
+[
+  {
+    "id": "TR833424MTG",
+    "status": "open",
+    "createdAt": "2025-08-23T02:23:53.424Z",
+    "updatedAt": "2025-08-23T02:23:53.424Z",
+    "phone": "081321960111",
+    "name": "testing",
+    "location": "Jln. Pantai Tanjungpura Desa Ujunggebang Kecamatan Sukra - Indramayu",
+    "category": "Tidak Bisa Browsing",
+    "description": "tester saja"
+  },
+  {
+    "id": "TR984063C3E",
+    "status": "open",
+    "createdAt": "2025-08-23T02:59:44.063Z",
+    "updatedAt": "2025-08-23T02:59:44.064Z",
+    "phone": "081234567890",
+    "name": "Test Customer Admin Notification",
+    "location": "Test Location for Admin",
+    "category": "Test Category",
+    "description": "Test trouble report untuk memastikan admin juga menerima notifikasi."
+  },
+  {
+    "id": "TR756171FCJ",
+    "status": "open",
+    "createdAt": "2025-08-23T03:12:36.171Z",
+    "updatedAt": "2025-08-23T03:12:36.172Z",
+    "phone": "081234567890",
+    "name": "Test Date Format",
+    "location": "Test Location",
+    "category": "Test Category",
+    "description": "Test untuk format tanggal yang benar"
+  }
+]
