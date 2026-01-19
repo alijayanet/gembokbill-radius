@@ -213,18 +213,44 @@ setup_database() {
         print_success "MySQL installed"
     fi
     
-    # Read MySQL root password from settings or prompt
-    print_info "Please enter MySQL root password:"
-    read -s MYSQL_ROOT_PASSWORD
-    
-    # Create database and user
-    print_info "Creating RADIUS database and user..."
-    
+    # Get RADIUS configuration
     RADIUS_USER=$(grep -oP '(?<="radius_user": ")[^"]*' settings.json || echo "radius")
     RADIUS_PASSWORD=$(grep -oP '(?<="radius_password": ")[^"]*' settings.json || echo "radpassword")
     RADIUS_DATABASE=$(grep -oP '(?<="radius_database": ")[^"]*' settings.json || echo "radius")
     
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF
+    # Reset MySQL root password automatically
+    print_warning "Configuring MySQL root access..."
+    print_info "Stopping MySQL service..."
+    systemctl stop mysql 2>/dev/null || true
+    
+    print_info "Starting MySQL in safe mode..."
+    mkdir -p /var/run/mysqld
+    chown mysql:mysql /var/run/mysqld
+    mysqld_safe --skip-grant-tables --skip-networking &
+    
+    # Wait for MySQL to start
+    sleep 5
+    
+    print_info "Setting MySQL root password to: Gembok@2024"
+    mysql << SQLSCRIPT
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'Gembok@2024';
+FLUSH PRIVILEGES;
+SQLSCRIPT
+    
+    # Stop safe mode MySQL
+    print_info "Stopping MySQL safe mode..."
+    killall mysqld_safe mysqld 2>/dev/null || true
+    sleep 3
+    
+    # Start MySQL normally
+    print_info "Starting MySQL service..."
+    systemctl start mysql
+    sleep 3
+    
+    # Create RADIUS database and user
+    print_info "Creating RADIUS database and user..."
+    mysql -u root -p'Gembok@2024' << SQLSCRIPT
 -- Create database
 CREATE DATABASE IF NOT EXISTS $RADIUS_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -331,8 +357,10 @@ INSERT INTO radgroupcheck (groupname, attribute, op, value) VALUES ('default', '
 INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES ('default', 'Service-Type', ':=', 'Framed-User');
 INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES ('default', 'Framed-Protocol', ':=', 'PPP');
 
-EOF
+SQLSCRIPT
     
+    print_success "MySQL root password configured: Gembok@2024"
+    print_warning "Please save this password for future reference!"
     print_success "Database setup completed"
 }
 
@@ -377,9 +405,14 @@ test_freeradius() {
 setup_radius_groups() {
     print_header "Setting up RADIUS Groups"
     
+    # Get RADIUS database name
+    RADIUS_DATABASE=$(grep -oP '(?<="radius_database": ")[^"]*' settings.json || echo "radius")
+    
     # Setup default groups
     print_info "Creating default RADIUS groups..."
-    mysql -u $RADIUS_USER -p"$MYSQL_ROOT_PASSWORD" $RADIUS_DATABASE << EOF
+    mysql -u root -p'Gembok@2024' << EOF
+USE $RADIUS_DATABASE;
+
 -- Create default group
 INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES 
 ('default', 'Auth-Type', ':=', 'Accept'),
@@ -453,7 +486,7 @@ run_gembok_migration() {
         DB_PASSWORD=$(grep -oP '(?<="db_password": ")[^"]*' settings.json || echo "")
         DB_NAME=$(grep -oP '(?<="db_name": ")[^"]*' settings.json || echo "gembok_bill")
         
-        mysql -h $DB_HOST -u $DB_USER -p"$DB_PASSWORD" $DB_NAME < migrations/create_radius_integration.sql
+        mysql -u root -p'Gembok@2024' $DB_NAME < migrations/create_radius_integration.sql
         print_success "MySQL migration completed"
     else
         print_info "Running SQLite migration..."
