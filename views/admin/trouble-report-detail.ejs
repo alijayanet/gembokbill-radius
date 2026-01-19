@@ -2,687 +2,788 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Laporan Gangguan - <%= companyHeader %></title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/customer-portal.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title><%= title %> - <%= typeof isTechnicianView !== 'undefined' && isTechnicianView ? 'Portal Technician' : 'Admin Panel' %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="technician-view" content="<% if (typeof isTechnicianView !== 'undefined' && isTechnicianView) { %>true<% } else { %>false<% } %>">
+    <meta name="report-id" content="<%= report.id %>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.5.0/css/dataTables.responsive.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <link href="/css/responsive-admin.css" rel="stylesheet">
+    <!-- Admin Mobile Optimizations -->
+    <link href="/css/admin-mobile.css" rel="stylesheet">
+    
+    <!-- Mobile Sidebar Enhancement -->
+    <%- include('../partials/mobile-sidebar-head') %>
+    
     <style>
-        :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #6b7280;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --info-color: #3b82f6;
-            --light-bg: #f8fafc;
-            --border-color: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        body { background: #f5f6fa; }
+        .form-label { font-weight: 600; }
+        
+        .main-content {
+            padding: 32px 24px;
         }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: var(--shadow-lg);
-            margin: 2rem auto;
-            overflow: hidden;
-        }
-
-        .header-section {
-            background: linear-gradient(135deg, var(--primary-color), #6366f1);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
-        .header-section h2 {
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header-section h4 {
-            font-weight: 400;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-
-        .content-section {
-            padding: 2rem;
-        }
-
-        .status-badge {
-            font-size: 0.875rem;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: var(--shadow);
-        }
-
-        .status-open {
-            background: linear-gradient(135deg, var(--danger-color), #dc2626);
-            color: white;
-        }
-
-        .status-in_progress {
-            background: linear-gradient(135deg, var(--warning-color), #d97706);
-            color: white;
-        }
-
-        .status-resolved {
-            background: linear-gradient(135deg, var(--success-color), #059669);
-            color: white;
-        }
-
-        .status-closed {
-            background: linear-gradient(135deg, var(--secondary-color), #4b5563);
-            color: white;
-        }
-
-        .info-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .info-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .info-card h6 {
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .info-item:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: var(--secondary-color);
-            min-width: 120px;
-        }
-
-        .info-value {
-            color: #1f2937;
-            text-align: right;
-            flex: 1;
-        }
-
-        .description-box {
-            background: var(--light-bg);
+        
+        .card {
+            border: none;
             border-radius: 12px;
-            padding: 1.5rem;
-            border-left: 4px solid var(--primary-color);
-            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-
+        
+        .page-title {
+            font-weight: 700;
+            color: #343a40;
+            margin-bottom: 0;
+        }
+        
+        .badge-status {
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 500;
+        }
+        
+        .detail-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .avatar-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
         .timeline {
             position: relative;
-            padding-left: 2rem;
-            margin: 2rem 0;
+            padding-left: 30px;
         }
-
+        
         .timeline::before {
             content: '';
             position: absolute;
-            left: 0.5rem;
+            left: 10px;
             top: 0;
             height: 100%;
-            width: 3px;
-            background: linear-gradient(to bottom, var(--primary-color), var(--info-color));
-            border-radius: 2px;
+            width: 2px;
+            background: #e9ecef;
         }
-
+        
         .timeline-item {
             position: relative;
-            margin-bottom: 1.5rem;
-            padding-left: 1rem;
+            padding-bottom: 25px;
         }
-
-        .timeline-item::before {
-            content: '';
+        
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        
+        .timeline-dot {
             position: absolute;
-            left: -1.5rem;
-            top: 0.5rem;
-            width: 16px;
-            height: 16px;
+            left: -30px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: white;
-            border: 3px solid var(--primary-color);
-            box-shadow: var(--shadow);
-        }
-
-        .timeline-content {
-            background: white;
-            border-radius: 12px;
-            padding: 1.25rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .timeline-content:hover {
-            transform: translateX(5px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .timeline-time {
-            font-size: 0.875rem;
-            color: var(--secondary-color);
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .comment-form {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-        }
-
-        .form-control {
-            border-radius: 12px;
-            border: 2px solid var(--border-color);
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .btn {
-            border-radius: 12px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), #6366f1);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .btn-outline-secondary {
-            border: 2px solid var(--secondary-color);
-            color: var(--secondary-color);
-            background: transparent;
-        }
-
-        .btn-outline-secondary:hover {
-            background: var(--secondary-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, var(--success-color), #059669);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .action-buttons {
+            background: #3b7ddd;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin: 2rem 0;
-            gap: 1rem;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
         }
-
-        .info-button {
-            background: none;
-            border: none;
-            color: var(--info-color);
-            padding: 0.5rem 1rem;
+        
+        .timeline-content {
+            background: #f8f9fa;
             border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 15px;
+        }
+        
+        .btn-action {
+            width: 36px;
+            height: 36px;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 5px;
+            transition: all 0.3s ease;
         }
-
-        .info-button:hover {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--info-color);
-            transform: translateY(-1px);
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
         }
-
-        .info-button i {
-            font-size: 1rem;
-        }
-
-        .footer-section {
-            background: var(--light-bg);
-            padding: 1.5rem;
-            text-align: center;
-            color: var(--secondary-color);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .modal-content {
-            border-radius: 16px;
-            border: none;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid var(--border-color);
-            border-radius: 16px 16px 0 0;
-        }
-
-        .modal-footer {
-            border-top: 1px solid var(--border-color);
-            border-radius: 0 0 16px 16px;
-        }
-
-        .alert {
-            border-radius: 12px;
-            border: none;
-            padding: 1rem 1.25rem;
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                margin: 1rem;
-                border-radius: 16px;
+        
+        /* Mobile responsive improvements */
+        @media (max-width: 767.98px) {
+            .main-content {
+                padding: 15px;
+                margin-top: 60px;
             }
             
-            .header-section {
-                padding: 1.5rem;
+            .page-title {
+                font-size: 1.5rem;
             }
             
-            .header-section h2 {
-                font-size: 2rem;
+            .avatar-circle {
+                width: 48px;
+                height: 48px;
+                font-size: 1.2rem;
             }
             
-            .content-section {
-                padding: 1.5rem;
+            .timeline {
+                padding-left: 20px;
             }
             
-            .action-buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .info-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-            
-            .info-value {
-                text-align: left;
+            .timeline-dot {
+                left: -20px;
+                width: 16px;
+                height: 16px;
+                font-size: 0.6rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="main-container">
-            <!-- Header Section -->
-            <div class="header-section">
-                <h2><i class="fas fa-exclamation-triangle me-3"></i><%= companyHeader %></h2>
-                <h4>Detail Laporan Gangguan</h4>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Include Responsive Sidebar -->
+        <% if (typeof isTechnicianView !== 'undefined' && isTechnicianView) { %>
+            <%- include('../partials/technician-responsive-sidebar', { page: 'troubletickets', technician: technician }) %>
+        <% } else { %>
+            <%- include('../partials/admin-responsive-sidebar', { page: 'trouble', settings: settings }) %>
+        <% } %>
+        
+        <main class="col-md-10 main-content ms-sm-auto">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4">
+                <div>
+                    <h1 class="page-title">Detail Laporan Gangguan</h1>
+                    <p class="text-muted">Informasi lengkap dan penanganan laporan #<%= report.id %></p>
+                </div>
+                <div>
+                    <% if (typeof isTechnicianView !== 'undefined' && isTechnicianView) { %>
+                        <a href="/technician/troubletickets" class="btn btn-outline-secondary rounded-pill me-2">
+                            <i class="bi bi-arrow-left me-1"></i> Back
+                        </a>
+                    <% } else { %>
+                        <a href="/admin/trouble" class="btn btn-outline-secondary rounded-pill me-2">
+                            <i class="bi bi-arrow-left me-1"></i> Back
+                        </a>
+                    <% } %>
+                    <a href="https://wa.me/<%= report.phone.replace(/^0/, '62') %>" target="_blank" class="btn btn-success rounded-pill">
+                        <i class="bi bi-whatsapp me-1"></i> Hubungi Customer
+                    </a>
+                </div>
             </div>
             
-            <!-- Content Section -->
-            <div class="content-section">
-                <!-- Status Header -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h3 class="mb-2">Tiket #<%= report.id %></h3>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="status-badge status-<%= report.status %>">
-                                <i class="fas fa-<%= report.status === 'open' ? 'exclamation-circle' : 
-                                                   report.status === 'in_progress' ? 'clock' : 
-                                                   report.status === 'resolved' ? 'check-circle' : 'times-circle' %>"></i>
-                                <%= report.status === 'open' ? 'Dibuka' : 
-                                   report.status === 'in_progress' ? 'Sedang Ditangani' : 
-                                   report.status === 'resolved' ? 'Terselesaikan' : 'Ditutup' %>
-                            </span>
+            <!-- Status dan Info Laporan -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="avatar-circle bg-primary text-white">
+                                    <%= report.name.charAt(0).toUpperCase() %>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1"><%= report.name %></h5>
+                                    <p class="text-muted mb-0"><i class="bi bi-telephone me-2"></i><%= report.phone %></p>
+                                </div>
+                                <div class="ms-auto">
+                                    <span class="badge badge-status <%= 
+                                        report.status === 'open' ? 'bg-danger' : 
+                                        report.status === 'in_progress' ? 'bg-warning text-dark' : 
+                                        report.status === 'resolved' ? 'bg-success' : 
+                                        'bg-secondary' 
+                                    %>">
+                                        <% if (report.status === 'open') { %>
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                        <% } else if (report.status === 'in_progress') { %>
+                                            <i class="bi bi-gear me-1"></i>
+                                        <% } else if (report.status === 'resolved') { %>
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        <% } else { %>
+                                            <i class="bi bi-archive me-1"></i>
+                                        <% } %>
+                                        <%= 
+                                            report.status === 'open' ? 'Belum Ditangani' : 
+                                            report.status === 'in_progress' ? 'Sedang Ditangani' : 
+                                            report.status === 'resolved' ? 'Terselesaikan' : 
+                                            'Ditutup' 
+                                        %>
+                                    </span>
+                                </div>
+                            </div>
                             
-                            <!-- Info Buttons -->
-                            <button class="info-button" title="Status: <%= report.status %>">
-                                <i class="fas fa-info-circle"></i>
-                                Status
-                            </button>
-                            <button class="info-button" title="Prioritas: <%= report.priority || 'Normal' %>">
-                                <i class="fas fa-flag"></i>
-                                Prioritas
-                            </button>
-                            <button class="info-button" title="Estimasi: <%= report.estimated_time || 'No ditentukan' %>">
-                                <i class="fas fa-clock"></i>
-                                Estimasi
-                            </button>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="detail-label">ID Tiket</div>
+                                    <div class="detail-value">#<%= report.id %></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-label">Kategori</div>
+                                    <div class="detail-value">
+                                        <span class="badge bg-light text-dark rounded-pill px-3 py-2">
+                                            <% if (report.category === 'internet') { %>
+                                                <i class="bi bi-globe me-1"></i>
+                                            <% } else if (report.category === 'wifi') { %>
+                                                <i class="bi bi-wifi me-1"></i>
+                                            <% } else if (report.category === 'perangkat') { %>
+                                                <i class="bi bi-router me-1"></i>
+                                            <% } else { %>
+                                                <i class="bi bi-question-circle me-1"></i>
+                                            <% } %>
+                                            <%= report.category %>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-label">Date Laporan</div>
+                                    <div class="detail-value">
+                                        <i class="bi bi-calendar-event me-2"></i>
+                                        <%= new Date(report.createdAt).toLocaleDateString('id-ID') %>
+                                        <small class="text-muted ms-2"><%= new Date(report.createdAt).toLocaleTimeString('id-ID') %></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-label">Terakhir Diupdate</div>
+                                    <div class="detail-value">
+                                        <i class="bi bi-clock-history me-2"></i>
+                                        <%= new Date(report.updatedAt).toLocaleDateString('id-ID') %>
+                                        <small class="text-muted ms-2"><%= new Date(report.updatedAt).toLocaleTimeString('id-ID') %></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-label">Prioritas</div>
+                                    <div class="detail-value">
+                                        <% if (report.priority === 'high') { %>
+                                            <span class="badge bg-danger rounded-pill px-3 py-2">
+                                                <i class="bi bi-exclamation-triangle me-1"></i> Tinggi
+                                            </span>
+                                        <% } else if (report.priority === 'medium') { %>
+                                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                                                <i class="bi bi-exclamation me-1"></i> Sedang
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge bg-info text-dark rounded-pill px-3 py-2">
+                                                <i class="bi bi-info-circle me-1"></i> Normal
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <div class="detail-label">Deskripsi Masalah</div>
+                                <div class="p-3 bg-light rounded">
+                                    <%= report.description %>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Customer Information -->
-                <div class="info-card">
-                    <h6><i class="fas fa-user me-2"></i>Informasi Customer</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Name:</span>
-                                <span class="info-value"><%= report.name %></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Nomor HP:</span>
-                                <span class="info-value"><%= report.phone %></span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Lokasi:</span>
-                                <span class="info-value"><%= report.location %></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Kategori:</span>
-                                <span class="info-value"><%= report.category %></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Report Details -->
-                <div class="info-card">
-                    <h6><i class="fas fa-file-alt me-2"></i>Detail Laporan</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Date Laporan:</span>
-                                <span class="info-value"><%= new Date(report.createdAt).toLocaleString('id-ID') %></span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-item">
-                                <span class="info-label">Terakhir Diupdate:</span>
-                                <span class="info-value"><%= new Date(report.updatedAt).toLocaleString('id-ID') %></span>
-                            </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="bi bi-arrow-clockwise me-2"></i>Update Status</h5>
+                            <form id="updateStatusForm">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status Laporan</label>
+                                    <div class="status-options">
+                                        <div class="form-check form-check-inline status-radio">
+                                            <input class="form-check-input" type="radio" name="status" id="statusOpen" value="open" <%= report.status === 'open' ? 'checked' : '' %>>
+                                            <label class="form-check-label status-label open" for="statusOpen">
+                                                <i class="bi bi-exclamation-circle"></i> Belum Ditangani
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline status-radio">
+                                            <input class="form-check-input" type="radio" name="status" id="statusInProgress" value="in_progress" <%= report.status === 'in_progress' ? 'checked' : '' %>>
+                                            <label class="form-check-label status-label in-progress" for="statusInProgress">
+                                                <i class="bi bi-gear"></i> Sedang Ditangani
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline status-radio">
+                                            <input class="form-check-input" type="radio" name="status" id="statusResolved" value="resolved" <%= report.status === 'resolved' ? 'checked' : '' %>>
+                                            <label class="form-check-label status-label resolved" for="statusResolved">
+                                                <i class="bi bi-check-circle"></i> Terselesaikan
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline status-radio">
+                                            <input class="form-check-input" type="radio" name="status" id="statusClosed" value="closed" <%= report.status === 'closed' ? 'checked' : '' %>>
+                                            <label class="form-check-label status-label closed" for="statusClosed">
+                                                <i class="bi bi-archive"></i> Ditutup
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Catatan Update</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="4" placeholder="Addkan catatan atau update terkait penanganan laporan..." required></textarea>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="sendNotification" name="sendNotification" checked>
+                                    <label class="form-check-label" for="sendNotification">
+                                        <i class="bi bi-bell me-1"></i> Send notifikasi ke pelanggan
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                                    <i class="bi bi-save me-2"></i> Update Status
+                                </button>
+                            </form>
                         </div>
                     </div>
                     
-                    <div class="description-box">
-                        <h6 class="mb-3"><i class="fas fa-comment me-2"></i>Deskripsi Masalah:</h6>
-                        <p class="mb-0"><%= report.description %></p>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3"><i class="bi bi-info-circle me-2"></i>Informasi Addan</h5>
+                            <div class="info-item mb-3">
+                                <div class="detail-label">Perangkat</div>
+                                <div class="detail-value">
+                                    <% if (report.device_id) { %>
+                                        <a href="/admin/genieacs/device/<%= report.device_id %>" class="text-decoration-none">
+                                            <i class="bi bi-router me-1"></i> <%= report.device_id %>
+                                        </a>
+                                    <% } else { %>
+                                        <span class="text-muted">No data available perangkat</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="detail-label">Lokasi</div>
+                                <div class="detail-value">
+                                    <% if (report.location) { %>
+                                        <i class="bi bi-geo-alt me-1"></i> <%= report.location %>
+                                    <% } else { %>
+                                        <span class="text-muted">No data available lokasi</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Timeline Activity -->
-                <div class="info-card">
-                    <h6><i class="fas fa-history me-2"></i>Riwayat Aktivitas</h6>
+            </div>
+            
+            <!-- Timeline Aktivitas -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Riwayat Aktivitas</h5>
+                        <span class="badge bg-primary rounded-pill"><%= report.notes ? report.notes.length + 1 : 1 %> aktivitas</span>
+                    </div>
+                    
                     <div class="timeline">
                         <!-- Item pertama selalu pembuatan tiket -->
                         <div class="timeline-item">
+                            <div class="timeline-dot">
+                                <i class="bi bi-plus"></i>
+                            </div>
                             <div class="timeline-content">
-                                <div class="timeline-time">
-                                    <i class="fas fa-calendar-plus me-2"></i>
-                                    <%= new Date(report.createdAt).toLocaleString('id-ID') %>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold">Tiket Dibuat</h6>
+                                    <span class="badge bg-primary rounded-pill">Baru</span>
                                 </div>
-                                <h6 class="text-success mb-2"><i class="fas fa-plus-circle me-2"></i>Tiket Dibuat</h6>
-                                <p class="mb-0">Laporan gangguan berhasil dibuat dan menunggu tindak lanjut dari tim teknis.</p>
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-calendar-event me-1"></i> <%= new Date(report.createdAt).toLocaleDateString('id-ID') %>
+                                    <i class="bi bi-clock ms-2 me-1"></i> <%= new Date(report.createdAt).toLocaleTimeString('id-ID') %>
+                                </p>
+                                <div class="timeline-message">
+                                    <p class="mb-0">Laporan gangguan dibuat oleh pelanggan melalui <%= report.source || 'WhatsApp' %>.</p>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Notes/aktivitas lainnya -->
                         <% if (report.notes && report.notes.length > 0) { %>
-                            <% report.notes.forEach(note => { %>
+                            <% report.notes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(note => { %>
                                 <div class="timeline-item">
+                                    <div class="timeline-dot <%= 
+                                        note.status === 'open' ? 'bg-danger' : 
+                                        note.status === 'in_progress' ? 'bg-warning' : 
+                                        note.status === 'resolved' ? 'bg-success' : 
+                                        'bg-secondary' 
+                                    %>">
+                                        <i class="bi <%= 
+                                            note.status === 'open' ? 'bi-exclamation' : 
+                                            note.status === 'in_progress' ? 'bi-gear' : 
+                                            note.status === 'resolved' ? 'bi-check' : 
+                                            'bi-archive' 
+                                        %>"></i>
+                                    </div>
                                     <div class="timeline-content">
-                                        <div class="timeline-time">
-                                            <i class="fas fa-clock me-2"></i>
-                                            <%= new Date(note.timestamp).toLocaleString('id-ID') %>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0 fw-bold">
+                                                Status: 
+                                                <span class="<%= 
+                                                    note.status === 'open' ? 'text-danger' : 
+                                                    note.status === 'in_progress' ? 'text-warning' : 
+                                                    note.status === 'resolved' ? 'text-success' : 
+                                                    'text-secondary' 
+                                                %>">
+                                                    <%= 
+                                                        note.status === 'open' ? 'Belum Ditangani' : 
+                                                        note.status === 'in_progress' ? 'Sedang Ditangani' : 
+                                                        note.status === 'resolved' ? 'Terselesaikan' : 
+                                                        'Ditutup' 
+                                                    %>
+                                                </span>
+                                            </h6>
+                                            <% if (note.admin) { %>
+                                                <span class="badge bg-dark rounded-pill">Admin: <%= note.admin %></span>
+                                            <% } %>
                                         </div>
-                                        <h6 class="text-info mb-2">
-                                            <i class="fas fa-<%= note.status === 'open' ? 'exclamation-circle' : 
-                                                              note.status === 'in_progress' ? 'clock' : 
-                                                              note.status === 'resolved' ? 'check-circle' : 'times-circle' %> me-2"></i>
-                                            Status: <%= note.status === 'open' ? 'Dibuka' : 
-                                                       note.status === 'in_progress' ? 'Sedang Ditangani' : 
-                                                       note.status === 'resolved' ? 'Terselesaikan' : 'Ditutup' %>
-                                        </h6>
-                                        <p class="mb-0"><%= note.content %></p>
+                                        <p class="text-muted small mb-2">
+                                            <i class="bi bi-calendar-event me-1"></i> <%= new Date(note.timestamp).toLocaleDateString('id-ID') %>
+                                            <i class="bi bi-clock ms-2 me-1"></i> <%= new Date(note.timestamp).toLocaleTimeString('id-ID') %>
+                                        </p>
+                                        <div class="timeline-message">
+                                            <p class="mb-0"><%= note.content %></p>
+                                            <% if (note.notificationSent) { %>
+                                                <div class="notification-sent mt-2">
+                                                    <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                                    <small class="text-muted">Notifikasi terkirim ke pelanggan</small>
+                                                </div>
+                                            <% } %>
+                                        </div>
                                     </div>
                                 </div>
                             <% }); %>
+                        <% } else { %>
+                            <div class="empty-timeline text-center py-4">
+                                <i class="bi bi-clock" style="font-size: 2rem; color: #dee2e6;"></i>
+                                <p class="text-muted mt-2 mb-0">Belum ada update aktivitas</p>
+                            </div>
                         <% } %>
                     </div>
                 </div>
-                
-                <!-- Form Komentar (hanya jika tiket belum ditutup) -->
-                <% if (report.status !== 'closed') { %>
-                    <div class="comment-form">
-                        <h6><i class="fas fa-comment-dots me-2"></i>Addkan Komentar</h6>
-                        <form id="commentForm">
-                            <div class="mb-3">
-                                <textarea class="form-control" id="comment" name="comment" rows="4" 
-                                    placeholder="Tulis komentar atau informasi tambahan yang dapat membantu tim teknis..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-2"></i>Send Komentar
-                            </button>
-                        </form>
-                    </div>
-                <% } %>
-                
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <a href="/customer/trouble/list" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back ke Register Laporan
-                    </a>
-                    
-                    <% if (report.status === 'resolved') { %>
-                        <button id="closeReportBtn" class="btn btn-success">
-                            <i class="fas fa-check-circle me-2"></i>Close Laporan
-                        </button>
-                    <% } %>
-                </div>
             </div>
             
-            <!-- Footer Section -->
-            <div class="footer-section">
-                <p class="mb-0"><%= footerInfo %></p>
+        </main>
+    </div>
+</div>
+
+<!-- Modal Notifikasi -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationModalLabel">Notifikasi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="notificationMessage">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="modalOkButton">OK</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal Notifikasi -->
-    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="notificationModalLabel">
-                        <i class="fas fa-bell me-2"></i>Notifikasi
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="notificationMessage">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="modalOkButton">
-                        <i class="fas fa-check me-2"></i>OK
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<style>
+    /* Status Radio Buttons */
+    .status-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .status-radio {
+        margin: 0;
+    }
+    .status-radio input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    .status-label {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        background: #f8f9fa;
+    }
+    .status-label.open {
+        color: #dc3545;
+    }
+    .status-label.in-progress {
+        color: #ffc107;
+    }
+    .status-label.resolved {
+        color: #198754;
+    }
+    .status-label.closed {
+        color: #6c757d;
+    }
+    .status-radio input:checked + .status-label.open {
+        background: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    .status-radio input:checked + .status-label.in-progress {
+        background: #ffc107;
+        color: #212529;
+        border-color: #ffc107;
+    }
+    .status-radio input:checked + .status-label.resolved {
+        background: #198754;
+        color: white;
+        border-color: #198754;
+    }
+    .status-radio input:checked + .status-label.closed {
+        background: #6c757d;
+        color: white;
+        border-color: #6c757d;
+    }
+    
+    /* Timeline Styling */
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 12px;
+        width: 2px;
+        background: linear-gradient(to bottom, #dee2e6 0%, #3b7ddd 100%);
+        z-index: 1;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        padding-left: 40px;
+        animation: fadeInRight 0.5s ease-in-out;
+    }
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        text-align: center;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .timeline-item:hover .timeline-dot {
+        transform: scale(1.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    @keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    .timeline-content {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .timeline-content:hover {
+        background-color: #fff;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    }
+    .notification-sent {
+        padding: 5px 10px;
+        background: rgba(25, 135, 84, 0.1);
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+    }
+    .empty-timeline {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .timeline-message {
+        background: white;
+        border-radius: 6px;
+        padding: 10px;
+        border-left: 3px solid #3b7ddd;
+    }
+</style>
 
-    <script src="/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
-            const notificationMessage = document.getElementById('notificationMessage');
-            const modalOkButton = document.getElementById('modalOkButton');
+<!-- EJS Context Setup via Meta Tags -->
+<script type="text/javascript">
+    // Read values from meta tags to avoid EJS in JavaScript
+    window.isTechnicianView = document.querySelector('meta[name="technician-view"]').content === 'true';
+    window.reportId = document.querySelector('meta[name="report-id"]').content;
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const updateStatusForm = document.getElementById('updateStatusForm');
+        const notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+        const notificationMessage = document.getElementById('notificationMessage');
+        const modalOkButton = document.getElementById('modalOkButton');
+        
+        // Animasi untuk status radio buttons
+        const statusRadios = document.querySelectorAll('.status-radio input');
+        console.log('Found', statusRadios.length, 'radio buttons');
+        
+        statusRadios.forEach(radio => {
+            console.log('Setting up radio:', radio.id, 'value:', radio.value, 'checked:', radio.checked);
             
-            // Form komentar
-            const commentForm = document.getElementById('commentForm');
-            if (commentForm) {
-                commentForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const comment = document.getElementById('comment').value;
-                    
-                    fetch('/customer/trouble/comment/<%= report.id %>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ comment })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            notificationMessage.innerHTML = `
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i>${data.message}
-                                </div>
-                            `;
-                            
-                            // Reset form dan refresh halaman setelah berhasil
-                            commentForm.reset();
-                            modalOkButton.addEventListener('click', function() {
-                                window.location.reload();
-                            }, { once: true });
-                        } else {
-                            notificationMessage.innerHTML = `
-                                <div class="alert alert-danger">
-                                    <i class="fas fa-exclamation-circle me-2"></i>${data.message}
-                                </div>
-                            `;
-                        }
-                        
-                        notificationModal.show();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        notificationMessage.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Terjadi kesalahan saat mengirim komentar. Silakan coba lagi.
-                            </div>
-                        `;
-                        notificationModal.show();
-                    });
-                });
-            }
+            radio.addEventListener('change', function() {
+                console.log('Radio changed to:', this.value, 'checked:', this.checked);
+                
+                // Highlight label yang dipilih dengan animasi
+                const label = this.nextElementSibling;
+                label.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                    label.classList.remove('animate__animated', 'animate__pulse');
+                }, 500);
+            });
             
-            // Tombol tutup laporan
-            const closeReportBtn = document.getElementById('closeReportBtn');
-            if (closeReportBtn) {
-                closeReportBtn.addEventListener('click', function() {
-                    fetch('/customer/trouble/close/<%= report.id %>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            notificationMessage.innerHTML = `
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i>${data.message}
-                                </div>
-                                <p class="mb-0">Terima kasih telah mengkonfirmasi bahwa masalah Anda telah terselesaikan.</p>
-                            `;
-                            
-                            modalOkButton.addEventListener('click', function() {
-                                window.location.reload();
-                            }, { once: true });
-                        } else {
-                            notificationMessage.innerHTML = `
-                                <div class="alert alert-danger">
-                                    <i class="fas fa-exclamation-circle me-2"></i>${data.message}
-                                </div>
-                            `;
-                        }
-                        
-                        notificationModal.show();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        notificationMessage.innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Terjadi kesalahan saat menutup laporan. Silakan coba lagi.
-                            </div>
-                        `;
-                        notificationModal.show();
-                    });
-                });
-            }
+            // Also add click handler to label for better UX
+            const label = radio.nextElementSibling;
+            label.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Label clicked for:', radio.value);
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            });
         });
-    </script>
+        
+        // Handle form submission
+        updateStatusForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const statusRadio = document.querySelector('input[name="status"]:checked');
+            const status = statusRadio ? statusRadio.value : '';
+            const notes = document.getElementById('notes').value;
+            const sendNotification = document.getElementById('sendNotification').checked;
+            
+            // Debug logging
+            console.log('Form submission debug:');
+            console.log('  - Status radio found:', statusRadio);
+            console.log('  - Status value:', status);
+            console.log('  - Notes:', notes);
+            console.log('  - Send notification:', sendNotification);
+            
+            // Validate required fields
+            if (!status) {
+                alert('Silakan pilih status laporan');
+                return;
+            }
+            
+            if (!notes.trim()) {
+                alert('Silakan tambahkan catatan update');
+                return;
+            }
+            
+            // Determine parameter name based on context
+            const notesParam = window.isTechnicianView ? 'technician_notes' : 'notes';
+            
+            // Prepare body data
+            const bodyData = { 
+                status, 
+                [notesParam]: notes,
+                sendNotification
+            };
+            
+            console.log('Body data to send:', bodyData);
+            
+            // Tampilkan loading state pada button
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Memproses...';
+            submitBtn.disabled = true;
+            
+            
+            // Determine update URL based on context
+            const updateUrl = window.isTechnicianView ? 
+                '/technician/troubletickets/' + window.reportId + '/update' : 
+                '/admin/trouble/update-status/' + window.reportId;
+            
+            fetch(updateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Backkan button ke state normal
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                if (data.success) {
+                    notificationMessage.innerHTML = 
+                        '<div class="alert alert-success">' +
+                        '<i class="bi bi-check-circle-fill me-2"></i> ' + data.message +
+                        '</div>';
+                    
+                    // Reset form dan refresh halaman setelah berhasil
+                    document.getElementById('notes').value = '';
+                    modalOkButton.addEventListener('click', function() {
+                        window.location.reload();
+                    }, { once: true });
+                } else {
+                    notificationMessage.innerHTML = 
+                        '<div class="alert alert-danger">' +
+                        '<i class="bi bi-exclamation-triangle-fill me-2"></i> ' + data.message +
+                        '</div>';
+                }
+                
+                notificationModal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                notificationMessage.innerHTML = 
+                    '<div class="alert alert-danger">' +
+                    'Terjadi kesalahan saat mengupdate status. Silakan coba lagi.' +
+                    '</div>';
+                notificationModal.show();
+            });
+        });
+    });
+</script>
+
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

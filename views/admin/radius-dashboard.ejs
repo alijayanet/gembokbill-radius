@@ -222,6 +222,18 @@
                 <div class="stat-label">Total Users</div>
             </div>
             <div class="stat-card">
+                <div class="stat-value" id="profileCount">-</div>
+                <div class="stat-label">Total Profiles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeSessions">-</div>
+                <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="hotspotUsersCount">-</div>
+                <div class="stat-label">Hotspot Users</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-value" id="connectionStatus">
                     <% if (testResult.success) { %>
                         <span class="status-badge status-connected">Connected</span>
@@ -302,6 +314,7 @@
                         <th>Upload Speed</th>
                         <th>Rate Limit</th>
                         <th>Priority</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="profilesTable">
@@ -450,6 +463,42 @@
         </div>
     </div>
 
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit RADIUS Profile</h3>
+                <button class="close-btn" onclick="closeModal('editProfileModal')">&times;</button>
+            </div>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label class="form-label">Profile Name</label>
+                    <input type="text" class="form-input" id="editProfileName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Download Speed</label>
+                    <input type="text" class="form-input" id="editDownloadSpeed" required placeholder="e.g., 10M">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Upload Speed</label>
+                    <input type="text" class="form-input" id="editUploadSpeed" required placeholder="e.g., 10M">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rate Limit (Optional)</label>
+                    <input type="text" class="form-input" id="editRateLimit" placeholder="e.g., 10M/10M">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Burst Limit (Optional)</label>
+                    <input type="text" class="form-input" id="editBurstLimit" placeholder="e.g., 15M/15M">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <input type="number" class="form-input" id="editPriority" value="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Profile</button>
+            </form>
+        </div>
+    </div>
+
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -540,6 +589,10 @@
         function openSettingsModal() {
             $('#settingsModal').css('display', 'flex');
             loadSettings();
+        }
+
+        function openModal(modalId) {
+            $(`#${modalId}`).css('display', 'flex');
         }
 
         function closeModal(modalId) {
@@ -760,9 +813,10 @@
                 const result = await response.json();
                 if (result.success) {
                     const profiles = result.profiles || [];
+                    $('#profileCount').text(profiles.length);
                     let html = '';
                     if (profiles.length === 0) {
-                        html = '<tr><td colspan="5" style="text-align: center;">No RADIUS profiles found</td></tr>';
+                        html = '<tr><td colspan="6" style="text-align: center;">No RADIUS profiles found</td></tr>';
                     } else {
                         profiles.forEach(profile => {
                             html += `
@@ -772,6 +826,14 @@
                                     <td>${profile.upload_speed}</td>
                                     <td>${profile.rate_limit || '-'}</td>
                                     <td>${profile.priority}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editProfile(${profile.id})">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteProfile(${profile.id}, '${profile.name}')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             `;
                         });
@@ -797,6 +859,7 @@
                 const result = await response.json();
                 if (result.success) {
                     const sessions = result.sessions || [];
+                    $('#activeSessions').text(sessions.length);
                     let html = '';
                     if (sessions.length === 0) {
                         html = '<tr><td colspan="8" style="text-align: center;">No accounting data found</td></tr>';
@@ -881,6 +944,7 @@
                 const result = await response.json();
                 if (result.success) {
                     const users = result.users || [];
+                    $('#hotspotUsersCount').text(users.length);
                     let html = '';
                     if (users.length === 0) {
                         html = '<tr><td colspan="5" style="text-align: center;">No active hotspot users found</td></tr>';
@@ -1047,6 +1111,85 @@
                 }
             } catch (error) {
                 showAlert(`Error adding user: ${error.message}`, 'error');
+            }
+        });
+
+        async function deleteProfile(profileId, profileName) {
+            if (!confirm(`Are you sure you want to delete profile "${profileName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/radius/profiles/${profileId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showAlert(`Profile "${profileName}" deleted successfully`, 'success');
+                    loadProfiles();
+                } else {
+                    showAlert(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error deleting profile: ${error.message}`, 'error');
+            }
+        }
+
+        let editingProfileId = null;
+
+        async function editProfile(profileId) {
+            try {
+                const response = await fetch(`/admin/radius/profiles/${profileId}`);
+                const result = await response.json();
+                if (result.success) {
+                    const profile = result.profile;
+                    editingProfileId = profileId;
+                    $('#editProfileName').val(profile.name);
+                    $('#editDownloadSpeed').val(profile.download_speed);
+                    $('#editUploadSpeed').val(profile.upload_speed);
+                    $('#editRateLimit').val(profile.rate_limit || '');
+                    $('#editBurstLimit').val(profile.burst_limit || '');
+                    $('#editPriority').val(profile.priority);
+                    openModal('editProfileModal');
+                } else {
+                    showAlert(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error loading profile: ${error.message}`, 'error');
+            }
+        }
+
+        $('#editProfileForm').on('submit', async function(e) {
+            e.preventDefault();
+            const profileData = {
+                name: $('#editProfileName').val(),
+                download_speed: $('#editDownloadSpeed').val(),
+                upload_speed: $('#editUploadSpeed').val(),
+                rate_limit: $('#editRateLimit').val() || null,
+                burst_limit: $('#editBurstLimit').val() || null,
+                priority: parseInt($('#editPriority').val())
+            };
+
+            try {
+                const response = await fetch(`/admin/radius/profiles/${editingProfileId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('Profile updated successfully', 'success');
+                    closeModal('editProfileModal');
+                    $('#editProfileForm')[0].reset();
+                    editingProfileId = null;
+                    loadProfiles();
+                } else {
+                    showAlert(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error updating profile: ${error.message}`, 'error');
             }
         });
 
