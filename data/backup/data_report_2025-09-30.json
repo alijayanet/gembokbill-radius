@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-09-30T05:41:15.430Z",
+  "summary": {
+    "totalCustomers": 3,
+    "totalPackages": 8,
+    "totalTechnicians": 5,
+    "totalODPs": 3
+  },
+  "customers": [
+    {
+      "id": 7,
+      "username": "cust_7890_447089_7lou",
+      "name": "Test Customer 1",
+      "status": "active",
+      "package": "Paket Internet Dasar",
+      "hasCoordinates": true
+    },
+    {
+      "id": 8,
+      "username": "cust_7891_447155_1oqx",
+      "name": "Test Customer 2",
+      "status": "active",
+      "package": "Paket Internet Standard",
+      "hasCoordinates": true
+    },
+    {
+      "id": 9,
+      "username": "cust_0111_447204_y91g",
+      "name": "santo@gembok.com",
+      "status": "active",
+      "package": "SOSIAL",
+      "hasCoordinates": true
+    }
+  ],
+  "packages": [
+    {
+      "id": 1,
+      "name": "Paket Internet Dasar",
+      "price": 100000
+    },
+    {
+      "id": 2,
+      "name": "Paket Internet Standard",
+      "price": 150000
+    },
+    {
+      "id": 3,
+      "name": "Paket Internet Premium",
+      "price": 250000
+    },
+    {
+      "id": 4,
+      "name": "BRONZE",
+      "price": 110000
+    },
+    {
+      "id": 7,
+      "name": "SOSIAL",
+      "price": 60000
+    },
+    {
+      "id": 16,
+      "name": "testing",
+      "price": 70000
+    },
+    {
+      "id": 17,
+      "name": "nyoba",
+      "price": 65000
+    },
+    {
+      "id": 19,
+      "name": "nyoba2",
+      "price": 65000
+    }
+  ],
+  "technicians": [
+    {
+      "id": 1,
+      "name": "Administrator",
+      "phone": "081234567891"
+    },
+    {
+      "id": 2,
+      "name": "Teknisi 6656",
+      "phone": "62838076656"
+    },
+    {
+      "id": 3,
+      "name": "Teknisi 0947",
+      "phone": "62822180947"
+    },
+    {
+      "id": 124,
+      "name": "Teknisi 6xxx",
+      "phone": "62838076656xxx"
+    },
+    {
+      "id": 125,
+      "name": "Teknisi 7xxx",
+      "phone": "62822180947xxx"
+    }
+  ],
+  "odps": [
+    {
+      "id": 4,
+      "name": "ODP-SERVER",
+      "code": "ODP01",
+      "capacity": 64,
+      "used_ports": 0,
+      "status": "active"
+    },
+    {
+      "id": 5,
+      "name": "ODP-KAPRAN",
+      "code": "ODP02",
+      "capacity": 64,
+      "used_ports": 0,
+      "status": "active"
+    },
+    {
+      "id": 8,
+      "name": "TIANG-KESIN",
+      "code": "T01",
+      "capacity": 0,
+      "used_ports": 0,
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "timestamp": "2025-09-30T05:30:37.388Z",
+  "local": [
+    {
+      "table_name": "customers",
+      "count": 3,
+      "description": "customers"
+    },
+    {
+      "table_name": "packages",
+      "count": 8,
+      "description": "packages"
+    },
+    {
+      "table_name": "technicians",
+      "count": 3,
+      "description": "technicians"
+    },
+    {
+      "table_name": "odps",
+      "count": 3,
+      "description": "odps"
+    },
+    {
+      "table_name": "invoices",
+      "count": 0,
+      "description": "invoices"
+    }
+  ],
+  "server": [
+    {
+      "table_name": "customers",
+      "count": 3,
+      "description": "customers"
+    },
+    {
+      "table_name": "packages",
+      "count": 8,
+      "description": "packages"
+    },
+    {
+      "table_name": "technicians",
+      "count": 3,
+      "description": "technicians"
+    },
+    {
+      "table_name": "odps",
+      "count": 3,
+      "description": "odps"
+    },
+    {
+      "table_name": "invoices",
+      "count": 0,
+      "description": "invoices"
+    }
+  ],
+  "differences": [],
+  "recommendations": [
+    {
+      "action": "sync",
+      "reason": "Data sudah sinkron",
+      "suggestion": "Tidak perlu sinkronisasi"
+    }
+  ]
+}
