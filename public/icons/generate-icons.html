@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512" style="display: none;"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+        gradient.addColorStop(0, '#28a745');
+        gradient.addColorStop(1, '#20c997');
+        
+        // Draw background
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 512, 512);
+        
+        // Draw circle
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(256, 180, 60, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw money emoji
+        ctx.font = '80px Arial';
+        ctx.fillStyle = '#28a745';
+        ctx.textAlign = 'center';
+        ctx.fillText('💰', 256, 200);
+        
+        // Draw letter C
+        ctx.font = 'bold 200px Arial';
+        ctx.fillStyle = 'white';
+        ctx.fillText('C', 256, 320);
+        
+        // Convert to different sizes and download
+        const sizes = [16, 32, 72, 96, 128, 144, 152, 192, 384, 512];
+        
+        sizes.forEach(size => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = size;
+            tempCanvas.height = size;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCtx.drawImage(canvas, 0, 0, size, size);
+            
+            const link = document.createElement('a');
+            link.download = 'icon-' + size + 'x' + size + '.png';
+            link.href = tempCanvas.toDataURL();
+            link.click();
+        });
+        
+        console.log('Icons generated successfully!');
+    </script>
+</body>
+</html>

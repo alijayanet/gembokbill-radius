@@ -1,0 +1,697 @@
+const express = require('express');
+const router = express.Router();
+const { adminAuth } = require('./adminAuth');
+const { getDevicesCached } = require('../config/genieacs');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+
+// Helper function untuk menentukan status device
+function getDeviceStatus(lastInform) {
+    if (!lastInform) return 'Unknown';
+    
+    try {
+        const lastInformTime = new Date(lastInform).getTime();
+        const now = Date.now();
+        const diffMs = now - lastInformTime;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        
+        // Device dianggap online jika last inform < 1 jam
+        if (diffHours < 1) {
+            return 'Online';
+        } else if (diffHours < 24) {
+            return 'Warning';
+        } else {
+            return 'Offline';
+        }
+    } catch (error) {
+        return 'Unknown';
+    }
+}
+
+// Helper function untuk mendapatkan parameter dari device
+function getParameterValue(device, parameterName) {
+    if (!device || !parameterName) return null;
+    
+    // Cek direct property dulu
+    if (device[parameterName] !== undefined) {
+        const value = device[parameterName];
+        // Jika ada _value, ambil itu
+        if (value && typeof value === 'object' && value._value !== undefined) {
+            return value._value;
+        }
+        // Jika langsung ada nilai
+        if (typeof value === 'string' || typeof value === 'number') {
+            return value;
+        }
+        return value;
+    }
+    
+    // Cek nested path
+    const pathParts = parameterName.split('.');
+    let current = device;
+    
+    for (const part of pathParts) {
+        if (current && typeof current === 'object' && current[part] !== undefined) {
+            current = current[part];
+        } else {
+            return null;
+        }
+    }
+    
+    // Jika ada _value, ambil itu
+    if (current && typeof current === 'object' && current._value !== undefined) {
+        return current._value;
+    }
+    
+    // Jika langsung ada nilai
+    if (typeof current === 'string' || typeof current === 'number') {
+        return current;
+    }
+    
+    return current;
+}
+
+// Helper function untuk mendapatkan koordinat dari customer
+async function getCustomerCoordinates(customerId) {
+    return new Promise((resolve, reject) => {
+        const dbPath = path.join(__dirname, '../data/billing.db');
+        const db = new sqlite3.Database(dbPath);
+        
+        db.get(`
+            SELECT latitude, longitude, name, phone, pppoe_username, address, package_name, status
+            FROM customers 
+            WHERE id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL
+        `, [customerId], (err, row) => {
+            db.close();
+            if (err) {
+                console.error('Error getting customer coordinates:', err);
+                resolve(null);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+// API endpoint untuk mapping data baru
+router.get('/api/mapping/new', adminAuth, async (req, res) => {
+    try {
+        console.log('🚀 New Mapping API - Loading network data...');
+        
+        const dbPath = path.join(__dirname, '../data/billing.db');
+        const db = new sqlite3.Database(dbPath);
+        
+        // Load data secara parallel untuk performa maksimal
+        const [
+            customers,
+            odps,
+            cables,
+            backboneCables,
+            onuDevices
+        ] = await Promise.all([
+            // Load customers
+            new Promise((resolve, reject) => {
+                console.log('🔍 Loading customers from database...');
+                db.all(`
+                    SELECT id, name, phone, pppoe_username, latitude, longitude, 
+                           address, package_id, status, join_date, odp_id
+                    FROM customers 
+                    WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+                    ORDER BY name
+                `, [], (err, rows) => {
+                    if (err) {
+                        console.error('❌ Error loading customers:', err);
+                        resolve([]);
+                    } else {
+                        console.log(`✅ Found ${rows ? rows.length : 0} customers with coordinates`);
+                        console.log('📋 Sample customers:', rows?.slice(0, 2));
+                        resolve(rows || []);
+                    }
+                });
+            }),
+            
+            // Load ODPs
+            new Promise((resolve, reject) => {
+                console.log('🔍 Loading ODPs from database...');
+                db.all(`
+                    SELECT id, name, code, address, latitude, longitude, 
+                           capacity, used_ports, status, installation_date, parent_odp_id
+                    FROM odps 
+                    WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+                    ORDER BY name
+                `, [], (err, rows) => {
+                    if (err) {
+                        console.error('❌ Error loading ODPs:', err);
+                        resolve([]);
+                    } else {
+                        console.log(`✅ Found ${rows ? rows.length : 0} ODPs with coordinates`);
+                        console.log('📋 Sample ODPs:', rows?.slice(0, 2));
+                        resolve(rows || []);
+                    }
+                });
+            }),
+            
+            // Load access cables (customer to ODP connections)
+            new Promise((resolve, reject) => {
+                db.all(`
+                    SELECT cr.id, cr.customer_id, cr.odp_id, cr.cable_length, cr.cable_type, 
+                           cr.status, cr.port_number, cr.notes,
+                           c.name as customer_name, c.latitude as customer_lat, c.longitude as customer_lng,
+                           o.name as odp_name, o.latitude as odp_lat, o.longitude as odp_lng
+                    FROM cable_routes cr
+                    LEFT JOIN customers c ON cr.customer_id = c.id
+                    LEFT JOIN odps o ON cr.odp_id = o.id
+                    WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL 
+                    AND o.latitude IS NOT NULL AND o.longitude IS NOT NULL
+                    ORDER BY cr.id
+                `, [], (err, rows) => {
+                    if (err) {
+                        console.error('Error loading cables:', err);
+                        resolve([]);
+                    } else {
+                        // Generate coordinates from customer to ODP
+                        const cablesWithCoords = (rows || []).map(cable => {
+                            const coordinates = [
+                                [cable.customer_lat, cable.customer_lng],
+                                [cable.odp_lat, cable.odp_lng]
+                            ];
+                            
+                            return {
+                                id: cable.id,
+                                name: `Cable ${cable.id}`,
+                                from: cable.customer_name,
+                                to: cable.odp_name,
+                                coordinates: coordinates,
+                                status: cable.status,
+                                type: 'Access Cable',
+                                length: cable.cable_length,
+                                portNumber: cable.port_number,
+                                notes: cable.notes
+                            };
+                        });
+                        
+                        resolve(cablesWithCoords);
+                    }
+                });
+            }),
+            
+            // Load backbone cables (ODP to ODP connections)
+            new Promise((resolve, reject) => {
+                db.all(`
+                    SELECT oc.id, oc.from_odp_id, oc.to_odp_id, oc.connection_type, 
+                           oc.cable_length, oc.cable_capacity, oc.status, oc.notes,
+                           o1.name as from_odp_name, o1.latitude as from_lat, o1.longitude as from_lng,
+                           o2.name as to_odp_name, o2.latitude as to_lat, o2.longitude as to_lng
+                    FROM odp_connections oc
+                    LEFT JOIN odps o1 ON oc.from_odp_id = o1.id
+                    LEFT JOIN odps o2 ON oc.to_odp_id = o2.id
+                    WHERE o1.latitude IS NOT NULL AND o1.longitude IS NOT NULL 
+                    AND o2.latitude IS NOT NULL AND o2.longitude IS NOT NULL
+                    ORDER BY oc.id
+                `, [], (err, rows) => {
+                    if (err) {
+                        console.error('Error loading backbone cables:', err);
+                        resolve([]);
+                    } else {
+                        // Generate coordinates from ODP to ODP
+                        const backboneWithCoords = (rows || []).map(cable => {
+                            const coordinates = [
+                                [cable.from_lat, cable.from_lng],
+                                [cable.to_lat, cable.to_lng]
+                            ];
+                            
+                            return {
+                                id: cable.id,
+                                name: `Backbone ${cable.id}`,
+                                from: cable.from_odp_name,
+                                to: cable.to_odp_name,
+                                coordinates: coordinates,
+                                type: 'Backbone Connection',
+                                length: cable.cable_length,
+                                capacity: cable.cable_capacity,
+                                status: cable.status,
+                                notes: cable.notes
+                            };
+                        });
+                        
+                        resolve(backboneWithCoords);
+                    }
+                });
+            }),
+            
+            // Load ONU devices from GenieACS (with limit for performance)
+            new Promise(async (resolve, reject) => {
+                try {
+                    console.log('🔍 Loading ONU devices from GenieACS...');
+                    console.log('🔍 GenieACS URL:', process.env.GENIEACS_URL || 'http://192.168.8.151:7557');
+                    
+                    const devicesRaw = await getDevicesCached();
+                    console.log(`📊 Found ${devicesRaw.length} devices from GenieACS`);
+                    
+                    // Force log to see if this is executing
+                    console.log('🚀 BACKEND: GenieACS devices loading started');
+                    
+                    // Debug: Log sample raw device
+                    if (devicesRaw.length > 0) {
+                        console.log('🔍 Sample raw device from GenieACS:', JSON.stringify(devicesRaw[0], null, 2));
+                    }
+                    
+                    // Limit devices untuk performa (max 1000 devices)
+                    const maxDevices = 1000;
+                    const devicesToProcess = devicesRaw.length > maxDevices ? 
+                        devicesRaw.slice(0, maxDevices) : devicesRaw;
+                    
+                    if (devicesRaw.length > maxDevices) {
+                        console.log(`⚠️ Limiting to ${maxDevices} devices for performance`);
+                    }
+                    
+                    const devicesWithCoords = [];
+                    console.log(`🚀 BACKEND: Starting to process ${devicesToProcess.length} devices`);
+                    
+                    for (const device of devicesToProcess) {
+                        console.log(`🔍 Processing device: ${device._id}`);
+                        
+                        // Debug: Log device structure
+                        console.log(`🔍 Device keys:`, Object.keys(device));
+                        console.log(`🔍 VirtualParameters keys:`, device.VirtualParameters ? Object.keys(device.VirtualParameters) : 'N/A');
+                        
+                        // Cari customer berdasarkan PPPoE username atau serial number
+                        let customerData = null;
+                        let coordinateSource = 'none';
+                        
+                        // 1. Coba cari berdasarkan PPPoE username (check multiple paths)
+                        const pppoeUsername1 = getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username');
+                        const pppoeUsername2 = getParameterValue(device, 'VirtualParameters.pppoeUsername');
+                        const pppoeUsername = pppoeUsername2 || pppoeUsername1;
+                        
+                        console.log(`📋 PPPoE Username (path1): ${pppoeUsername1}`);
+                        console.log(`📋 PPPoE Username (path2): ${pppoeUsername2}`);
+                        console.log(`📋 PPPoE Username (final): ${pppoeUsername}`);
+                        
+                        // Special logging for "santo" customer
+                        if (pppoeUsername && pppoeUsername.includes('santo')) {
+                            console.log(`🎯 Found device with "santo" PPPoE: ${pppoeUsername}`);
+                            console.log(`🎯 Device ID: ${device._id}`);
+                        }
+                        
+                        if (pppoeUsername && pppoeUsername !== '-') {
+                            const customer = await new Promise((resolve, reject) => {
+                                db.get(`
+                                    SELECT c.id, c.name, c.phone, c.pppoe_username, c.latitude, c.longitude, 
+                                           c.address, c.status, c.package_id,
+                                           p.name as package_name,
+                                           o.name as odp_name
+                                    FROM customers c
+                                    LEFT JOIN packages p ON c.package_id = p.id
+                                    LEFT JOIN odps o ON c.odp_id = o.id
+                                    WHERE c.pppoe_username = ? AND c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+                                `, [pppoeUsername], (err, row) => {
+                                    if (err) {
+                                        console.error('Error finding customer by PPPoE:', err);
+                                        resolve(null);
+                                    } else {
+                                        resolve(row);
+                                    }
+                                });
+                            });
+                            
+                            if (customer) {
+                                customerData = customer;
+                                coordinateSource = 'pppoe_username';
+                                console.log(`✅ Found customer by PPPoE: ${customer.name}`);
+                                
+                                // Special logging for "santo" customer
+                                if (pppoeUsername && pppoeUsername.includes('santo')) {
+                                    console.log(`🎯 Successfully matched "santo" device with customer: ${customer.name}`);
+                                    console.log(`🎯 Customer coordinates: ${customer.latitude}, ${customer.longitude}`);
+                                }
+                            } else {
+                                console.log(`❌ No customer found for PPPoE: ${pppoeUsername}`);
+                                
+                                // Special logging for "santo" customer
+                                if (pppoeUsername && pppoeUsername.includes('santo')) {
+                                    console.log(`🎯 Customer "santo" not found in database with PPPoE: ${pppoeUsername}`);
+                                    console.log(`🎯 This means the device exists in GenieACS but customer data is missing`);
+                                }
+                            }
+                        }
+                        
+                        // 2. Coba cari berdasarkan serial number (check multiple paths)
+                        if (!customerData) {
+                            const serialNumber1 = getParameterValue(device, 'Device.DeviceInfo.SerialNumber');
+                            const serialNumber2 = getParameterValue(device, 'VirtualParameters.getSerialNumber');
+                            const serialNumber = serialNumber2 || serialNumber1;
+                            
+                            console.log(`📋 Serial Number (path1): ${serialNumber1}`);
+                            console.log(`📋 Serial Number (path2): ${serialNumber2}`);
+                            console.log(`📋 Serial Number (final): ${serialNumber}`);
+                            
+                            if (serialNumber && serialNumber !== '-') {
+                                const customer = await new Promise((resolve, reject) => {
+                                    db.get(`
+                                        SELECT c.id, c.name, c.phone, c.pppoe_username, c.latitude, c.longitude, 
+                                               c.address, c.status, c.package_id,
+                                               p.name as package_name,
+                                               o.name as odp_name
+                                        FROM customers c
+                                        LEFT JOIN packages p ON c.package_id = p.id
+                                        LEFT JOIN odps o ON c.odp_id = o.id
+                                        WHERE c.serial_number = ? AND c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+                                    `, [serialNumber], (err, row) => {
+                                        if (err) {
+                                            console.error('Error finding customer by serial:', err);
+                                            resolve(null);
+                                        } else {
+                                            resolve(row);
+                                        }
+                                    });
+                                });
+                                
+                                if (customer) {
+                                    customerData = customer;
+                                    coordinateSource = 'serial_number';
+                                    console.log(`✅ Found customer by serial: ${customer.name}`);
+                                } else {
+                                    console.log(`❌ No customer found for serial: ${serialNumber}`);
+                                }
+                            }
+                        }
+                        
+                        console.log(`📊 Final customer data: ${customerData ? customerData.name : 'None'}`);
+                        
+                        // Jika customer ditemukan, tambahkan device dengan koordinat
+                        if (customerData) {
+                            const deviceWithCoords = {
+                                id: device._id,
+                                serialNumber: getParameterValue(device, 'VirtualParameters.getSerialNumber') || getParameterValue(device, 'Device.DeviceInfo.SerialNumber') || 'N/A',
+                                name: getParameterValue(device, 'DeviceID.ProductClass') || getParameterValue(device, 'Device.DeviceInfo.ProductClass') || 'N/A',
+                                model: getParameterValue(device, 'DeviceID.ProductClass') || getParameterValue(device, 'Device.DeviceInfo.ModelName') || 'N/A',
+                                status: getDeviceStatus(device._lastInform),
+                                ssid: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID') || 'N/A',
+                                latitude: customerData.latitude,
+                                longitude: customerData.longitude,
+                                customerName: customerData.name,
+                                customerPhone: customerData.phone,
+                                customerPPPoE: customerData.pppoe_username,
+                                customerAddress: customerData.address,
+                                customerPackage: customerData.package_name,
+                                customerStatus: customerData.status,
+                                odpName: customerData.odp_name || 'N/A',
+                                coordinateSource: coordinateSource,
+                                
+                                // Essential GenieACS Data (optimized)
+                                genieacsData: {
+                                    // Device Basic Info (essential only)
+                                    manufacturer: getParameterValue(device, 'DeviceID.Manufacturer') || 'N/A',
+                                    hardwareVersion: getParameterValue(device, 'InternetGatewayDevice.DeviceInfo.HardwareVersion') || 'N/A',
+                                    softwareVersion: getParameterValue(device, 'InternetGatewayDevice.DeviceInfo.SoftwareVersion') || 'N/A',
+                                    deviceUptime: getParameterValue(device, 'VirtualParameters.getdeviceuptime') || getParameterValue(device, 'InternetGatewayDevice.DeviceInfo.UpTime') || 0,
+                                    
+                                    // PPPoE Connection Info (essential)
+                                    pppoeUsername: getParameterValue(device, 'VirtualParameters.pppoeUsername') || 
+                                                 getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username') || 'N/A',
+                                    pppoeIP: getParameterValue(device, 'VirtualParameters.pppoeIP') || 'N/A',
+                                    pppoeMac: getParameterValue(device, 'VirtualParameters.pppoeMac') || 'N/A',
+                                    pppUptime: getParameterValue(device, 'VirtualParameters.getpppuptime') || 0,
+                                    
+                                    // Optical Power (essential)
+                                    rxPower: getParameterValue(device, 'VirtualParameters.RXPower') || 
+                                            getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.X_HW_GPONInterfaceConfig.RXPower') ||
+                                            getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower') ||
+                                            getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.RXPower') || 'N/A',
+                                    
+                                    txPower: getParameterValue(device, 'VirtualParameters.TXPower') || 
+                                            getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.X_HW_GPONInterfaceConfig.TXPower') ||
+                                            getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower') || 'N/A',
+                                    
+                                    // Temperature (essential)
+                                    temperature: getParameterValue(device, 'VirtualParameters.gettemp') || 
+                                               getParameterValue(device, 'InternetGatewayDevice.DeviceInfo.Temperature') || 'N/A',
+                                    
+                                    // WiFi Information (essential)
+                                    wifiPassword: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase') || 'N/A',
+                                    connectedDevices: getParameterValue(device, 'VirtualParameters.activedevices') || 0,
+                                    wifiChannel: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel') || 'N/A',
+                                    wifiPower: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.TransmitPower') || 'N/A',
+                                    
+                                    // LAN Information (essential)
+                                    lanIP: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress.1.IPAddress') || 'N/A',
+                                    lanMac: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceMACAddress') || 'N/A',
+                                    dhcpEnabled: getParameterValue(device, 'InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable') || false,
+                                    
+                                    // Connection Status (essential)
+                                    connectionStatus: getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus') || 'N/A',
+                                    externalIP: getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress') || 'N/A',
+                                    
+                                    // VLAN Information (essential)
+                                    vlanID: getParameterValue(device, 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.VLANID') || 'N/A',
+                                    
+                                    // Device Serial (alternative sources)
+                                    deviceSerial: getParameterValue(device, 'VirtualParameters.getSerialNumber') || 
+                                                getParameterValue(device, 'DeviceID.SerialNumber') || 'N/A',
+                                    
+                                    // Last Inform Time
+                                    lastInform: device._lastInform,
+                                    
+                                    // Additional Device Info (essential)
+                                    description: getParameterValue(device, 'InternetGatewayDevice.DeviceInfo.Description') || 'N/A',
+                                    productClass: getParameterValue(device, 'DeviceID.ProductClass') || 'N/A'
+                                }
+                            };
+                            
+                            devicesWithCoords.push(deviceWithCoords);
+                            console.log(`✅ Added device to list: ${device.serialNumber || device.name}`);
+                        } else {
+                            console.log(`❌ Skipped device: ${device.serialNumber || device.name} - no customer coordinates`);
+                            
+                            // Special logging for "santo" customer
+                            if (pppoeUsername && pppoeUsername.includes('santo')) {
+                                console.log(`🎯 "santo" device skipped - no customer coordinates found`);
+                                console.log(`🎯 This means the device exists in GenieACS but customer "santo" has no coordinates in database`);
+                            }
+                        }
+                    }
+                    
+                    console.log(`✅ Processed ${devicesWithCoords.length} ONU devices with coordinates`);
+                    console.log(`🚀 BACKEND: Device processing completed`);
+                    
+                    // Summary of all devices found
+                    console.log(`📊 Summary: ${devicesRaw.length} total devices from GenieACS`);
+                    console.log(`📊 Summary: ${devicesWithCoords.length} devices with customer coordinates`);
+                    console.log(`📊 Summary: ${devicesRaw.length - devicesWithCoords.length} devices without customer coordinates`);
+                    
+                    // Debug: Log sample device data
+                    if (devicesWithCoords.length > 0) {
+                        console.log('🔍 Sample device data:', JSON.stringify(devicesWithCoords[0], null, 2));
+                    }
+                    
+                    // If no devices with coordinates found, use fallback
+                    if (devicesWithCoords.length === 0) {
+                        console.log('⚠️ No ONU devices with coordinates found, using fallback...');
+                        console.log('🚀 BACKEND: Starting fallback process');
+                        
+                        // Load customers for fallback
+                        const customersForFallback = await new Promise((resolve, reject) => {
+                            db.all(`
+                                SELECT c.id, c.name, c.phone, c.pppoe_username, c.latitude, c.longitude, 
+                                       c.address, c.status, c.package_id,
+                                       p.name as package_name,
+                                       o.name as odp_name
+                                FROM customers c
+                                LEFT JOIN packages p ON c.package_id = p.id
+                                LEFT JOIN odps o ON c.odp_id = o.id
+                                WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+                                ORDER BY c.name
+                            `, [], (err, rows) => {
+                                if (err) {
+                                    console.error('Error loading customers for fallback:', err);
+                                    resolve([]);
+                                } else {
+                                    resolve(rows || []);
+                                }
+                            });
+                        });
+                        
+                        const fallbackDevices = customersForFallback.map((customer, index) => ({
+                            id: `fallback_${customer.id}`,
+                            serialNumber: `SIM${customer.id.toString().padStart(4, '0')}`,
+                            name: `Simulated ONU ${customer.name}`,
+                            model: 'Simulated ONU',
+                            status: index % 2 === 0 ? 'Online' : 'Offline',
+                            ssid: `SSID_${customer.id}`,
+                            latitude: customer.latitude,
+                            longitude: customer.longitude,
+                            customerName: customer.name,
+                            customerPhone: customer.phone,
+                            customerPPPoE: customer.pppoe_username,
+                            customerAddress: customer.address,
+                            customerPackage: customer.package_name,
+                            customerStatus: customer.status,
+                            odpName: customer.odp_name || 'N/A',
+                            rxPower: '-15.5',
+                            txPower: '2.1',
+                            temperature: '45°C',
+                            uptime: '7 days',
+                            lastInform: new Date().toISOString(),
+                            firmware: '1.0.0',
+                            hardware: 'v1.0',
+                            ipAddress: `192.168.1.${100 + index}`,
+                            macAddress: `00:11:22:33:44:${index.toString(16).padStart(2, '0')}`,
+                            coordinateSource: 'fallback',
+                            
+                            // Add genieacsData for fallback devices
+                            genieacsData: {
+                                manufacturer: 'Simulated',
+                                hardwareVersion: 'v1.0',
+                                softwareVersion: '1.0.0',
+                                deviceUptime: 604800, // 7 days in seconds
+                                pppoeUsername: customer.pppoe_username,
+                                pppoeIP: `192.168.1.${100 + index}`,
+                                pppoeMac: `00:11:22:33:44:${index.toString(16).padStart(2, '0')}`,
+                                pppUptime: 604800, // 7 days in seconds
+                                rxPower: '-15.5',
+                                txPower: '2.1',
+                                temperature: '45°C',
+                                wifiPassword: 'simulated_password',
+                                connectedDevices: Math.floor(Math.random() * 5),
+                                wifiChannel: '6',
+                                wifiPower: '75%',
+                                lanIP: `192.168.1.${100 + index}`,
+                                lanMac: `00:11:22:33:44:${index.toString(16).padStart(2, '0')}`,
+                                dhcpEnabled: true,
+                                connectionStatus: index % 2 === 0 ? 'Connected' : 'Disconnected',
+                                externalIP: `203.142.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                                vlanID: '100',
+                                deviceSerial: `SIM${customer.id.toString().padStart(4, '0')}`,
+                                lastInform: new Date().toISOString(),
+                                description: 'Simulated device (GenieACS unavailable)',
+                                productClass: 'Simulated ONU'
+                            }
+                        }));
+                        
+                        console.log(`✅ Created ${fallbackDevices.length} fallback ONU devices`);
+                        console.log(`🚀 BACKEND: Fallback process completed`);
+                        resolve(fallbackDevices);
+                    } else {
+                        resolve(devicesWithCoords);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error loading ONU devices from GenieACS:', error.message);
+                    console.log('🚀 BACKEND: GenieACS error, using fallback');
+                    console.log('🔄 Falling back to customer-based ONU simulation...');
+                    
+                    // Fallback: Create simulated ONU devices from customers
+                    const fallbackDevices = customers.map((customer, index) => ({
+                        id: `fallback_${customer.id}`,
+                        serialNumber: `SIM${customer.id.toString().padStart(4, '0')}`,
+                        name: `Simulated ONU ${customer.name}`,
+                        model: 'Simulated ONU',
+                        status: index % 2 === 0 ? 'Online' : 'Offline',
+                        ssid: `SSID_${customer.id}`,
+                        latitude: customer.latitude,
+                        longitude: customer.longitude,
+                        customerName: customer.name,
+                        customerPhone: customer.phone,
+                        customerPPPoE: customer.pppoe_username,
+                        customerAddress: customer.address,
+                        customerPackage: customer.package_name,
+                        customerStatus: customer.status,
+                        odpName: customer.odp_name || 'N/A',
+                        rxPower: '-15.5',
+                        txPower: '2.1',
+                        temperature: '45°C',
+                        uptime: '7 days',
+                        lastInform: new Date().toISOString(),
+                        firmware: '1.0.0',
+                        hardware: 'v1.0',
+                        ipAddress: `192.168.1.${100 + index}`,
+                        macAddress: `00:11:22:33:44:${index.toString(16).padStart(2, '0')}`,
+                        coordinateSource: 'fallback',
+                        
+                        // Add genieacsData for fallback devices
+                        genieacsData: {
+                            manufacturer: 'Simulated',
+                            hardwareVersion: 'v1.0',
+                            softwareVersion: '1.0.0',
+                            deviceUptime: 604800, // 7 days in seconds
+                            pppoeUsername: customer.pppoe_username,
+                            pppoeIP: `192.168.1.${100 + index}`,
+                            pppoeMac: `00:11:22:33:44:${index.toString(16).padStart(2, '0')}`,
+                            pppUptime: 604800, // 7 days in seconds
+                            rxPower: '-15.5',
+                            txPower: '2.1',
+                            temperature: '45°C',
+                            wifiPassword: 'simulated_password',
+                            connectedDevices: Math.floor(Math.random() * 5),
+                            wifiChannel: '6',
+                            wifiPower: '75%',
+                            lanIP: `192.168.1.${100 + index}`,
+                            lanMac: `00:11:22:33:44:${index.toString(16).padStart(2, '0')}`,
+                            dhcpEnabled: true,
+                            connectionStatus: index % 2 === 0 ? 'Connected' : 'Disconnected',
+                            externalIP: `203.142.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                            vlanID: '100',
+                            deviceSerial: `SIM${customer.id.toString().padStart(4, '0')}`,
+                            lastInform: new Date().toISOString(),
+                            description: 'Simulated device (GenieACS unavailable)',
+                            productClass: 'Simulated ONU'
+                        }
+                    }));
+                    
+                    console.log(`✅ Created ${fallbackDevices.length} fallback ONU devices`);
+                    console.log('🔍 Sample fallback device:', JSON.stringify(fallbackDevices[0], null, 2));
+                    console.log(`🚀 BACKEND: Catch fallback completed`);
+                    resolve(fallbackDevices);
+                }
+            })
+        ]);
+        
+        db.close();
+        
+        // Hitung statistik
+        const statistics = {
+            totalCustomers: customers.length,
+            totalONU: onuDevices.length,
+            onlineONU: onuDevices.filter(d => d.status === 'Online').length,
+            offlineONU: onuDevices.filter(d => d.status === 'Offline').length,
+            totalODP: odps.length,
+            totalCables: cables.length,
+            totalBackboneCables: backboneCables.length,
+            connectedCables: cables.filter(c => c.status === 'connected').length,
+            disconnectedCables: cables.filter(c => c.status === 'disconnected').length
+        };
+        
+        console.log('✅ New Mapping API - Data loaded successfully:', statistics);
+        
+        // Debug sample data
+        console.log('🔍 Sample data being sent:');
+        console.log('- Sample customer:', customers[0]);
+        console.log('- Sample ODP:', odps[0]);
+        console.log('- Sample cable:', cables[0]);
+        console.log('- Sample ONU device:', onuDevices[0]);
+        
+        res.json({
+            success: true,
+            data: {
+                customers: customers,
+                onuDevices: onuDevices,
+                odps: odps,
+                cables: cables,
+                backboneCables: backboneCables,
+                statistics: statistics
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in new mapping API:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Route untuk halaman mapping baru sudah dipindah ke adminBilling.js
+
+module.exports = router;

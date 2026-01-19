@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | Portal ISP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css?v=1">
+  <style>
+    /* Dark theme handles body and navbar backgrounds */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .navbar { backdrop-filter: blur(10px); border-bottom: 1px solid transparent; box-shadow: none; }
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      margin-bottom: 25px;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2); }
+    .btn-back {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-back:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      color: white;
+    }
+    .customer-info { border-radius: 16px; padding: 25px; margin-bottom: 25px; }
+    .invoice-card {
+      border-left: 4px solid #667eea;
+      transition: all 0.3s ease;
+    }
+    .invoice-card:hover {
+      border-left-color: #764ba2;
+      transform: translateX(5px);
+    }
+    /* badges will use theme.css colors */
+    .badge-paid, .badge-unpaid, .badge-overdue { color: inherit; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container">
+      <a class="navbar-brand" href="/customer/dashboard">
+        <img src="/img/<%= settings.logo_filename || 'logo.png' %>" alt="Logo" height="40">
+        Customer Portal
+      </a>
+      <div class="navbar-nav ms-auto">
+        <a href="/customer/dashboard" class="btn btn-back">
+          <i class="bi bi-arrow-left me-2"></i>Back ke Dashboard
+        </a>
+        <a href="/customer/logout" class="btn btn-outline-danger btn-sm ms-2">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- Customer Info -->
+    <div class="customer-info">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h4 class="mb-2">
+            <i class="bi bi-person-circle me-2"></i>
+            <%= customer.name %>
+          </h4>
+          <p class="mb-1">
+            <i class="bi bi-phone me-2"></i>
+            <%= customer.phone %>
+          </p>
+          <p class="mb-1">
+            <i class="bi bi-person me-2"></i>
+            Username: <%= customer.username %>
+          </p>
+          <% if (customer.package_name) { %>
+          <p class="mb-0">
+            <i class="bi bi-wifi me-2"></i>
+            Paket: <%= customer.package_name %> - Rp <%= parseFloat(customer.package_price).toLocaleString('id-ID') %>
+          </p>
+          <% } %>
+        </div>
+        <div class="col-md-4 text-end">
+          <div class="mb-2">
+            <strong>Status Payment:</strong>
+            <% if (customer.payment_status === 'paid') { %>
+              <span class="badge badge-paid">Lunas</span>
+            <% } else if (customer.payment_status === 'unpaid') { %>
+              <span class="badge badge-unpaid">Belum Lunas</span>
+            <% } else if (customer.payment_status === 'overdue') { %>
+              <span class="badge badge-overdue">Terlambat</span>
+            <% } else { %>
+              <span class="badge bg-secondary">Belum Ada Bill</span>
+            <% } %>
+          </div>
+          <div>
+            <strong>Total Bill:</strong> <%= invoices.length %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoices -->
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-receipt me-2"></i>
+          Riwayat Bill
+        </h5>
+      </div>
+      <div class="card-body">
+        <% if (invoices && invoices.length > 0) { %>
+          <div class="table-container">
+            <h6><i class="bi bi-receipt-cutoff"></i>Riwayat Bill</h6>
+            <!-- Desktop / Tablet: Tabel -->
+            <div class="d-none d-md-block">
+              <div class="table-responsive">
+                <table class="table table-hover" id="invoicesTable" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>No. Bill</th>
+                      <th>Amount</th>
+                      <th>Jatuh Tempo</th>
+                      <th>Status</th>
+                      <th>Date Dibuat</th>
+                      <th>Paket</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% invoices.forEach(function(invoice) { %>
+                      <tr>
+                        <td>
+                          <span class="fw-bold"><%= invoice.invoice_number %></span>
+                        </td>
+                        <td>
+                          <span class="fw-bold text-primary">
+                            Rp <%= parseFloat(invoice.amount).toLocaleString('id-ID') %>
+                          </span>
+                        </td>
+                        <td>
+                          <% if (new Date(invoice.due_date) < new Date() && invoice.status === 'unpaid') { %>
+                            <span class="text-danger fw-bold">
+                              <%= new Date(invoice.due_date).toLocaleDateString('id-ID') %>
+                            </span>
+                          <% } else { %>
+                            <%= new Date(invoice.due_date).toLocaleDateString('id-ID') %>
+                          <% } %>
+                        </td>
+                        <td>
+                          <% if (invoice.status === 'paid') { %>
+                            <span class="badge bg-success">Lunas</span>
+                          <% } else if (invoice.status === 'unpaid') { %>
+                            <% if (new Date(invoice.due_date) < new Date()) { %>
+                              <span class="badge bg-danger">Terlambat</span>
+                            <% } else { %>
+                              <span class="badge bg-warning text-dark">Belum Lunas</span>
+                            <% } %>
+                          <% } %>
+                        </td>
+                        <td>
+                          <%= new Date(invoice.created_at).toLocaleDateString('id-ID') %>
+                        </td>
+                        <td>
+                          <span class="badge bg-info">
+                            <%= invoice.package_name %>
+                          </span>
+                        </td>
+                        <td>
+                          <% if (invoice.status === 'unpaid') { %>
+                            <button class="btn btn-sm btn-primary pay-now-btn"
+                                    data-invoice-id="<%= invoice.id %>"
+                                    data-invoice-number="<%= invoice.invoice_number %>"
+                                    data-amount="<%= invoice.amount %>">
+                              <i class="bi bi-credit-card me-1"></i>Bayar Sekarang
+                            </button>
+                          <% } else { %>
+                            <span class="text-success small"><i class="bi bi-check-circle me-1"></i>Lunas</span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Mobile: Kartu dengan tombol di bawah -->
+            <div class="d-block d-md-none">
+              <div class="vstack gap-3">
+                <% invoices.forEach(function(invoice) { %>
+                  <div class="card shadow-sm">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                          <div class="small text-muted">No. Bill</div>
+                          <div class="fw-bold"><%= invoice.invoice_number %></div>
+                        </div>
+                        <div class="text-end">
+                          <div class="small text-muted">Amount</div>
+                          <div class="fw-bold text-primary">Rp <%= parseFloat(invoice.amount).toLocaleString('id-ID') %></div>
+                        </div>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                          <div class="small text-muted">Jatuh Tempo</div>
+                          <% if (new Date(invoice.due_date) < new Date() && invoice.status === 'unpaid') { %>
+                            <div class="text-danger fw-semibold"><%= new Date(invoice.due_date).toLocaleDateString('id-ID') %></div>
+                          <% } else { %>
+                            <div><%= new Date(invoice.due_date).toLocaleDateString('id-ID') %></div>
+                          <% } %>
+                        </div>
+                        <div class="text-end">
+                          <div class="small text-muted">Status</div>
+                          <% if (invoice.status === 'paid') { %>
+                            <span class="badge bg-success">Lunas</span>
+                          <% } else if (invoice.status === 'unpaid') { %>
+                            <% if (new Date(invoice.due_date) < new Date()) { %>
+                              <span class="badge bg-danger">Terlambat</span>
+                            <% } else { %>
+                              <span class="badge bg-warning text-dark">Belum Lunas</span>
+                            <% } %>
+                          <% } %>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <span class="badge bg-info"><%= invoice.package_name %></span>
+                        <small class="text-muted ms-2">Dibuat: <%= new Date(invoice.created_at).toLocaleDateString('id-ID') %></small>
+                      </div>
+                      <% if (invoice.status === 'unpaid') { %>
+                        <button class="btn btn-primary w-100 pay-now-btn"
+                                data-invoice-id="<%= invoice.id %>"
+                                data-invoice-number="<%= invoice.invoice_number %>"
+                                data-amount="<%= invoice.amount %>">
+                          <i class="bi bi-credit-card me-1"></i>Bayar Sekarang
+                        </button>
+                      <% } else { %>
+                        <div class="text-success small"><i class="bi bi-check-circle me-1"></i>Lunas</div>
+                      <% } %>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="text-center py-4">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">Belum ada tagihan</h5>
+            <p class="text-muted">Bill akan muncul di sini setelah admin membuat tagihan untuk Anda.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-credit-card me-2"></i>
+          Informasi Payment
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="text-primary">
+              <i class="bi bi-bank me-2"></i>
+              Transfer Bank
+            </h6>
+            <p class="mb-1"><strong>Bank:</strong> <%= settings.payment_bank_name || 'BRI' %></p>
+            <p class="mb-1"><strong>No. Rekening:</strong> <%= settings.payment_account_number || '-' %></p>
+            <p class="mb-1"><strong>Atas Name:</strong> <%= settings.payment_account_holder || '-' %></p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-primary">
+              <i class="bi bi-cash me-2"></i>
+              Payment Tunai
+            </h6>
+            <p class="mb-1"><strong>Address:</strong> <%= settings.payment_cash_address || '-' %></p>
+            <p class="mb-1"><strong>Jam Operasional:</strong> <%= settings.payment_cash_hours || '-' %></p>
+            <p class="mb-1"><strong>Kontak:</strong> <%= settings.contact_phone || '-' %></p>
+          </div>
+        </div>
+
+        <!-- E-Wallet -->
+        <% if (settings.payment_dana || settings.payment_ovo || settings.payment_gopay) { %>
+          <hr class="my-3">
+          <h6 class="text-primary mb-2">
+            <i class="bi bi-wallet2 me-2"></i>
+            E-Wallet
+          </h6>
+          <div class="row g-2">
+            <% if (settings.payment_dana) { %>
+              <div class="col-12 col-md-4">
+                <div class="border rounded p-3 h-100">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="fw-semibold">DANA</div>
+                      <div class="text-muted small" id="wallet-number-dana"><%= settings.payment_dana %></div>
+                    </div>
+                    <span class="badge bg-info">Active</span>
+                  </div>
+                  <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary copy-wallet-btn" data-number="<%= settings.payment_dana %>">
+                      <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary show-qr-btn" data-target="#wallet-qr-dana" data-text="<%= settings.payment_dana %>">
+                      <i class="bi bi-qr-code me-1"></i>Tampilkan QR
+                    </button>
+                    <button class="btn btn-sm btn-outline-success download-qr-btn"
+                            data-target="#wallet-qr-dana"
+                            data-text="<%= settings.payment_dana %>"
+                            data-filename="QR-DANA-<%= settings.payment_dana %>.png">
+                      <i class="bi bi-download me-1"></i>Download QR
+                    </button>
+                  </div>
+                  <div id="wallet-qr-dana" class="mt-2" style="display:none;"></div>
+                </div>
+              </div>
+            <% } %>
+            <% if (settings.payment_ovo) { %>
+              <div class="col-12 col-md-4">
+                <div class="border rounded p-3 h-100">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="fw-semibold">OVO</div>
+                      <div class="text-muted small" id="wallet-number-ovo"><%= settings.payment_ovo %></div>
+                    </div>
+                    <span class="badge bg-info">Active</span>
+                  </div>
+                  <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary copy-wallet-btn" data-number="<%= settings.payment_ovo %>">
+                      <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary show-qr-btn" data-target="#wallet-qr-ovo" data-text="<%= settings.payment_ovo %>">
+                      <i class="bi bi-qr-code me-1"></i>Tampilkan QR
+                    </button>
+                    <button class="btn btn-sm btn-outline-success download-qr-btn"
+                            data-target="#wallet-qr-ovo"
+                            data-text="<%= settings.payment_ovo %>"
+                            data-filename="QR-OVO-<%= settings.payment_ovo %>.png">
+                      <i class="bi bi-download me-1"></i>Download PNG
+                    </button>
+                  </div>
+                  <div id="wallet-qr-ovo" class="mt-2" style="display:none;"></div>
+                </div>
+              </div>
+            <% } %>
+            <% if (settings.payment_gopay) { %>
+              <div class="col-12 col-md-4">
+                <div class="border rounded p-3 h-100">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="fw-semibold">GoPay</div>
+                      <div class="text-muted small" id="wallet-number-gopay"><%= settings.payment_gopay %></div>
+                    </div>
+                    <span class="badge bg-info">Active</span>
+                  </div>
+                  <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary copy-wallet-btn" data-number="<%= settings.payment_gopay %>">
+                      <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary show-qr-btn" data-target="#wallet-qr-gopay" data-text="<%= settings.payment_gopay %>">
+                      <i class="bi bi-qr-code me-1"></i>Tampilkan QR
+                    </button>
+                    <button class="btn btn-sm btn-outline-success download-qr-btn"
+                            data-target="#wallet-qr-gopay"
+                            data-text="<%= settings.payment_gopay %>"
+                            data-filename="QR-GoPay-<%= settings.payment_gopay %>.png">
+                      <i class="bi bi-download me-1"></i>Download PNG
+                    </button>
+                  </div>
+                  <div id="wallet-qr-gopay" class="mt-2" style="display:none;"></div>
+                </div>
+              </div>
+            <% } %>
+          </div>
+          <div class="alert alert-secondary mt-2 py-2 small">
+            <i class="bi bi-info-circle me-1"></i>
+            Silakan transfer ke nomor E-Wallet di atas sesuai preferensi Anda, lalu konfirmasi ke admin.
+          </div>
+        <% } %>
+        <div class="alert alert-info mt-3">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Penting:</strong> Setelah melakukan pembayaran, harap simpan bukti pembayaran dan konfirmasi ke admin melalui WhatsApp <%= settings.contact_whatsapp || '-' %>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Selectan Payment Gateway -->
+  <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="paymentModalLabel">Select Metode Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <strong>Invoice:</strong> <span id="modal-invoice-number"></span><br>
+            <strong>Amount:</strong> Rp <span id="modal-amount"></span>
+          </div>
+          
+          <!-- Gateway options akan di-load di sini -->
+          <div id="gateway-options" class="d-grid gap-2">
+            <div class="text-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Memuat opsi pembayaran...</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="/js/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <script>
+    $(document).ready(function() {
+      $('#invoicesTable').DataTable({
+        responsive: true,
+        language: {
+          url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json',
+          emptyTable: "No data available yang tersedia",
+          info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+          infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+          infoFiltered: "(disaring dari _MAX_ entri keseluruhan)",
+          lengthMenu: "Tampilkan _MENU_ entri",
+          loadingRecords: "Loading...",
+          processing: "Processing...",
+          search: "Cari:",
+          zeroRecords: "No ditemukan data yang sesuai",
+          paginate: {
+            first: "Pertama",
+            last: "Terakhir",
+            next: "Selanjutnya",
+            previous: "Sebelumnya"
+          }
+        },
+        order: [[4, 'desc']], // Sort by created date descending
+        pageLength: 10
+      });
+
+      function generateOrGetQrCanvas($target, text) {
+        if (typeof QRCode === 'undefined') return null;
+        // If canvas/img exists, reuse it; else generate
+        const existingCanvas = $target.find('canvas')[0] || $target.find('img')[0];
+        if (existingCanvas) return existingCanvas;
+        // Generate hidden then return element
+        $target.show();
+        $target.empty();
+        $target.css({ background: '#ffffff', padding: '12px', display: 'inline-block' });
+        new QRCode($target[0], {
+          text: text,
+          width: 240,
+          height: 240,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        return $target.find('canvas')[0] || $target.find('img')[0] || null;
+      }
+
+      // Download QR as PNG
+      $(document).on('click', '.download-qr-btn', function() {
+        const targetSel = $(this).data('target');
+        const text = String($(this).data('text') || '');
+        const filename = String($(this).data('filename') || 'qr.png');
+        const $target = $(targetSel);
+        if ($target.length === 0) return;
+
+        if (typeof QRCode === 'undefined') {
+          showToast('error', 'Failed', 'Library QRCode belum termuat. Coba muat ulang.');
+          return;
+        }
+
+        const el = generateOrGetQrCanvas($target, text);
+        if (!el) {
+          showToast('error', 'Failed', 'No dapat menyiapkan QR.');
+          return;
+        }
+
+        try {
+          // Support canvas or img
+          let dataUrl = '';
+          if (el.tagName.toLowerCase() === 'canvas') {
+            dataUrl = el.toDataURL('image/png');
+          } else if (el.tagName.toLowerCase() === 'img') {
+            dataUrl = el.src;
+          }
+          if (!dataUrl) throw new Error('No dataURL');
+
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (e) {
+          showToast('error', 'Failed', 'No dapat mengunduh QR.');
+        }
+      });
+
+      // Copy E-Wallet number
+      $(document).on('click', '.copy-wallet-btn', function() {
+        const number = $(this).data('number');
+        if (!number) return;
+        navigator.clipboard.writeText(String(number))
+          .then(() => {
+            showToast('success', 'Disalin', 'Nomor E-Wallet berhasil disalin.');
+          })
+          .catch(() => {
+            showToast('error', 'Failed', 'No dapat menyalin nomor.');
+          });
+      });
+
+      // Toggle QR for E-Wallet
+      $(document).on('click', '.show-qr-btn', function() {
+        const targetSel = $(this).data('target');
+        const text = String($(this).data('text') || '');
+        const $target = $(targetSel);
+        if ($target.length === 0) return;
+
+        if ($target.is(':visible')) {
+          $target.hide();
+          $(this).html('<i class="bi bi-qr-code me-1"></i>Tampilkan QR');
+          return;
+        }
+
+        $target.show();
+        try {
+          if (typeof QRCode === 'undefined') {
+            showToast('error', 'Failed', 'Library QRCode belum termuat. Coba muat ulang halaman.');
+            return;
+          }
+          // Reset and ensure good contrast + quiet zone
+          $target.empty();
+          $target.css({ background: '#ffffff', padding: '12px', display: 'inline-block' });
+          new QRCode($target[0], {
+            text: text,
+            width: 240,
+            height: 240,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        } catch (e) {
+          showToast('error', 'Failed', 'No dapat membuat QR code.');
+        }
+        $(this).html('<i class="bi bi-eye-slash me-1"></i>Sembunyikan QR');
+      });
+
+      // Handle payment button click
+      $('.pay-now-btn').on('click', function() {
+        const invoiceId = $(this).data('invoice-id');
+        const invoiceNumber = $(this).data('invoice-number');
+        const amount = $(this).data('amount');
+        
+        // Set modal data
+        $('#modal-invoice-number').text(invoiceNumber);
+        $('#modal-amount').text(parseFloat(amount).toLocaleString('id-ID'));
+        
+        // Store invoice ID for later use
+        $('#paymentModal').data('invoice-id', invoiceId);
+        
+        // Load gateway options
+        loadGatewayOptions();
+        
+        // Show modal
+        $('#paymentModal').modal('show');
+      });
+
+      function loadGatewayOptions() {
+        $('#gateway-options').html(`
+          <div class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Memuat opsi pembayaran...</p>
+          </div>
+        `);
+
+        $.get('/payment/gateway-status')
+          .done(function(response) {
+            if (response.success) {
+              const gateways = response.data;
+              let html = '';
+              
+              // Check if any gateway is enabled
+              const enabledGateways = Object.keys(gateways).filter(key => gateways[key].enabled);
+              
+              if (enabledGateways.length === 0) {
+                html = `
+                  <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Payment online belum tersedia. Silakan gunakan metode pembayaran manual di bawah.
+                  </div>
+                `;
+              } else {
+                enabledGateways.forEach(gateway => {
+                  const gatewayName = gateway.charAt(0).toUpperCase() + gateway.slice(1);
+                  const isActive = gateways[gateway].active;
+                  
+                  html += `
+                    <button class="btn btn-outline-primary gateway-btn" 
+                            data-gateway="${gateway}"
+                            ${isActive ? 'data-active="true"' : ''}>
+                      <i class="bi bi-credit-card me-2"></i>
+                      Bayar dengan ${gatewayName}
+                      ${isActive ? '<span class="badge bg-success ms-2">Active</span>' : ''}
+                    </button>
+                  `;
+                });
+              }
+              
+              $('#gateway-options').html(html);
+              
+              // Handle gateway selection
+              $('.gateway-btn').on('click', function() {
+                const gateway = $(this).data('gateway');
+                const invoiceId = $('#paymentModal').data('invoice-id');
+                
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Memproses...');
+                
+                processPayment(invoiceId, gateway);
+              });
+            }
+          })
+          .fail(function() {
+            $('#gateway-options').html(`
+              <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Failed memuat opsi pembayaran. Silakan coba lagi.
+              </div>
+            `);
+          });
+      }
+
+      function processPayment(invoiceId, gateway) {
+        $.post('/payment/create', {
+          invoice_id: invoiceId,
+          gateway: gateway
+        })
+        .done(function(response) {
+          if (response.success) {
+            // Close modal
+            $('#paymentModal').modal('hide');
+            
+            // Redirect to payment URL
+            window.open(response.data.payment_url, '_blank');
+            
+            // Show success message
+            showToast('success', 'Successful!', 'Halaman pembayaran telah dibuka. Silakan lanjutkan pembayaran di tab baru.');
+          } else {
+            showToast('error', 'Error!', response.message || 'Failed membuat pembayaran');
+          }
+        })
+        .fail(function(xhr) {
+          const errorMsg = xhr.responseJSON?.message || 'Failed membuat pembayaran';
+          showToast('error', 'Error!', errorMsg);
+        })
+        .always(function() {
+          // Reset gateway buttons
+          $('.gateway-btn').prop('disabled', false).each(function() {
+            const gateway = $(this).data('gateway');
+            const gatewayName = gateway.charAt(0).toUpperCase() + gateway.slice(1);
+            const isActive = $(this).data('active');
+            
+            $(this).html(`
+              <i class="bi bi-credit-card me-2"></i>
+              Bayar dengan ${gatewayName}
+              ${isActive ? '<span class="badge bg-success ms-2">Active</span>' : ''}
+            `);
+          });
+        });
+      }
+
+      function showToast(type, title, message) {
+        const toastId = 'toast-' + Date.now();
+        const iconClass = type === 'success' ? 'bi-check-circle' : 'bi-x-circle';
+        const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        
+        const toastHtml = `
+          <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" 
+               role="alert" aria-live="assertive" aria-atomic="true" 
+               style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <div class="d-flex">
+              <div class="toast-body">
+                <i class="${iconClass} me-2"></i>
+                <strong>${title}</strong><br>
+                <small>${message}</small>
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                      data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+        `;
+        
+        $('body').append(toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+        toast.show();
+        
+        // Auto remove after hide
+        toastElement.addEventListener('hidden.bs.toast', () => {
+          toastElement.remove();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

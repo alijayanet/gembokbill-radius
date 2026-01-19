@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Hotspot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/responsive-admin.css" rel="stylesheet">
+    <style>
+        body { background: #f5f6fa; }
+        .form-label { font-weight: 600; }
+        .sidebar {
+            min-height: 100vh;
+            background: #222e3c;
+            color: #fff;
+            padding-top: 32px;
+        }
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            padding: 12px 24px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .sidebar a.active, .sidebar a:hover {
+            background: #3b4a5a;
+        }
+        .sidebar .sidebar-header {
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 0 24px 24px 24px;
+        }
+        .main-content {
+            padding: 32px 24px;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .card.bg-primary, .card.bg-success, .card.bg-warning, .card.bg-info {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card.bg-primary:hover, .card.bg-success:hover, .card.bg-warning:hover, .card.bg-info:hover {
+            transform: translateY(-2px);
+        }
+        .card-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .card-text {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body data-company-header="<%= company_header || 'Name Hotspot' %>" data-admin-kontak="<%= adminKontak || 'Kontak Admin' %>">
+<div class="container-fluid">
+    <div class="row">
+        <!-- Include Responsive Admin Sidebar -->
+        <%- include('partials/admin-responsive-sidebar', { page: 'hotspot', settings: settings }) %>
+        
+        <main class="col-md-10 main-content ms-sm-auto">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0">Manajemen User Hotspot</h1>
+                    <a href="/admin/hotspot/voucher" class="btn btn-info">
+                        <i class="bi bi-ticket-perforated-fill me-2"></i> Kelola Voucher Hotspot
+                    </a>
+                </div>
+            </div>
+
+            <!-- Notifikasi -->
+            <% if (success) { %>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i> <%= success %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <% } %>
+            
+            <% if (error) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i> <%= error %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <% } %>
+
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="totalUsers"><%= allUsers ? allUsers.length : 0 %></h5>
+                            <p class="card-text">Total User Hotspot</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="activeUsers"><%= users ? users.length : 0 %></h5>
+                            <p class="card-text">User Active</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="offlineUsers"><%= allUsers && users ? (allUsers.length - users.length) : 0 %></h5>
+                            <p class="card-text">User Offline</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="profileCount"><%= profiles ? profiles.length : 0 %></h5>
+                            <p class="card-text">Total Profile</p>
+                        </div>
+                    </div>
+                                        <div class="mt-3">
+                            <button type="button" class="btn btn-success me-2" onclick="saveVoucherOnlineSettings()">
+                                <i class="bi bi-save me-2"></i>Save Setting Voucher Online
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="resetVoucherOnlineSettings()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Reset ke Profile Pertama
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voucher Online Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-globe me-2"></i>Setting Voucher Online</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Konfigurasi paket voucher yang akan ditampilkan di halaman publik (/voucher)</p>
+
+                    <!-- Voucher Generation Settings -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-gear me-2"></i>Pengaturan Generate Voucher</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Panjang Username:</label>
+                                            <select class="form-select" id="voucher_username_length">
+                                                <option value="4" selected>4 karakter</option>
+                                                <option value="5">5 karakter</option>
+                                                <option value="6">6 karakter</option>
+                                                <option value="8">8 karakter</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Panjang Password:</label>
+                                            <select class="form-select" id="voucher_password_length">
+                                                <option value="4">4 karakter</option>
+                                                <option value="5">5 karakter</option>
+                                                <option value="6" selected>6 karakter</option>
+                                                <option value="8">8 karakter</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Tipe Karakter:</label>
+                                            <select class="form-select" id="voucher_char_type">
+                                                <option value="alphanumeric" selected>Huruf + Angka</option>
+                                                <option value="numeric">Angka Saja</option>
+                                                <option value="alphabetic">Huruf Saja</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Format Username:</label>
+                                            <select class="form-select" id="voucher_username_format">
+                                                <option value="V{timestamp}" selected>V + Timestamp (V123456)</option>
+                                                <option value="V{random}">V + Random (VABCD)</option>
+                                                <option value="{random}">Random Saja (ABCD)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Tipe Akun:</label>
+                                            <select class="form-select" id="voucher_account_type" onchange="togglePasswordLengthField()">
+                                                <option value="voucher" selected>Voucher (Username = Password)</option>
+                                                <option value="member">Member (Username ≠ Password)</option>
+                                            </select>
+                                            <div class="form-text">
+                                                <strong>Voucher:</strong> Username dan password sama (untuk voucher sementara)<br>
+                                                <strong>Member:</strong> Username dan password berbeda (untuk member tetap)
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6" id="password_length_separate_field">
+                                            <label class="form-label">Panjang Password (jika berbeda):</label>
+                                            <select class="form-select" id="voucher_password_length_separate">
+                                                <option value="4">4 karakter</option>
+                                                <option value="5">5 karakter</option>
+                                                <option value="6" selected>6 karakter</option>
+                                                <option value="8">8 karakter</option>
+                                            </select>
+                                            <div class="form-text">Hanya berlaku jika tipe akun = Member</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-info btn-sm" onclick="saveVoucherGenerationSettings()">
+                                            <i class="bi bi-save me-1"></i>Save Pengaturan Generate
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="testVoucherGeneration()">
+                                            <i class="bi bi-play me-1"></i>Test Generate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Paket 3k -->
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">3rb - 1 Hari</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="editPackageName('3k')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Name Paket:</small>
+                                        <input type="text" class="form-control form-control-sm" id="name_3k" value="<%= voucherOnlineSettings['3k']?.name || '3rb - 1 Hari' %>" placeholder="Name paket">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Profile Mikrotik:</small>
+                                        <select class="form-select form-select-sm" id="profile_3k">
+                                            <% profiles.forEach(function(profile) { %>
+                                                <option value="<%= profile.name %>" <%= (voucherOnlineSettings['3k'] && voucherOnlineSettings['3k'].profile === profile.name) ? 'selected' : '' %>><%= profile.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Price:</small>
+                                        <input type="number" class="form-control form-control-sm" id="price_3k" value="<%= voucherOnlineSettings['3k']?.price || 3000 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Duration:</small>
+                                        <select class="form-select form-select-sm" id="duration_type_3k">
+                                            <option value="hours" <%= (voucherOnlineSettings['3k']?.duration_type || 'hours') === 'hours' ? 'selected' : '' %>>Jam</option>
+                                            <option value="days" <%= (voucherOnlineSettings['3k']?.duration_type || 'hours') === 'days' ? 'selected' : '' %>>Hari</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Duration:</small>
+                                        <input type="number" class="form-control form-control-sm" id="duration_3k" value="<%= voucherOnlineSettings['3k']?.duration || 24 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Digit Voucher:</small>
+                                        <select class="form-select form-select-sm" id="digits_3k">
+                                            <option value="4" <%= (voucherOnlineSettings['3k']?.digits || 5) === 4 ? 'selected' : '' %>>4 digit</option>
+                                            <option value="5" <%= (voucherOnlineSettings['3k']?.digits || 5) === 5 ? 'selected' : '' %>>5 digit</option>
+                                            <option value="6" <%= (voucherOnlineSettings['3k']?.digits || 5) === 6 ? 'selected' : '' %>>6 digit</option>
+                                            <option value="8" <%= (voucherOnlineSettings['3k']?.digits || 5) === 8 ? 'selected' : '' %>>8 digit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="online_3k" <%= voucherOnlineSettings['3k']?.enabled !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="online_3k">
+                                            Tampilkan Online
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paket 5k -->
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">5rb - 2 Hari</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="editPackageName('5k')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Name Paket:</small>
+                                        <input type="text" class="form-control form-control-sm" id="name_5k" value="<%= voucherOnlineSettings['5k']?.name || '5rb - 2 Hari' %>" placeholder="Name paket">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Profile Mikrotik:</small>
+                                        <select class="form-select form-select-sm" id="profile_5k">
+                                            <% profiles.forEach(function(profile) { %>
+                                                <option value="<%= profile.name %>" <%= (voucherOnlineSettings['5k'] && voucherOnlineSettings['5k'].profile === profile.name) ? 'selected' : '' %>><%= profile.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Price:</small>
+                                        <input type="number" class="form-control form-control-sm" id="price_5k" value="<%= voucherOnlineSettings['5k']?.price || 5000 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Duration:</small>
+                                        <select class="form-select form-select-sm" id="duration_type_5k">
+                                            <option value="hours" <%= (voucherOnlineSettings['5k']?.duration_type || 'hours') === 'hours' ? 'selected' : '' %>>Jam</option>
+                                            <option value="days" <%= (voucherOnlineSettings['5k']?.duration_type || 'hours') === 'days' ? 'selected' : '' %>>Hari</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Duration:</small>
+                                        <input type="number" class="form-control form-control-sm" id="duration_5k" value="<%= voucherOnlineSettings['5k']?.duration || 48 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Digit Voucher:</small>
+                                        <select class="form-select form-select-sm" id="digits_5k">
+                                            <option value="4" <%= (voucherOnlineSettings['5k']?.digits || 5) === 4 ? 'selected' : '' %>>4 digit</option>
+                                            <option value="5" <%= (voucherOnlineSettings['5k']?.digits || 5) === 5 ? 'selected' : '' %>>5 digit</option>
+                                            <option value="6" <%= (voucherOnlineSettings['5k']?.digits || 5) === 6 ? 'selected' : '' %>>6 digit</option>
+                                            <option value="8" <%= (voucherOnlineSettings['5k']?.digits || 5) === 8 ? 'selected' : '' %>>8 digit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="online_5k" <%= voucherOnlineSettings['5k']?.enabled !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="online_5k">
+                                            Tampilkan Online
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paket 10k -->
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">10rb - 5 Hari</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="editPackageName('10k')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Name Paket:</small>
+                                        <input type="text" class="form-control form-control-sm" id="name_10k" value="<%= voucherOnlineSettings['10k']?.name || '10rb - 5 Hari' %>" placeholder="Name paket">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Profile Mikrotik:</small>
+                                        <select class="form-select form-select-sm" id="profile_10k">
+                                            <% profiles.forEach(function(profile) { %>
+                                                <option value="<%= profile.name %>" <%= (voucherOnlineSettings['10k'] && voucherOnlineSettings['10k'].profile === profile.name) ? 'selected' : '' %>><%= profile.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Price:</small>
+                                        <input type="number" class="form-control form-control-sm" id="price_10k" value="<%= voucherOnlineSettings['10k']?.price || 10000 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Duration:</small>
+                                        <select class="form-select form-select-sm" id="duration_type_10k">
+                                            <option value="hours" <%= (voucherOnlineSettings['10k']?.duration_type || 'hours') === 'hours' ? 'selected' : '' %>>Jam</option>
+                                            <option value="days" <%= (voucherOnlineSettings['10k']?.duration_type || 'hours') === 'days' ? 'selected' : '' %>>Hari</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Duration:</small>
+                                        <input type="number" class="form-control form-control-sm" id="duration_10k" value="<%= voucherOnlineSettings['10k']?.duration || 120 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Digit Voucher:</small>
+                                        <select class="form-select form-select-sm" id="digits_10k">
+                                            <option value="4" <%= (voucherOnlineSettings['10k']?.digits || 5) === 4 ? 'selected' : '' %>>4 digit</option>
+                                            <option value="5" <%= (voucherOnlineSettings['10k']?.digits || 5) === 5 ? 'selected' : '' %>>5 digit</option>
+                                            <option value="6" <%= (voucherOnlineSettings['10k']?.digits || 5) === 6 ? 'selected' : '' %>>6 digit</option>
+                                            <option value="8" <%= (voucherOnlineSettings['10k']?.digits || 5) === 8 ? 'selected' : '' %>>8 digit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="online_10k" <%= voucherOnlineSettings['10k']?.enabled !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="online_10k">
+                                            Tampilkan Online
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paket 15k -->
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">15rb - 8 Hari</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-dark" onclick="editPackageName('15k')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Name Paket:</small>
+                                        <input type="text" class="form-control form-control-sm" id="name_15k" value="<%= voucherOnlineSettings['15k']?.name || '15rb - 8 Hari' %>" placeholder="Name paket">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Profile Mikrotik:</small>
+                                        <select class="form-select form-select-sm" id="profile_15k">
+                                            <% profiles.forEach(function(profile) { %>
+                                                <option value="<%= profile.name %>" <%= (voucherOnlineSettings['15k'] && voucherOnlineSettings['15k'].profile === profile.name) ? 'selected' : '' %>><%= profile.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Price:</small>
+                                        <input type="number" class="form-control form-control-sm" id="price_15k" value="<%= voucherOnlineSettings['15k']?.price || 15000 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Duration:</small>
+                                        <select class="form-select form-select-sm" id="duration_type_15k">
+                                            <option value="hours" <%= (voucherOnlineSettings['15k']?.duration_type || 'hours') === 'hours' ? 'selected' : '' %>>Jam</option>
+                                            <option value="days" <%= (voucherOnlineSettings['15k']?.duration_type || 'hours') === 'days' ? 'selected' : '' %>>Hari</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Duration:</small>
+                                        <input type="number" class="form-control form-control-sm" id="duration_15k" value="<%= voucherOnlineSettings['15k']?.duration || 192 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Digit Voucher:</small>
+                                        <select class="form-select form-select-sm" id="digits_15k">
+                                            <option value="4" <%= (voucherOnlineSettings['15k']?.digits || 5) === 4 ? 'selected' : '' %>>4 digit</option>
+                                            <option value="5" <%= (voucherOnlineSettings['15k']?.digits || 5) === 5 ? 'selected' : '' %>>5 digit</option>
+                                            <option value="6" <%= (voucherOnlineSettings['15k']?.digits || 5) === 6 ? 'selected' : '' %>>6 digit</option>
+                                            <option value="8" <%= (voucherOnlineSettings['15k']?.digits || 5) === 8 ? 'selected' : '' %>>8 digit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="online_15k" <%= voucherOnlineSettings['15k']?.enabled !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="online_15k">
+                                            Tampilkan Online
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paket 25k -->
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">25rb - 15 Hari</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="editPackageName('25k')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Name Paket:</small>
+                                        <input type="text" class="form-control form-control-sm" id="name_25k" value="<%= voucherOnlineSettings['25k']?.name || '25rb - 15 Hari' %>" placeholder="Name paket">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Profile Mikrotik:</small>
+                                        <select class="form-select form-select-sm" id="profile_25k">
+                                            <% profiles.forEach(function(profile) { %>
+                                                <option value="<%= profile.name %>" <%= (voucherOnlineSettings['25k'] && voucherOnlineSettings['25k'].profile === profile.name) ? 'selected' : '' %>><%= profile.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Price:</small>
+                                        <input type="number" class="form-control form-control-sm" id="price_25k" value="<%= voucherOnlineSettings['25k']?.price || 25000 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Duration:</small>
+                                        <select class="form-select form-select-sm" id="duration_type_25k">
+                                            <option value="hours" <%= (voucherOnlineSettings['25k']?.duration_type || 'hours') === 'hours' ? 'selected' : '' %>>Jam</option>
+                                            <option value="days" <%= (voucherOnlineSettings['25k']?.duration_type || 'hours') === 'days' ? 'selected' : '' %>>Hari</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Duration:</small>
+                                        <input type="number" class="form-control form-control-sm" id="duration_25k" value="<%= voucherOnlineSettings['25k']?.duration || 360 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Digit Voucher:</small>
+                                        <select class="form-select form-select-sm" id="digits_25k">
+                                            <option value="4" <%= (voucherOnlineSettings['25k']?.digits || 5) === 4 ? 'selected' : '' %>>4 digit</option>
+                                            <option value="5" <%= (voucherOnlineSettings['25k']?.digits || 5) === 5 ? 'selected' : '' %>>5 digit</option>
+                                            <option value="6" <%= (voucherOnlineSettings['25k']?.digits || 5) === 6 ? 'selected' : '' %>>6 digit</option>
+                                            <option value="8" <%= (voucherOnlineSettings['25k']?.digits || 5) === 8 ? 'selected' : '' %>>8 digit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="online_25k" <%= voucherOnlineSettings['25k']?.enabled !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="online_25k">
+                                            Tampilkan Online
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paket 50k -->
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-secondary">
+                                <div class="card-header bg-secondary text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">50rb - 30 Hari</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="editPackageName('50k')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Name Paket:</small>
+                                        <input type="text" class="form-control form-control-sm" id="name_50k" value="<%= voucherOnlineSettings['50k']?.name || '50rb - 30 Hari' %>" placeholder="Name paket">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Profile Mikrotik:</small>
+                                        <select class="form-select form-select-sm" id="profile_50k">
+                                            <% profiles.forEach(function(profile) { %>
+                                                <option value="<%= profile.name %>" <%= (voucherOnlineSettings['50k'] && voucherOnlineSettings['50k'].profile === profile.name) ? 'selected' : '' %>><%= profile.name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Price:</small>
+                                        <input type="number" class="form-control form-control-sm" id="price_50k" value="<%= voucherOnlineSettings['50k']?.price || 50000 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Duration:</small>
+                                        <select class="form-select form-select-sm" id="duration_type_50k">
+                                            <option value="hours" <%= (voucherOnlineSettings['50k']?.duration_type || 'hours') === 'hours' ? 'selected' : '' %>>Jam</option>
+                                            <option value="days" <%= (voucherOnlineSettings['50k']?.duration_type || 'hours') === 'days' ? 'selected' : '' %>>Hari</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Duration:</small>
+                                        <input type="number" class="form-control form-control-sm" id="duration_50k" value="<%= voucherOnlineSettings['50k']?.duration || 720 %>">
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Digit Voucher:</small>
+                                        <select class="form-select form-select-sm" id="digits_50k">
+                                            <option value="4" <%= (voucherOnlineSettings['50k']?.digits || 5) === 4 ? 'selected' : '' %>>4 digit</option>
+                                            <option value="5" <%= (voucherOnlineSettings['50k']?.digits || 5) === 5 ? 'selected' : '' %>>5 digit</option>
+                                            <option value="6" <%= (voucherOnlineSettings['50k']?.digits || 5) === 6 ? 'selected' : '' %>>6 digit</option>
+                                            <option value="8" <%= (voucherOnlineSettings['50k']?.digits || 5) === 8 ? 'selected' : '' %>>8 digit</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="online_50k" <%= voucherOnlineSettings['50k']?.enabled !== false ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="online_50k">
+                                            Tampilkan Online
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <!-- Manual Voucher Generation -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-pencil-square me-2"></i>Generate Voucher Manual</h6>
+                            <div class="mb-3">
+                                <label for="manualUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="manualUsername" placeholder="Enter username">
+                            </div>
+                            <div class="mb-3">
+                                <label for="manualPassword" class="form-label">Password</label>
+                                <input type="text" class="form-control" id="manualPassword" placeholder="Enter password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="manualProfile" class="form-label">Profile</label>
+                                <select class="form-select" id="manualProfile">
+                                    <% profiles.forEach(function(profile) { %>
+                                        <option value="<%= profile.name %>"><%= profile.name %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary" onclick="generateManualVoucher()">
+                                <i class="bi bi-plus-circle me-1"></i>Generate Manual
+                            </button>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-robot me-2"></i>Generate Voucher Otomatis</h6>
+                            <div class="mb-3">
+                                <label for="autoCount" class="form-label">Amount Voucher</label>
+                                <input type="number" class="form-control" id="autoCount" value="1" min="1" max="10">
+                            </div>
+                            <div class="mb-3">
+                                <label for="autoProfile" class="form-label">Profile</label>
+                                <select class="form-select" id="autoProfile">
+                                    <% profiles.forEach(function(profile) { %>
+                                        <option value="<%= profile.name %>"><%= profile.name %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoNumeric" checked>
+                                    <label class="form-check-label" for="autoNumeric">
+                                        Username & Password sama (angka saja)
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-success" onclick="generateAutoVoucher()">
+                                <i class="bi bi-magic me-1"></i>Generate Otomatis
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Cleanup Expired Vouchers -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-trash me-2"></i>Cleanup Voucher Expired</h6>
+                            <p class="text-muted small mb-3">
+                                Delete voucher yang belum dibayar setelah 24 jam untuk menghindari penumpukan.<br>
+                                <strong>Otomatis:</strong> Cleanup berjalan setiap 6 jam (00:00, 06:00, 12:00, 18:00).
+                            </p>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="cleanupExpiredVouchers()">
+                                <i class="bi bi-trash me-1"></i>Cleanup Sekarang
+                            </button>
+                            <div id="cleanupStatus" class="mt-2" style="display: none;">
+                                <small class="text-muted">Memproses cleanup...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Register User Hotspot</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover" id="hotspotTable" style="width:100%">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Username</th>
+                                            <th>Password</th>
+                                            <th>Profile</th>
+                                            <th>Status</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% allUsers.forEach(function(user, i) { %>
+                                        <tr>
+                                            <td><%= i+1 %></td>
+                                            <td><%= user.name %></td>
+                                            <td><%= user.password %></td>
+                                            <td><%= user.profile %></td>
+                                            <td><%= users && users.find(u => (u.user || u.name) === user.name) ? 'Active' : 'Offline' %></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning edit-user-btn" data-username="<%= user.name %>" data-password="<%= user.password %>" data-profile="<%= user.profile %>"><i class="bi bi-pencil"></i> Edit</button>
+                                                <button class="btn btn-sm btn-danger delete-user-btn" data-username="<%= user.name %>"><i class="bi bi-trash"></i> Delete</button>
+                                                <% if (users && users.find(u => (u.user || u.name) === user.name)) { %>
+                                                <button class="btn btn-sm btn-info disconnect-session-btn" data-username="<%= user.name %>"><i class="bi bi-x-circle"></i> Putus</button>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modal Generate Voucher -->
+        <div class="modal fade" id="generateVoucherModal" tabindex="-1" aria-labelledby="generateVoucherModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="generateVoucherModalLabel">Generate Voucher Hotspot</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="generateVoucherForm">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Amount Voucher</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" value="10" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="length" class="form-label">Panjang Karakter</label>
+                                <input type="number" class="form-control" id="length" name="length" value="5" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="profileModal" class="form-label">Profile</label>
+                                <select class="form-select" id="profileModal" name="profile" required>
+                                    <% if (profiles && profiles.length > 0) { %>
+                                        <% profiles.forEach(function(p) { %>
+                                        <option value="<%= p.name %>"><%= p.name %></option>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <option value="">No ada profile tersedia</option>
+                                    <% } %>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="price" class="form-label">Price</label>
+                                    <input type="number" class="form-control" id="price" name="price" placeholder="Contoh: 5000" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="voucherModel" class="form-label">Model Voucher</label>
+                                    <select class="form-select" id="voucherModel" name="voucherModel">
+                                        <option value="default" selected>Default</option>
+                                        <option value="model1">Model 1 (Simple)</option>
+                                        <option value="model2">Model 2 (Standard)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="type" class="form-label">Tipe</label>
+                                    <select class="form-select" id="type" name="type">
+                                        <option value="voucher" selected>Username = Password</option>
+                                        <option value="member">Username & Password Beda</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="charType" class="form-label">Jenis Karakter</label>
+                                    <select class="form-select" id="charType" name="charType">
+                                        <option value="alphanumeric" selected>Alfanumerik</option>
+                                        <option value="numeric">Numerik</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Generate</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirm Disconnect User -->
+<div class="modal fade" id="disconnectUserModal" tabindex="-1" aria-labelledby="disconnectUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="disconnectUserModalLabel">
+                    <i class="bi bi-power me-2"></i>Confirm Putus Koneksi
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <p class="mb-1">Are you sure you want to memutus koneksi user:</p>
+                        <h5 class="mb-0"><span id="disconnectUsername" class="fw-bold"></span>?</h5>
+                        <p class="text-muted small mt-2 mb-0">User akan langsung terputus dari jaringan hotspot.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDisconnect">
+                    <i class="bi bi-power me-1"></i>Putus Koneksi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirm Restart Mikrotik -->
+<div class="modal fade" id="restartMikrotikModal" tabindex="-1" aria-labelledby="restartMikrotikModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="restartMikrotikModalLabel"><i class="bi bi-arrow-repeat"></i> Confirm Restart Mikrotik</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to <b>restart Mikrotik</b>?<br>Router akan reboot dan koneksi internet pelanggan akan terputus sementara.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRestartMikrotik">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Notifikasi -->
+<div id="restartNotif" class="alert d-none position-fixed top-0 end-0 m-4" style="z-index:1055; min-width:300px;"></div>
+<!-- Toast Notification -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header" id="toastHeader">
+            <i class="bi me-2" id="toastIcon"></i>
+            <strong class="me-auto" id="toastTitle">Notifikasi</strong>
+            <small id="toastTime">Baru saja</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+            Pesan notifikasi akan muncul di sini.
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit User -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="editUserModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit User Hotspot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" action="/admin/hotspot/edit" method="POST">
+                    <input type="hidden" id="originalUsername" name="originalUsername">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label"><i class="bi bi-person me-1"></i>Username</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label"><i class="bi bi-key me-1"></i>Password</label>
+                        <input type="text" class="form-control" id="editPassword" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editProfile" class="form-label"><i class="bi bi-speedometer2 me-1"></i>Profile</label>
+                        <select class="form-select" id="editProfile" name="profile" required>
+                            <% if (profiles && profiles.length > 0) { %>
+                                <% profiles.forEach(function(profile) { %>
+                                    <option value="<%= profile.name %>"><%= profile.name %></option>
+                                <% }); %>
+                            <% } else { %>
+                                <option value="">No ada profile tersedia</option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-warning"><i class="bi bi-save me-1"></i>Save Perubahan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script src="/js/adminHotspotTable.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+    /* Custom styles for tables */
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    /* Badge styles */
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+    }
+    
+    /* Animated elements */
+    .rotate-refresh {
+        animation: rotate 1s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Card hover effects */
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    
+    /* Button hover effects */
+    .btn-outline-danger:hover i,
+    .btn-outline-warning:hover i {
+        transform: scale(1.2);
+        transition: transform 0.2s;
+    }
+    
+    .btn i {
+        transition: transform 0.2s;
+    }
+    /* Mobile responsive fixes */
+    @media (max-width: 767.98px) {
+        .main-content {
+            margin-top: 70px !important; /* Extra space for mobile navbar */
+            padding-top: 10px !important;
+            z-index: 1;
+        }
+        .card {
+            z-index: 1;
+        }
+        /* Pastikan cards tidak overlap dengan mobile navbar */
+        .row.mb-4:first-of-type {
+            margin-top: 10px;
+        }
+        /* Responsive notification positioning */
+        #restartNotif {
+            top: 80px !important; /* Below mobile navbar */
+            right: 10px !important;
+            left: 10px !important;
+            width: auto !important;
+        }
+    }
+</style>
+<script>
+// Global variable to hold voucher data for printing
+window.vouchersToPrint = {};
+
+// Template for Model 1 (Simple)
+function getModel1VoucherHTML(voucher, price, companyHeader, adminKontak) {
+    const colors = { '5000': '#1433FD', '10000': '#663399', '20000': '#0000FF', '50000': '#FF8C00' };
+    const color = colors[price] || '#FF69B4';
+    const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+
+    return `
+        <div style="border: 1px solid ${color}; border-radius: 5px; margin: 4px; padding: 5px; width: 220px; text-align: center; font-family: 'Courier New', monospace; page-break-inside: avoid; background-color: #fff;">
+            <div style="font-weight: bold; font-size: 14px;">${companyHeader}</div>
+            <div style="font-size: 12px; margin: 5px 0;">Paket ${formattedPrice}</div>
+            <div style="border: 1px solid ${color}; border-radius: 5px; padding: 8px; margin: 5px 0; font-weight: bold; font-size: 16px;">
+                ${voucher.username}
+            </div>
+            <div style="font-size: 10px;">Login: ${voucher.username}</div>
+            ${voucher.username !== voucher.password ? `<div style="font-size: 10px;">Pass: ${voucher.password}</div>` : ''}
+            <div style="font-size: 10px; margin-top: 5px;">Kontak: ${adminKontak}</div>
+        </div>
+    `;
+}
+
+// Template for Model 2 (Standard)
+function getModel2VoucherHTML(voucher, price, companyHeader, adminKontak) {
+    const color = '#bf0000';
+    const formattedPrice = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(price);
+    return `
+        <div style="border: 1px solid ${color}; border-radius: 4px; text-align: center; font-size: 12px; font-weight:bold; width: 245px; margin: 4px; page-break-inside: avoid; background-color: #f2f2f2;">
+            <div style="background-color: #E6E6E6; border: 1px solid ${color}; border-radius: 4px; padding: 5px;">
+                <div style="font-size: 16px; font-weight: bold;">${companyHeader}</div>
+            </div>
+            <div style="font-weight:bold; font-size:28px; color:#555; margin-top: 5px;">
+                <small style="font-size:18px;">Rp</small>${formattedPrice}
+            </div>
+            <div style="font-weight:bold; color:#555; font-size:13px;">Kode Voucher</div>
+            <div style="border: 1px solid #000; border-radius: 6px; font-weight:bold; font-size:22px; color: #FFF; background-color: ${color}; margin: 5px; padding: 5px;">
+                ${voucher.username}
+            </div>
+            <div style="font-size: 10px;">Login dengan kode di atas</div>
+             ${voucher.username !== voucher.password ? `<div style="font-size: 10px;">Password: ${voucher.password}</div>` : ''}
+            <div style="font-size: 10px; margin-top: 5px;">${adminKontak}</div>
+        </div>
+    `;
+}
+
+// Template for Default Model
+function getDefaultVoucherHTML(voucher, price, companyHeader, adminKontak) {
+    const priceValue = typeof price === 'string' ? parseInt(price) || 0 : price || 0;
+    const formattedPrice = new Intl.NumberFormat('id-ID', { 
+        style: 'currency', 
+        currency: 'IDR', 
+        minimumFractionDigits: 0 
+    }).format(priceValue);
+    
+    const header = companyHeader || 'Name Hotspot';
+    const contact = adminKontak || 'Kontak Admin';
+    
+    return `
+        <div class="voucher-card">
+            <div class="header">${header}</div>
+            <div class="price">${formattedPrice}</div>
+            <div class="login-info">
+                <div>Login: @hotspot</div>
+                <div class="credentials">
+                    <div class="username">${voucher.username}</div>
+                    ${voucher.username !== voucher.password ? 
+                        `<div class="password">Pass: ${voucher.password}</div>` : ''}
+                </div>
+            </div>
+            <div class="footer">Hubungi: ${contact}</div>
+        </div>
+    `;
+}
+
+function printVouchers() {
+    if (!window.vouchersToPrint || !window.vouchersToPrint.vouchers || window.vouchersToPrint.vouchers.length === 0) {
+        alert('No data available voucher untuk dicetak.');
+        return;
+    }
+
+    const { vouchers, price, model } = window.vouchersToPrint;
+    const companyHeader = document.body.getAttribute('data-company-header') || 'Name Hotspot';
+    const adminKontak = document.body.getAttribute('data-admin-kontak') || 'Kontak Admin';
+
+    let content = '<div class="voucher-container">';
+    vouchers.forEach((voucher, index) => {
+        let voucherHTML = '';
+        switch (model) {
+            case 'model1':
+                voucherHTML = getModel1VoucherHTML(voucher, price, companyHeader, adminKontak);
+                break;
+            case 'model2':
+                voucherHTML = getModel2VoucherHTML(voucher, price, companyHeader, adminKontak);
+                break;
+            default:
+                voucherHTML = getDefaultVoucherHTML(voucher, price, companyHeader, adminKontak);
+        }
+        if (index > 0 && index % 8 === 0) {
+            content += '<div class="page-break"></div>';
+        }
+        content += voucherHTML;
+    });
+    content += '</div>';
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Print Voucher</title>
+            <meta charset="UTF-8">
+            <style>
+                @page { size: A4; margin: 0.5cm; }
+                @media print {
+                    body { 
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        margin: 0; padding: 0;
+                    }
+                    .voucher-container { page-break-after: always; page-break-inside: avoid; }
+                    .page-break { page-break-after: always; break-after: page; }
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0; padding: 0.5cm;
+                    width: 21cm; min-height: 29.7cm;
+                    box-sizing: border-box;
+                }
+                .voucher-container {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 0.5cm; width: 100%;
+                }
+                .voucher-card {
+                    width: 100%; border: 1px solid #ccc;
+                    border-radius: 10px; padding: 10px;
+                    box-sizing: border-box; break-inside: avoid;
+                    page-break-inside: avoid; background-color: #fff;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .header {
+                    font-weight: bold; font-size: 0.9em; color: #fff;
+                    background-color: #007bff; padding: 8px;
+                    border-radius: 5px 5px 0 0;
+                    margin: -10px -10px 10px -10px;
+                }
+                .price {
+                    font-size: 1em; font-weight: bold; margin: 5px 0; color: #333;
+                }
+                .login-info { margin: 8px 0; font-size: 0.8em; }
+                .credentials {
+                    border: 1px dashed #666; padding: 5px; margin: 8px 0;
+                    background-color: #f9f9f9; border-radius: 4px;
+                }
+                .username { font-size: 1.1em; font-weight: bold; word-break: break-all; }
+                .password { font-size: 0.9em; color: #555; word-break: break-all; }
+                .footer {
+                    font-size: 0.8em; margin-top: 8px; color: #666;
+                    border-top: 1px solid #eee; padding-top: 5px;
+                }
+            </style>
+        </head>
+        <body onload="window.print();">${content}</body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Fungsi untuk memuat data user hotspot aktif dengan optimasi
+    function loadActiveUsers() {
+        if (isLoading) {
+            console.log('Sedang loading, skip request...');
+            return;
+        }
+        
+        isLoading = true;
+        console.log('Memulai fetch data active users...');
+        
+        // Addkan timeout untuk request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 detik timeout
+        
+        fetch('/admin/hotspot/active-users', {
+            signal: controller.signal
+        })
+            .then(response => {
+                clearTimeout(timeoutId);
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                isLoading = false;
+                console.log('Data yang diterima:', data);
+                const tableBody = document.getElementById('activeUsersTableBody');
+                const activeUserCountInfo = document.getElementById('activeUserCountInfo');
+                
+                // Check if elements exist before proceeding
+                if (!tableBody) {
+                    console.warn('activeUsersTableBody element not found');
+                    return;
+                }
+                let activeUsers = [];
+                if (data.success && data.activeUsersList && Array.isArray(data.activeUsersList)) {
+                    activeUsers = data.activeUsersList;
+                } else if (data.success && data.data && Array.isArray(data.data)) {
+                    activeUsers = data.data;
+                }
+                if (activeUsers.length > 0) {
+                    // Limit data yang ditampilkan untuk performa (max 50 users)
+                    const maxDisplayUsers = 50;
+                    const limitedUsers = activeUsers.slice(0, maxDisplayUsers);
+                    
+                    // Sorting dengan optimasi
+                    const sortedUsers = limitedUsers.sort((a, b) => {
+                        const getSeconds = (uptimeStr) => {
+                            if (!uptimeStr) return 0;
+                            // Simplified parsing untuk performa
+                            const match = uptimeStr.match(/(\d+)([dhms])/g);
+                            if (!match) return 0;
+                            let total = 0;
+                            match.forEach(part => {
+                                const num = parseInt(part);
+                                const unit = part.slice(-1);
+                                switch(unit) {
+                                    case 'd': total += num * 86400; break;
+                                    case 'h': total += num * 3600; break;
+                                    case 'm': total += num * 60; break;
+                                    case 's': total += num; break;
+                                }
+                            });
+                            return total;
+                        };
+                        return getSeconds(b.uptime) - getSeconds(a.uptime);
+                    });
+                    
+                    // Batch processing untuk UI yang tidak blocking
+                    function renderUsersBatch(users, startIndex = 0, batchSize = 10) {
+                        const endIndex = Math.min(startIndex + batchSize, users.length);
+                        let html = '';
+                        
+                        for (let i = startIndex; i < endIndex; i++) {
+                            const user = users[i];
+                            const formattedUptime = formatUptime(user.uptime);
+                            let badgeClass = 'bg-success';
+                            if (user.uptime && user.uptime.includes('d')) {
+                                badgeClass = 'bg-primary';
+                            } else if (user.uptime && user.uptime.includes('h')) {
+                                const hours = parseInt(user.uptime.match(/(\d+)h/)?.[1] || 0);
+                                if (hours > 5) badgeClass = 'bg-info';
+                            }
+                            
+                            html += `
+                                <tr class="align-middle">
+                                    <td class="fw-bold">${user.user || user.name}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-hdd-network-fill text-secondary me-2"></i>
+                                            <code class="bg-light px-2 py-1 rounded">${user.address || '-'}</code>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge ${badgeClass}">
+                                            <i class="bi bi-clock me-1"></i> ${formattedUptime}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-danger disconnect-user" data-username="${user.user || user.name}" title="Putus koneksi user">
+                                            <i class="bi bi-power"></i> Putus
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                        
+                        if (startIndex === 0) {
+                            tableBody.innerHTML = html;
+                        } else {
+                            tableBody.innerHTML += html;
+                        }
+                        
+                        // Render batch berikutnya secara asinkron
+                        if (endIndex < users.length) {
+                            setTimeout(() => renderUsersBatch(users, endIndex, batchSize), 10);
+                        } else {
+                            // Selesai render, tambahkan event listeners
+                            document.querySelectorAll('.disconnect-user').forEach(btn => {
+                                btn.addEventListener('click', disconnectUser);
+                            });
+                        }
+                    }
+                    
+                    // Mulai rendering dengan batch
+                    renderUsersBatch(sortedUsers);
+                    
+                    // Tampilkan info jika data dipotong
+                    if (activeUsers.length > maxDisplayUsers) {
+                        console.log(`Menampilkan ${maxDisplayUsers} dari ${activeUsers.length} user aktif untuk performa`);
+                    }
+                    // Destroy & re-init DataTables hanya jika tabel ada di DOM dan data valid
+                    if (document.getElementById('activeUsersTable') && $.fn.DataTable.isDataTable('#activeUsersTable')) {
+                        $('#activeUsersTable').DataTable().destroy();
+                    }
+                    if (document.getElementById('activeUsersTable')) {
+                        $('#activeUsersTable').DataTable({
+                            pageLength: 10,
+                            lengthMenu: [10, 25, 50, 100],
+                            responsive: true,
+                            dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex"f>>rtip',
+                            language: {
+                                paginate: {
+                                    previous: '<i class="bi bi-chevron-left"></i>',
+                                    next: '<i class="bi bi-chevron-right"></i>'
+                                },
+                                info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ user',
+                                lengthMenu: 'Tampilkan _MENU_ user',
+                                search: 'Cari:',
+                                zeroRecords: 'No ada user aktif ditemukan',
+                                infoEmpty: 'Menampilkan 0 sampai 0 dari 0 user',
+                                infoFiltered: '(difilter dari _MAX_ total user)'
+                            },
+                            columnDefs: [
+                                { targets: -1, orderable: false, width: '80px', className: 'text-center' },
+                                { targets: 0, width: '25%' },
+                                { targets: 1, width: '25%' },
+                                { targets: 2, width: '25%', className: 'text-center' }
+                            ]
+                        });
+                    }
+                    // Update counter di card statistik dengan animasi
+                    const activeUserCount = document.getElementById('activeUserCount');
+                    if (activeUserCount) {
+                        activeUserCount.textContent = activeUsers.length;
+                        activeUserCount.classList.add('animate__animated', 'animate__heartBeat');
+                        setTimeout(() => {
+                            activeUserCount.classList.remove('animate__animated', 'animate__heartBeat');
+                        }, 1000);
+                    }
+                    // Update info di footer tabel
+                    if (activeUserCountInfo) {
+                        const displayCount = Math.min(activeUsers.length, maxDisplayUsers);
+                        activeUserCountInfo.innerHTML = `
+                            <i class="bi bi-info-circle me-1"></i>
+                            Menampilkan ${displayCount} dari ${activeUsers.length} user aktif | Terakhir diperbarui: 
+                            <span class="fw-bold">${new Date().toLocaleTimeString('id-ID')}</span>
+                        `;
+                    }
+                } else {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center py-5 animate__animated animate__fadeIn">
+                                <i class="bi bi-wifi-off text-secondary me-2" style="font-size: 2rem;"></i>
+                                <p class="mb-0 mt-2">No ada user hotspot aktif</p>
+                                <p class="text-muted small">Semua user hotspot sedang tidak terhubung</p>
+                            </td>
+                        </tr>
+                    `;
+                    const activeUserCount = document.getElementById('activeUserCount');
+                    if (activeUserCount) activeUserCount.textContent = '0';
+                    if (activeUserCountInfo) {
+                        activeUserCountInfo.innerHTML = `
+                            <i class="bi bi-info-circle me-1"></i>
+                            No ada user aktif | Terakhir diperbarui: 
+                            <span class="fw-bold">${new Date().toLocaleTimeString('id-ID')}</span>
+                        `;
+                    }
+                }
+            })
+            .catch(error => {
+                isLoading = false;
+                clearTimeout(timeoutId);
+                
+                // Handle different error types
+                if (error.name === 'AbortError') {
+                    console.error('Request timeout: Active users fetch aborted');
+                } else {
+                    console.error('Error fetching active users:', error);
+                }
+                
+                const tableBody = document.getElementById('activeUsersTableBody');
+                if (tableBody) {
+                    const errorMessage = error.name === 'AbortError' ? 
+                        'Request timeout - terlalu banyak data untuk diproses' : 
+                        error.message;
+                    tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 animate__animated animate__fadeIn">
+                            <i class="bi bi-exclamation-triangle-fill text-danger me-2" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2 text-danger">Failed memuat data</p>
+                            <p class="text-danger small">${errorMessage}</p>
+                        </td>
+                    </tr>
+                `;
+                }
+                const activeUserCountInfo = document.getElementById('activeUserCountInfo');
+                if (activeUserCountInfo) {
+                    activeUserCountInfo.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <span class="text-danger">Failed memuat data</span>
+                    `;
+                }
+            });
+    }
+    
+    // Fungsi untuk memutus koneksi user hotspot aktif
+    function disconnectUser(event) {
+        const username = event.currentTarget.getAttribute('data-username');
+        const userRow = event.currentTarget.closest('tr');
+        document.getElementById('disconnectUsername').textContent = username;
+        
+        // Highlight baris user yang akan diputus
+        userRow.classList.add('table-danger', 'animate__animated', 'animate__pulse');
+        
+        // Tampilkan modal konfirmasi dengan animasi
+        const disconnectModal = new bootstrap.Modal(document.getElementById('disconnectUserModal'));
+        disconnectModal.show();
+        
+        // Delete highlight setelah modal ditutup
+        document.getElementById('disconnectUserModal').addEventListener('hidden.bs.modal', function() {
+            userRow.classList.remove('table-danger', 'animate__animated', 'animate__pulse');
+        }, { once: true });
+        
+        // Event listener untuk tombol konfirmasi di modal
+        document.getElementById('confirmDisconnect').onclick = function() {
+            // Tampilkan loading state pada tombol
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memutus...';
+            
+            // Addkan efek visual pada baris yang akan diputus
+            userRow.classList.add('animate__animated', 'animate__fadeOut');
+            
+            fetch('/admin/hotspot/disconnect-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Sembunyikan modal
+                disconnectModal.hide();
+                
+                // Reset tombol konfirmasi
+                document.getElementById('confirmDisconnect').disabled = false;
+                document.getElementById('confirmDisconnect').innerHTML = '<i class="bi bi-power me-1"></i>Putus Koneksi';
+                
+                // Tampilkan toast notification dengan animasi
+                const toastEl = document.getElementById('notificationToast');
+                const toastTitle = document.getElementById('toastTitle');
+                const toastMessage = document.getElementById('toastMessage');
+                const toastHeader = document.getElementById('toastHeader');
+                const toastIcon = document.getElementById('toastIcon');
+                const toastTime = document.getElementById('toastTime');
+                
+                // Set waktu notifikasi
+                toastTime.textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                
+                if (data.success) {
+                    // Styling untuk notifikasi sukses
+                    toastTitle.textContent = 'Successful';
+                    toastMessage.innerHTML = `User <strong>${username}</strong> berhasil diputus dari hotspot.`;
+                    toastHeader.className = 'toast-header bg-success text-white';
+                    toastIcon.className = 'bi bi-check-circle-fill me-2';
+                    
+                    // Addkan animasi pada toast
+                    toastEl.classList.add('animate__animated', 'animate__fadeInUp');
+                } else {
+                    // Styling untuk notifikasi gagal
+                    toastTitle.textContent = 'Failed';
+                    toastMessage.innerHTML = `<strong>Error:</strong> ${data.message || 'Failed memutus koneksi user.'}`;
+                    toastHeader.className = 'toast-header bg-danger text-white';
+                    toastIcon.className = 'bi bi-exclamation-circle-fill me-2';
+                    
+                    // Addkan animasi pada toast
+                    toastEl.classList.add('animate__animated', 'animate__shakeX');
+                }
+                
+                const toastInstance = new bootstrap.Toast(toastEl);
+                toastInstance.show();
+                
+                // Refresh data user aktif dengan efek loading
+                const refreshBtn = document.getElementById('refreshActiveUsers');
+                refreshBtn.click(); // Trigger refresh button click untuk menampilkan loading state
+                
+                // Delete animasi dari toast setelah ditampilkan
+                setTimeout(() => {
+                    toastEl.classList.remove('animate__animated', 'animate__fadeInUp', 'animate__shakeX');
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Error disconnecting user:', error);
+                
+                // Sembunyikan modal
+                disconnectModal.hide();
+                
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-power"></i> Putus';
+            });
+        };
+        
+        confirmModal.show();
+    }
+    
+    // Load active users saat halaman dimuat dengan debounce
+    let isLoading = false;
+    let loadTimeout = null;
+    
+    function debouncedLoadActiveUsers() {
+        if (isLoading) return;
+        
+        clearTimeout(loadTimeout);
+        loadTimeout = setTimeout(() => {
+            if (!isLoading) {
+                loadActiveUsers();
+                updateLastUpdatedTime();
+            }
+        }, 1000);
+    }
+    
+    // Load initial data
+    debouncedLoadActiveUsers();
+    
+    // Set interval untuk refresh data setiap 60 detik (diperlambat untuk mengurangi beban)
+    setInterval(() => {
+        debouncedLoadActiveUsers();
+    }, 60000);
+    
+    // Fungsi untuk memperbarui waktu terakhir diperbarui
+    function updateLastUpdatedTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const element = document.getElementById('lastUpdatedTimeValue');
+        if (element) {
+            element.textContent = timeString;
+        }
+    }
+    
+    // Event listener untuk tombol refresh (jika ada)
+    const refreshBtn = document.getElementById('refreshActiveUsers');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+        this.disabled = true;
+        const icon = this.querySelector('i');
+        icon.classList.add('rotate-refresh');
+        this.querySelector('i').classList.add('rotate-refresh');
+        this.innerHTML = '<i class="bi bi-arrow-clockwise rotate-refresh"></i> Memperbarui...';
+        
+        // Addkan efek loading pada tabel
+        const tableBody = document.getElementById('activeUsersTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 mb-0">Memuat data user aktif...</p>
+                </td>
+            </tr>
+        `;
+        }
+        
+        loadActiveUsers();
+        updateLastUpdatedTime();
+        
+        setTimeout(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
+        }, 1000);
+        });
+    }
+    
+    const generateVoucherForm = document.getElementById('generateVoucherForm');
+    const voucherResultDiv = document.getElementById('voucherResult');
+
+    if (generateVoucherForm) {
+        generateVoucherForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+
+        const formData = new FormData(generateVoucherForm);
+        const data = Object.fromEntries(formData.entries());
+
+        if (!data.price) {
+            alert('Price tidak boleh kosong.');
+            btn.disabled = false;
+            btn.innerHTML = 'Generate';
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/hotspot/generate-vouchers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const result = await response.json();
+
+                            if (result.success) {
+                    window.vouchersToPrint = {
+                        vouchers: result.vouchers,
+                        price: data.price,
+                        model: data.voucherModel
+                    };
+
+                    let resultHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Voucher Successful Dibuat (${result.vouchers.length})</h5>
+                                <button class="btn btn-success mb-3" onclick="printVouchers()"><i class="bi bi-printer"></i> Print / Preview</button>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead><tr><th>Username</th><th>Password</th><th>Profile</th></tr></thead>
+                                        <tbody>
+                                            ${result.vouchers.map(v => `<tr><td>${v.username}</td><td>${v.password}</td><td>${v.profile}</td></tr>`).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>`;
+                    if (voucherResultDiv) {
+                        voucherResultDiv.innerHTML = resultHTML;
+                    }
+                
+                // Update voucher count in statistics
+                const currentCount = parseInt($('#voucherCount').text()) || 0;
+                $('#voucherCount').text(currentCount + result.vouchers.length);
+                
+                bootstrap.Modal.getInstance(document.getElementById('generateVoucherModal')).hide();
+
+            } else {
+                alert('Failed membuat voucher: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menghubungi server.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Generate';
+        }
+        });
+    }
+
+    // Search functionality
+    function filterUsers() {
+        const searchTerm = document.getElementById('searchUserInput').value.toLowerCase();
+        const rows = document.querySelectorAll('.user-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const username = row.querySelector('.username').textContent.toLowerCase();
+            if (username.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('showingCount').textContent = visibleCount;
+    }
+
+    const searchInput = document.getElementById('searchUserInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', filterUsers);
+    }
+    
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            if (searchInput) {
+                searchInput.value = '';
+                filterUsers();
+            }
+        });
+    }
+
+    // Auto-hide notifications
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            const fadeEffect = setInterval(() => {
+                if (!alert.style.opacity) {
+                    alert.style.opacity = 1;
+                }
+                if (alert.style.opacity > 0) {
+                    alert.style.opacity -= 0.1;
+                } else {
+                    clearInterval(fadeEffect);
+                    alert.remove();
+                }
+            }, 100);
+        }, 5000);
+    });
+
+    // Update active users count and table (real data from Mikrotik API)
+    function updateActiveUsers() {
+        // Update counter
+        fetch('/admin/hotspot/active-users')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('activeUsers').textContent = data.activeUsers || 0;
+                    
+                    // Update active users table if data contains activeUsersList
+                    if (data.activeUsersList && Array.isArray(data.activeUsersList)) {
+                        updateActiveUsersTable(data.activeUsersList);
+                    } else {
+                        // Jika tidak ada data detail, panggil endpoint khusus untuk tabel
+                        fetchActiveUsersTable();
+                    }
+                } else {
+                    console.error('Failed to get active users:', data.message);
+                    document.getElementById('activeUsers').textContent = '-';
+                    showEmptyActiveUsersTable('Failed memuat data: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching active users:', error);
+                document.getElementById('activeUsers').textContent = '-';
+                showEmptyActiveUsersTable('Error koneksi ke server');
+            });
+    }
+
+    // Fetch active users table data
+    function fetchActiveUsersTable() {
+        fetch('/admin/hotspot/active-users-detail')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.activeUsers) {
+                    updateActiveUsersTable(data.activeUsers);
+                } else {
+                    showEmptyActiveUsersTable('No ada user aktif');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching active users table:', error);
+                showEmptyActiveUsersTable('Error koneksi ke server');
+            });
+    }
+
+    // Update active users table with data
+    function updateActiveUsersTable(users) {
+        const tbody = document.getElementById('activeUsersTableBody');
+        tbody.innerHTML = '';
+        
+        if (!users || users.length === 0) {
+            showEmptyActiveUsersTable('No ada user aktif saat ini');
+            return;
+        }
+        
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            
+            // Format uptime to readable format
+            const uptime = formatUptime(user.uptime || '0s');
+            
+            row.innerHTML = `
+                <td>${user.name || user.user || '-'}</td>
+                <td>${user.address || user.ip || '-'}</td>
+                <td>${uptime}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm disconnect-user" data-username="${user.name || user.user}">
+                        <i class="bi bi-x-circle me-1"></i>Putus
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        // Add event listeners to disconnect buttons
+        document.querySelectorAll('.disconnect-user').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const username = this.getAttribute('data-username');
+                disconnectUser(username, this);
+            });
+        });
+    }
+
+    // Show empty state for active users table
+    function showEmptyActiveUsersTable(message) {
+        const tbody = document.getElementById('activeUsersTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-3">
+                    <i class="bi bi-info-circle me-2"></i>${message || 'No ada user aktif'}
+                </td>
+            </tr>
+        `;
+    }
+
+    // Format uptime string to readable format
+    function formatUptime(uptimeStr) {
+        if (!uptimeStr) return '-';
+        
+        // If already formatted, return as is
+        if (uptimeStr.includes('h') || uptimeStr.includes('m') || uptimeStr.includes('d')) {
+            return uptimeStr;
+        }
+        
+        // Try to parse seconds
+        const seconds = parseInt(uptimeStr.replace(/[^0-9]/g, ''));
+        if (isNaN(seconds)) return uptimeStr;
+        
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        
+        let result = '';
+        if (days > 0) result += `${days}d `;
+        if (hours > 0 || days > 0) result += `${hours}h `;
+        if (minutes > 0 || hours > 0 || days > 0) result += `${minutes}m `;
+        result += `${secs}s`;
+        
+        return result;
+    }
+
+    // Disconnect a user
+    function disconnectUser(username, buttonElement) {
+        if (!confirm(`Sure memutus koneksi user ${username}?`)) return;
+        
+        const originalText = buttonElement.innerHTML;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        
+        fetch('/admin/hotspot/disconnect-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove row from table
+                buttonElement.closest('tr').remove();
+                
+                // Show toast notification
+                showToast(`User ${username} berhasil diputus`, 'success');
+                
+                // Update active users count
+                updateActiveUsers();
+            } else {
+                showToast(`Failed memutus user: ${data.message}`, 'danger');
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error disconnecting user:', error);
+            showToast('Error koneksi ke server', 'danger');
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+        });
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'info') {
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1080';
+        
+        const toast = document.createElement('div');
+        toast.className = `toast show bg-${type} text-white`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="toast-header bg-${type} text-white">
+                <strong class="me-auto">${type === 'success' ? 'Success' : type === 'danger' ? 'Error' : 'Info'}</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        document.body.appendChild(toastContainer);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toastContainer.remove(), 500);
+        }, 5000);
+        
+        // Add click event to close button
+        toast.querySelector('.btn-close').addEventListener('click', () => {
+            toast.classList.remove('show');
+            setTimeout(() => toastContainer.remove(), 500);
+        });
+    }
+    
+    function updateHotspotStats() {
+        // Update total users count
+        const totalUsers = parseInt('<%= allUsers.length %>') || 0;
+        const totalUsersEl = document.getElementById('totalUsers');
+        if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+        
+        // Update total profiles count
+        const totalProfiles = parseInt('<%= profiles.length %>') || 0;
+        const totalProfilesEl = document.getElementById('profileCount');
+        if (totalProfilesEl) totalProfilesEl.textContent = totalProfiles;
+    }
+    
+    // Initialize all statistics
+    updateHotspotStats();
+    
+    // Update active users every 2 minutes (dikurangi untuk mengurangi beban server)
+    setInterval(updateActiveUsers, 120000);
+    
+    // Refresh hotspot stats button
+    const refreshStatsBtn = document.getElementById('btnRefreshHotspotStats');
+    if (refreshStatsBtn) {
+        refreshStatsBtn.addEventListener('click', function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Loading...';
+        
+        // Update all statistics
+        updateActiveUsers();
+        updateHotspotStats();
+        
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Statistik';
+        }, 2000);
+        });
+    }
+
+    // Hamburger & sidebar logic
+    const hamburger = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (hamburger && sidebar && overlay) {
+        hamburger.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        });
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+    }
+
+    // Functions untuk Voucher Online Settings
+    window.generateManualVoucher = function() {
+        const username = document.getElementById('manualUsername').value.trim();
+        const password = document.getElementById('manualPassword').value.trim();
+        const profile = document.getElementById('manualProfile').value;
+
+        if (!username || !password) {
+            showToast('Username dan password harus diisi!', 'error');
+            return;
+        }
+
+        // Generate voucher manual via AJAX
+        fetch('/admin/hotspot/generate-manual-voucher', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password,
+                profile: profile
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Voucher manual berhasil dibuat: ${username}`, 'success');
+                // Clear form
+                document.getElementById('manualUsername').value = '';
+                document.getElementById('manualPassword').value = '';
+                // Reload page to refresh table
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showToast('Failed membuat voucher: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error membuat voucher manual', 'error');
+        });
+    };
+
+    window.generateAutoVoucher = function() {
+        const count = parseInt(document.getElementById('autoCount').value) || 1;
+        const profile = document.getElementById('autoProfile').value;
+        const isNumeric = document.getElementById('autoNumeric').checked;
+
+        // Generate voucher otomatis via AJAX
+        fetch('/admin/hotspot/generate-auto-voucher', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                count: count,
+                profile: profile,
+                numericOnly: isNumeric
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`${count} voucher otomatis berhasil dibuat`, 'success');
+                // Reload page to refresh table
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showToast('Failed membuat voucher: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error menyimpan setting voucher online', 'error');
+        });
+    };
+
+    // Function untuk test generate voucher (incomplete implementation)
+    window.testGenerateVoucher = function() {
+        // This function appears to be incomplete
+        // Placeholder implementation
+        console.warn('Test generate voucher function is not fully implemented');
+        showToast('Fitur test generate voucher belum diimplementasikan sepenuhnya', 'warning');
+    };
+
+    // Function untuk menyimpan pengaturan generate voucher
+    window.saveVoucherGenerationSettings = function() {
+        const settings = {
+            username_length: document.getElementById('voucher_username_length').value,
+            password_length: document.getElementById('voucher_password_length').value,
+            char_type: document.getElementById('voucher_char_type').value,
+            username_format: document.getElementById('voucher_username_format').value,
+            account_type: document.getElementById('voucher_account_type').value,
+            password_length_separate: document.getElementById('voucher_password_length_separate').value
+        };
+
+        // Save via AJAX
+        fetch('/admin/hotspot/save-voucher-generation-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ settings: settings })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Pengaturan generate voucher berhasil disimpan!', 'success');
+            } else {
+                showToast('Failed to save pengaturan: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error menyimpan pengaturan generate voucher', 'error');
+        });
+    };
+
+    // Function untuk edit nama paket
+    window.editPackageName = function(packageId) {
+        const nameInput = document.getElementById(`name_${packageId}`);
+        const headerElement = document.querySelector(`#profile_${packageId}`).closest('.card').querySelector('.card-header h6');
+        
+        if (nameInput && headerElement) {
+            // Update header dengan nama baru
+            headerElement.textContent = nameInput.value;
+            
+            // Tampilkan toast konfirmasi
+            showToast(`Name paket ${packageId} berhasil diupdate`, 'success');
+        }
+    };
+
+    // Function untuk toggle password length field berdasarkan tipe akun
+    window.togglePasswordLengthField = function() {
+        const accountType = document.getElementById('voucher_account_type').value;
+        const passwordField = document.getElementById('password_length_separate_field');
+        
+        if (accountType === 'voucher') {
+            passwordField.style.display = 'none';
+        } else {
+            passwordField.style.display = 'block';
+        }
+    };
+
+    // Initialize field visibility saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', function() {
+        togglePasswordLengthField();
+    });
+
+    // Function untuk test generate voucher
+    window.testVoucherGeneration = function() {
+        const settings = {
+            username_length: document.getElementById('voucher_username_length').value,
+            password_length: document.getElementById('voucher_password_length').value,
+            char_type: document.getElementById('voucher_char_type').value,
+            username_format: document.getElementById('voucher_username_format').value,
+            account_type: document.getElementById('voucher_account_type').value,
+            password_length_separate: document.getElementById('voucher_password_length_separate').value
+        };
+
+        // Test via AJAX
+        fetch('/admin/hotspot/test-voucher-generation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ settings: settings })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const accountTypeText = data.account_type === 'voucher' ? 'Voucher' : 'Member';
+                const passwordText = data.account_type === 'voucher' ? '(sama dengan username)' : data.password;
+                showToast(`Test ${accountTypeText} berhasil! Username: ${data.username}, Password: ${passwordText}`, 'success');
+            } else {
+                showToast('Test gagal: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error test generate voucher', 'error');
+        });
+    };
+
+    // Function untuk simpan setting voucher online
+    window.saveVoucherOnlineSettings = function() {
+        const settings = {
+            online_50k: {
+                enabled: document.getElementById('online_50k').checked
+            }
+        };
+
+        fetch('/admin/hotspot/save-voucher-online-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ settings: settings })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Setting voucher online berhasil disimpan!', 'success');
+            } else {
+                showToast('Failed to save setting: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error menyimpan setting voucher online', 'error');
+        });
+    };
+
+    // Function untuk test generate voucher (incomplete implementation)
+    window.testGenerateVoucher = function() {
+        // This function appears to be incomplete
+        // Placeholder implementation
+        console.warn('Test generate voucher function is not fully implemented');
+        showToast('Fitur test generate voucher belum diimplementasikan sepenuhnya', 'warning');
+    };
+
+    // Function untuk menyimpan setting voucher online
+    window.saveVoucherOnlineSettings = function() {
+        const settings = {
+            '3k': {
+                name: document.getElementById('name_3k').value,
+                profile: document.getElementById('profile_3k').value,
+                price: parseInt(document.getElementById('price_3k').value) || 0,
+                duration: parseInt(document.getElementById('duration_3k').value) || 24,
+                duration_type: document.getElementById('duration_type_3k').value || 'hours',
+                digits: parseInt(document.getElementById('digits_3k').value) || 5,
+                enabled: document.getElementById('online_3k').checked
+            },
+            '5k': {
+                name: document.getElementById('name_5k').value,
+                profile: document.getElementById('profile_5k').value,
+                price: parseInt(document.getElementById('price_5k').value) || 0,
+                duration: parseInt(document.getElementById('duration_5k').value) || 48,
+                duration_type: document.getElementById('duration_type_5k').value || 'hours',
+                digits: parseInt(document.getElementById('digits_5k').value) || 5,
+                enabled: document.getElementById('online_5k').checked
+            },
+            '10k': {
+                name: document.getElementById('name_10k').value,
+                profile: document.getElementById('profile_10k').value,
+                price: parseInt(document.getElementById('price_10k').value) || 0,
+                duration: parseInt(document.getElementById('duration_10k').value) || 120,
+                duration_type: document.getElementById('duration_type_10k').value || 'hours',
+                digits: parseInt(document.getElementById('digits_10k').value) || 5,
+                enabled: document.getElementById('online_10k').checked
+            },
+            '15k': {
+                name: document.getElementById('name_15k').value,
+                profile: document.getElementById('profile_15k').value,
+                price: parseInt(document.getElementById('price_15k').value) || 0,
+                duration: parseInt(document.getElementById('duration_15k').value) || 192,
+                duration_type: document.getElementById('duration_type_15k').value || 'hours',
+                digits: parseInt(document.getElementById('digits_15k').value) || 5,
+                enabled: document.getElementById('online_15k').checked
+            },
+            '25k': {
+                name: document.getElementById('name_25k').value,
+                profile: document.getElementById('profile_25k').value,
+                price: parseInt(document.getElementById('price_25k').value) || 0,
+                duration: parseInt(document.getElementById('duration_25k').value) || 360,
+                duration_type: document.getElementById('duration_type_25k').value || 'hours',
+                digits: parseInt(document.getElementById('digits_25k').value) || 5,
+                enabled: document.getElementById('online_25k').checked
+            },
+            '50k': {
+                name: document.getElementById('name_50k').value,
+                profile: document.getElementById('profile_50k').value,
+                price: parseInt(document.getElementById('price_50k').value) || 0,
+                duration: parseInt(document.getElementById('duration_50k').value) || 720,
+                duration_type: document.getElementById('duration_type_50k').value || 'hours',
+                digits: parseInt(document.getElementById('digits_50k').value) || 5,
+                enabled: document.getElementById('online_50k').checked
+            }
+        };
+
+        fetch('/admin/hotspot/save-voucher-online-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ settings: settings })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Setting voucher online berhasil disimpan!', 'success');
+            } else {
+                showToast('Failed to save setting: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error menyimpan setting voucher online', 'error');
+        });
+    };
+
+    // Function untuk edit nama paket
+    window.editPackageName = function(packageId) {
+        const nameInput = document.getElementById(`name_${packageId}`);
+        const headerElement = document.querySelector(`#profile_${packageId}`).closest('.card').querySelector('.card-header h6');
+        
+        if (nameInput && headerElement) {
+            // Update header dengan nama baru
+            headerElement.textContent = nameInput.value;
+            
+            // Tampilkan toast konfirmasi
+            showToast(`Name paket ${packageId} berhasil diupdate`, 'success');
+        }
+    };
+
+    // Function untuk reset setting voucher online ke profile pertama
+    window.resetVoucherOnlineSettings = function() {
+        if (confirm('Are you sure you want to mereset semua setting voucher online ke profile pertama yang tersedia?')) {
+            // Call backend to reset settings
+            fetch('/admin/hotspot/reset-voucher-online-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI to reflect the reset
+                    const packages = ['3k', '5k', '10k', '15k', '25k', '50k'];
+                    packages.forEach(pkg => {
+                        const profileSelect = document.getElementById(`profile_${pkg}`);
+                        if (profileSelect) {
+                            profileSelect.value = data.defaultProfile;
+                        }
+                    });
+                    showToast(data.message, 'success');
+                } else {
+                    showToast('Failed reset setting: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error reset setting voucher online', 'error');
+            });
+        }
+    };
+
+    // Function untuk cleanup expired vouchers
+    window.cleanupExpiredVouchers = function() {
+        const statusDiv = document.getElementById('cleanupStatus');
+        const button = event.target;
+
+        // Show loading
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = '<small class="text-muted"><i class="bi bi-hourglass me-1"></i>Memproses cleanup...</small>';
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass me-1"></i>Memproses...';
+
+        // Call cleanup API
+        fetch('/voucher/cleanup-expired', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = `<small class="text-success"><i class="bi bi-check-circle me-1"></i>${data.message}</small>`;
+                if (data.details) {
+                    statusDiv.innerHTML += `<br><small class="text-muted">Database: ${data.details.database_deleted}, Mikrotik: ${data.details.mikrotik_deleted}</small>`;
+                }
+
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="bi bi-trash me-1"></i>Cleanup Sekarang';
+                    statusDiv.style.display = 'none';
+                }, 3000);
+
+                // Show success toast
+                showToast('Cleanup voucher expired berhasil!', 'success');
+
+            } else {
+                statusDiv.innerHTML = `<small class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${data.message}</small>`;
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-trash me-1"></i>Cleanup Sekarang';
+
+                // Show error toast
+                showToast('Failed cleanup voucher expired', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Cleanup error:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terjadi kesalahan saat cleanup</small>';
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-trash me-1"></i>Cleanup Sekarang';
+
+            showToast('Error saat cleanup voucher expired', 'error');
+        });
+    };
+
+    // Event handler tombol Edit User pada tabel semua user hotspot
+    $(document).ready(function() {
+        $(document).on('click', '.edit-user-btn', function() {
+            console.log('Tombol edit diklik'); // Debug log
+            const username = $(this).data('username');
+            const password = $(this).data('password');
+            const profile = $(this).data('profile');
+
+            $('#editUsername').val(username);
+            $('#editPassword').val(password);
+            $('#editProfile').val(profile);
+            $('#originalUsername').val(username);
+
+            if ($('#editUserModal').length) {
+                $('#editUserModal').modal('show');
+            } else {
+                console.error('Modal #editUserModal tidak ditemukan di DOM!');
+            }
+        });
+    });
+});
+</script>
+</body>
+</html> 

@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management - Portal Technician</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Boxicons -->
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* Navigation Styles */
+        .navbar-tech {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logout-btn:hover {
+            background: linear-gradient(45deg, #2980b9, #1f618d);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        /* Welcome Section */
+        .user-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .user-info h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .user-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .header-nav {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 1001;
+        }
+        
+        .header-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .back-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            color: white;
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .stats-card {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .stats-icon.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stats-icon.success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .stats-icon.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stats-icon.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        
+        .customer-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-suspended {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .btn-view {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-suspend {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        
+        .btn-restore {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+            }
+            
+            .header-nav h1 {
+                font-size: 1.2rem;
+            }
+            
+            .back-button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            
+            .stats-card .card-body {
+                padding: 15px;
+            }
+            
+            .stats-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-tech">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/technician/dashboard">
+                <i class="bx bx-wrench me-2"></i>Portal Technician
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <i class="bx bx-user-circle me-1"></i>
+                    <%= technician.name %>
+                </span>
+                <a href="/technician/logout" class="logout-btn">
+                    <i class="bx bx-log-out me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Include Technician Responsive Sidebar -->
+            <%- include('../partials/technician-responsive-sidebar', { page: 'customers', technician: technician }) %>
+            
+            <main class="col-md-10 ms-sm-auto main-content">
+                <!-- Welcome Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="user-info">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-1">
+                                        <i class="bx bx-user me-2"></i>Customer Management
+                                    </h4>
+                                    <p class="mb-0 opacity-75">
+                                        <i class="bx bx-user-circle me-1"></i>Technician: <%= technician.name %> | 
+                                        <i class="bx bx-briefcase me-1"></i>Role: <%= technician.role || 'Technician' %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-3">
+                            <h5>Loading customer data...</h5>
+                            <p class="text-muted">Please wait while we fetch the latest information</p>
+                        </div>
+                    </div>
+                </div>
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-6 col-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon primary me-3">
+                            <i class="bx bx-group"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Total Customers</h6>
+                            <h4 class="mb-0" id="totalCustomers">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon success me-3">
+                            <i class="bx bx-check-circle"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Active</h6>
+                            <h4 class="mb-0" id="activeCustomers">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-6 col-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon warning me-3">
+                            <i class="bx bx-pause-circle"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Suspended</h6>
+                            <h4 class="mb-0" id="suspendedCustomers">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon info me-3">
+                            <i class="bx bx-time"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Last Update</h6>
+                            <h6 class="mb-0" id="lastUpdate">-</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row align-items-center">
+                <div class="col-md-3 mb-2">
+                    <label for="statusFilter" class="form-label">Filter Status:</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="searchInput" class="form-label">Search:</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search customer...">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button class="btn btn-primary" onclick="loadCustomerData()">
+                            <i class="bx bx-refresh"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh">
+                            <label class="form-check-label" for="autoRefresh">
+                                Auto Refresh (30s)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Table -->
+        <div class="customer-table">
+            <h5 class="table-header">
+                <i class="bx bx-list-ul me-2"></i>Customer List
+            </h5>
+            <div class="table-responsive">
+                <table id="customerTable" class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Phone</th>
+                            <th>Package</th>
+                            <th>Status</th>
+                            <th>Last Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Edit Customer Modal -->
+    <div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCustomerModalLabel">
+                        <i class="bx bx-edit me-2"></i>Edit Customer
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCustomerForm">
+                        <input type="hidden" id="editCustomerId" name="id">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerName" class="form-label">Name Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editCustomerName" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerPhone" class="form-label">Nomor Phone <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="editCustomerPhone" name="phone" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editCustomerEmail" name="email">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editCustomerStatus" name="status">
+                                    <option value="active">Active</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editCustomerAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="editCustomerAddress" name="address" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerPackage" class="form-label">Package</label>
+                                <select class="form-select" id="editCustomerPackage" name="package_id">
+                                    <option value="">Select Package</option>
+                                    <!-- Options will be populated from server -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerPppoe" class="form-label">PPPoE Username</label>
+                                <input type="text" class="form-control" id="editCustomerPppoe" name="pppoe_username">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerOdp" class="form-label">ODP</label>
+                                <select class="form-select" id="editCustomerOdp" name="odp_id">
+                                    <option value="">Select ODP</option>
+                                    <!-- Options will be populated from server -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerNotes" class="form-label">Catatan</label>
+                                <input type="text" class="form-control" id="editCustomerNotes" name="notes">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bx bx-x me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveCustomerBtn" onclick="saveCustomerEdit()">
+                        <i class="bx bx-save me-1"></i>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <%- include('partials/mobile-navbar', { currentPage: 'customers' }) %>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        let customerTable;
+        let autoRefreshInterval;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initDataTable();
+            loadCustomerData();
+            setupEventListeners();
+        });
+        
+        // Initialize DataTable
+        function initDataTable() {
+            customerTable = $('#customerTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[0, 'asc']], // Sort by Name
+                columnDefs: [
+                    { orderable: false, targets: 6 } // Actions column
+                ],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
+                    }
+                }
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Status filter
+            $('#statusFilter').on('change', function() {
+                const status = $(this).val();
+                if (status === '') {
+                    customerTable.search('').draw();
+                } else {
+                    customerTable.column(4).search(status, true, false).draw();
+                }
+            });
+            
+            // Search input
+            $('#searchInput').on('keyup', function() {
+                customerTable.search(this.value).draw();
+            });
+            
+            // Auto refresh toggle
+            $('#autoRefresh').on('change', function() {
+                if (this.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+            });
+        }
+        
+        // Load customer data
+        async function loadCustomerData() {
+            try {
+                showLoading();
+                
+                const response = await fetch('/technician/api/customer-data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStatistics(data.statistics);
+                    updateCustomerTable(data.customers);
+                    updateLastUpdateTime();
+                    window.currentCustomers = data.customers; // Store for actions
+                } else {
+                    console.error('Failed to load customer data:', data.message);
+                    showError('Failed to load customer data');
+                }
+            } catch (error) {
+                console.error('Error loading customer data:', error);
+                showError('Error loading customer data');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Update statistics
+        function updateStatistics(stats) {
+            document.getElementById('totalCustomers').textContent = stats.total || 0;
+            document.getElementById('activeCustomers').textContent = stats.active || 0;
+            document.getElementById('suspendedCustomers').textContent = stats.suspended || 0;
+        }
+        
+        // Update customer table
+        function updateCustomerTable(customers) {
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+            
+            customers.forEach(customer => {
+                const row = createCustomerRow(customer);
+                tbody.appendChild(row);
+            });
+            
+            // Refresh DataTable
+            customerTable.clear().rows.add($('#customerTableBody tr')).draw();
+        }
+        
+        // Create customer row
+        function createCustomerRow(customer) {
+            const row = document.createElement('tr');
+            
+            // Determine status badge
+            let statusBadge;
+            switch(customer.status) {
+                case 'active':
+                    statusBadge = '<span class="status-badge status-active">Active</span>';
+                    break;
+                case 'suspended':
+                    statusBadge = '<span class="status-badge status-suspended">Suspended</span>';
+                    break;
+                case 'pending':
+                    statusBadge = '<span class="status-badge status-pending">Pending</span>';
+                    break;
+                default:
+                    statusBadge = '<span class="status-badge status-pending">Unknown</span>';
+            }
+            
+            // Format last payment
+            const lastPayment = customer.last_payment_date ? 
+                new Date(customer.last_payment_date).toLocaleDateString('id-ID') : 
+                'Never';
+            
+            // Create action buttons
+            const actions = `
+                <button class="action-btn btn-view me-1" onclick="viewCustomerDetails('${customer.id}')" title="View Details">
+                    <i class="bx bx-info-circle"></i>
+                </button>
+                ${customer.status === 'active' ? 
+                    `<button class="action-btn btn-suspend me-1" onclick="suspendCustomer('${customer.id}', '${customer.username}')" title="Suspend">
+                        <i class="bx bx-pause"></i>
+                    </button>` :
+                    `<button class="action-btn btn-restore me-1" onclick="restoreCustomer('${customer.id}', '${customer.username}')" title="Restore">
+                        <i class="bx bx-play"></i>
+                    </button>`
+                }
+                <button class="action-btn btn-edit" onclick="editCustomer('${customer.id}')" title="Edit">
+                    <i class="bx bx-edit"></i>
+                </button>
+            `;
+            
+            row.innerHTML = `
+                <td><strong>${customer.name || 'N/A'}</strong></td>
+                <td>${customer.username || customer.pppoe_username || 'N/A'}</td>
+                <td>${customer.phone || 'N/A'}</td>
+                <td>${customer.package_name || 'N/A'}</td>
+                <td>${statusBadge}</td>
+                <td>${lastPayment}</td>
+                <td>${actions}</td>
+            `;
+            
+            return row;
+        }
+        
+        // View customer details
+        function viewCustomerDetails(customerId) {
+            const customer = window.currentCustomers?.find(c => c.id == customerId);
+            if (!customer) return;
+            
+            const detailsHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bx bx-user me-2"></i>Customer Information</h6>
+                        <hr>
+                        <p><strong>Name:</strong> ${customer.name || 'N/A'}</p>
+                        <p><strong>Username:</strong> ${customer.username || customer.pppoe_username || 'N/A'}</p>
+                        <p><strong>Phone:</strong> ${customer.phone || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${customer.email || 'N/A'}</p>
+                        <p><strong>Address:</strong> ${customer.address || 'N/A'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bx bx-package me-2"></i>Service Information</h6>
+                        <hr>
+                        <p><strong>Package:</strong> ${customer.package_name || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${customer.status || 'N/A'}</p>
+                        <p><strong>Installation Date:</strong> ${customer.installation_date ? new Date(customer.installation_date).toLocaleDateString('id-ID') : 'N/A'}</p>
+                        <p><strong>Last Payment:</strong> ${customer.last_payment_date ? new Date(customer.last_payment_date).toLocaleDateString('id-ID') : 'Never'}</p>
+                        <p><strong>Notes:</strong> ${customer.notes || 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+            
+            showModal('Customer Details', detailsHtml);
+        }
+        
+        // Suspend customer
+        function suspendCustomer(customerId, username) {
+            if (!confirm(`Are you sure you want to suspend customer ${username}?`)) {
+                return;
+            }
+            
+            showToast('info', 'Processing', `Suspending customer ${username}...`);
+            
+            fetch(`/technician/api/suspend-customer/${customerId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Success', `Customer ${username} has been suspended`);
+                    loadCustomerData(); // Refresh data
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed to suspend customer');
+                }
+            })
+            .catch(error => {
+                console.error('Error suspending customer:', error);
+                showToast('error', 'Error', 'Failed to suspend customer');
+            });
+        }
+        
+        // Restore customer
+        function restoreCustomer(customerId, username) {
+            if (!confirm(`Are you sure you want to restore customer ${username}?`)) {
+                return;
+            }
+            
+            showToast('info', 'Processing', `Restoring customer ${username}...`);
+            
+            fetch(`/technician/api/restore-customer/${customerId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Success', `Customer ${username} has been restored`);
+                    loadCustomerData(); // Refresh data
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed to restore customer');
+                }
+            })
+            .catch(error => {
+                console.error('Error restoring customer:', error);
+                showToast('error', 'Error', 'Failed to restore customer');
+            });
+        }
+        
+        // Edit customer
+        async function editCustomer(customerId) {
+            try {
+                // Show loading
+                showToast('info', 'Loading', 'Mengambil data customer...');
+                
+                // Fetch customer data
+                const response = await fetch(`/technician/api/customers/${customerId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const customer = data.customer;
+                    console.log('📋 Customer data loaded:', customer);
+                    
+                    // Load packages and ODPs for dropdowns first
+                    await loadEditModalData();
+                    
+                    // Then populate edit modal with customer data
+                    document.getElementById('editCustomerId').value = customer.id;
+                    document.getElementById('editCustomerName').value = customer.name || '';
+                    document.getElementById('editCustomerPhone').value = customer.phone || '';
+                    document.getElementById('editCustomerEmail').value = customer.email || '';
+                    document.getElementById('editCustomerAddress').value = customer.address || '';
+                    document.getElementById('editCustomerPackage').value = customer.package_id || '';
+                    document.getElementById('editCustomerStatus').value = customer.status || 'active';
+                    document.getElementById('editCustomerPppoe').value = customer.pppoe_username || '';
+                    document.getElementById('editCustomerOdp').value = customer.odp_id || '';
+                    document.getElementById('editCustomerNotes').value = customer.notes || '';
+                    
+                    console.log('✅ Form populated with ODP ID:', customer.odp_id);
+                    console.log('✅ Form populated with Package ID:', customer.package_id);
+                    console.log('✅ Form populated with Status:', customer.status);
+                    console.log('✅ Form populated with PPPoE Username:', customer.pppoe_username);
+                    console.log('✅ Form populated with Email:', customer.email);
+                    console.log('✅ Form populated with Address:', customer.address);
+                    console.log('✅ Form populated with Phone:', customer.phone);
+                    console.log('✅ Form populated with Name:', customer.name);
+                    console.log('✅ Form populated with Notes:', customer.notes);
+                    console.log('✅ Form populated with ID:', customer.id);
+                    // Username not used in edit form
+                    console.log('🔍 Current ODP select value:', document.getElementById('editCustomerOdp').value);
+                    console.log('🔍 Current Package select value:', document.getElementById('editCustomerPackage').value);
+                    console.log('🔍 Current Status select value:', document.getElementById('editCustomerStatus').value);
+                    console.log('🔍 Current PPPoE Username value:', document.getElementById('editCustomerPppoe').value);
+                    console.log('🔍 Current Email value:', document.getElementById('editCustomerEmail').value);
+                    console.log('🔍 Current Address value:', document.getElementById('editCustomerAddress').value);
+                    console.log('🔍 Current Phone value:', document.getElementById('editCustomerPhone').value);
+                    console.log('🔍 Current Name value:', document.getElementById('editCustomerName').value);
+                    console.log('🔍 Current Notes value:', document.getElementById('editCustomerNotes').value);
+                    console.log('🔍 Current ID value:', document.getElementById('editCustomerId').value);
+                    // Username field not available in edit form
+                    
+                    // Show modal
+                    const editModal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+                    editModal.show();
+                    
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed mengambil data customer');
+                }
+            } catch (error) {
+                console.error('Error loading customer data:', error);
+                showToast('error', 'Error', 'Terjadi kesalahan saat mengambil data customer');
+            }
+        }
+
+        // Load packages and ODPs for edit modal
+        async function loadEditModalData() {
+            try {
+                // Load packages
+                const packagesResponse = await fetch('/technician/api/packages');
+                const packagesData = await packagesResponse.json();
+                
+                if (packagesData.success) {
+                    const packageSelect = document.getElementById('editCustomerPackage');
+                    packageSelect.innerHTML = '<option value="">Select Package</option>';
+                    
+                    console.log('📦 Loading packages:', packagesData.packages);
+                    
+                    packagesData.packages.forEach(pkg => {
+                        const option = document.createElement('option');
+                        option.value = pkg.id;
+                        option.textContent = `${pkg.name} - ${pkg.price ? 'Rp ' + pkg.price.toLocaleString('id-ID') : 'Free'}`;
+                        packageSelect.appendChild(option);
+                    });
+                    
+                    console.log('✅ Packages loaded');
+                }
+                
+                // Load ODPs
+                const odpsResponse = await fetch('/technician/api/odps');
+                const odpsData = await odpsResponse.json();
+                
+                if (odpsData.success) {
+                    const odpSelect = document.getElementById('editCustomerOdp');
+                    odpSelect.innerHTML = '<option value="">Select ODP</option>';
+                    
+                    console.log('📡 Loading ODPs:', odpsData.odps);
+                    
+                    odpsData.odps.forEach(odp => {
+                        const option = document.createElement('option');
+                        option.value = odp.id;
+                        option.textContent = `${odp.name} (${odp.code})`;
+                        odpSelect.appendChild(option);
+                    });
+                    
+                    console.log('✅ ODPs loaded, current value will be set after this');
+                }
+                
+            } catch (error) {
+                console.error('Error loading modal data:', error);
+            }
+        }
+
+        // Save customer changes
+        async function saveCustomerEdit() {
+            try {
+                const customerId = document.getElementById('editCustomerId').value;
+                const formData = {
+                    name: document.getElementById('editCustomerName').value.trim(),
+                    phone: document.getElementById('editCustomerPhone').value.trim(),
+                    email: document.getElementById('editCustomerEmail').value.trim(),
+                    address: document.getElementById('editCustomerAddress').value.trim(),
+                    package_id: document.getElementById('editCustomerPackage').value,
+                    status: document.getElementById('editCustomerStatus').value,
+                    pppoe_username: document.getElementById('editCustomerPppoe').value.trim(),
+                    odp_id: document.getElementById('editCustomerOdp').value,
+                    notes: document.getElementById('editCustomerNotes').value.trim()
+                };
+
+                // Validate required fields
+                if (!formData.name || !formData.phone) {
+                    showToast('error', 'Error', 'Name dan nomor telepon harus diisi');
+                    return;
+                }
+
+                // Show loading
+                const saveBtn = document.getElementById('saveCustomerBtn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Menyimpan...';
+                saveBtn.disabled = true;
+
+                // Send update request
+                const response = await fetch(`/technician/api/customers/${customerId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('success', 'Success', 'Customer berhasil diupdate');
+                    
+                    // Close modal
+                    const editModal = bootstrap.Modal.getInstance(document.getElementById('editCustomerModal'));
+                    editModal.hide();
+                    
+                    // Refresh customer data
+                    loadCustomerData();
+                } else {
+                    showToast('error', 'Error', data.message || 'Failed mengupdate customer');
+                }
+
+            } catch (error) {
+                console.error('Error saving customer:', error);
+                showToast('error', 'Error', 'Terjadi kesalahan saat menyimpan data customer');
+            } finally {
+                // Reset button
+                const saveBtn = document.getElementById('saveCustomerBtn');
+                saveBtn.innerHTML = '<i class="bx bx-save"></i> Save';
+                saveBtn.disabled = false;
+            }
+        }
+        
+        // Show modal
+        function showModal(title, content) {
+            const modalHtml = `
+                <div class="modal fade" id="infoModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                ${content}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal
+            const existingModal = document.getElementById('infoModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add new modal
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+            modal.show();
+        }
+        
+        // Show toast notification
+        function showToast(type, title, message) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}:</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Add toast to container
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            // Show toast
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            
+            // Remove toast after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        // Show error
+        function showError(message) {
+            showToast('danger', 'Error', message);
+        }
+        
+        // Update last update time
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('id-ID');
+        }
+        
+        // Start auto refresh
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing interval
+            autoRefreshInterval = setInterval(loadCustomerData, 30000); // 30 seconds
+            showToast('info', 'Auto Refresh', 'Auto refresh enabled (30s interval)');
+        }
+        
+        // Stop auto refresh
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                showToast('info', 'Auto Refresh', 'Auto refresh disabled');
+            }
+        }
+    </script>
+</body>
+</html>

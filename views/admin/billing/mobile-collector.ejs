@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tukang Tagih - <%= appSettings.companyHeader %></title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0B1437">
+    <link rel="apple-touch-icon" href="/img/icons/icon-192.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin-mobile-billing.css">
+    <!-- Admin Mobile Optimizations -->
+    <link href="/css/admin-mobile.css" rel="stylesheet">
+    <style>
+        .collector-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+            transition: all 0.3s ease;
+        }
+        
+        .collector-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .collector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .collector-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .collector-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .collector-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .info-item i {
+            margin-right: 0.25rem;
+            width: 16px;
+        }
+        
+        .collector-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        
+        .collector-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-view {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background: #0056b3;
+        }
+        
+        .btn-payments {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-payments:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-assign {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-assign:hover {
+            background: #e0a800;
+        }
+        
+        .search-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .search-input {
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            width: 100%;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-tab {
+            flex: 1;
+            padding: 0.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            color: #6c757d;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-tab.active {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+        
+        .floating-add-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(40,167,69,0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        
+        .floating-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(40,167,69,0.6);
+        }
+        
+        .floating-add-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h5 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 480px) {
+            .collector-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .collector-actions {
+                flex-direction: column;
+            }
+            
+            .filter-tabs {
+                flex-direction: column;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="/admin/billing/mobile" class="text-white me-3">
+                    <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
+                </a>
+                <div>
+                    <h4 class="mb-1">Tukang Tagih</h4>
+                    <p class="mb-0 opacity-75">Kelola tukang tagih dan pembayaran</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <i class="bi bi-person-check" style="font-size: 1.5rem; opacity: 0.8;"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-3">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-value text-success"><%= statistics.totalCollectors || 0 %></div>
+                <div class="summary-label">Total Tukang Tagih</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value text-warning">Rp <%= statistics.todayPayments ? statistics.todayPayments.toLocaleString('id-ID') : '0' %></div>
+                <div class="summary-label">Payment Hari Ini</div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <div class="position-relative">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Cari tukang tagih..." id="searchInput">
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <div class="filter-tab active" data-filter="all">
+                <i class="bi bi-list me-1"></i>Semua
+            </div>
+            <div class="filter-tab" data-filter="active">
+                <i class="bi bi-check-circle me-1"></i>Active
+            </div>
+            <div class="filter-tab" data-filter="inactive">
+                <i class="bi bi-x-circle me-1"></i>Nonaktif
+            </div>
+        </div>
+
+        <!-- Collectors List -->
+        <div id="collectorsList">
+            <% if (collectors && collectors.length > 0) { %>
+                <% collectors.forEach(function(collector) { %>
+                    <div class="collector-card" data-status="<%= collector.status || 'active' %>">
+                        <div class="collector-header">
+                            <h6 class="collector-name"><%= collector.name %></h6>
+                            <span class="collector-status status-<%= collector.status || 'active' %>">
+                                <%= collector.status === 'active' ? 'Active' : 'Nonaktif' %>
+                            </span>
+                        </div>
+                        <div class="collector-info">
+                            <div class="info-item">
+                                <i class="bi bi-telephone"></i>
+                                <%= collector.phone %>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-geo-alt"></i>
+                                <%= collector.address || 'Address tidak tersedia' %>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-percent"></i>
+                                Komisi: <%= collector.commission_rate || 5 %>% 
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-calendar"></i>
+                                Bergabung: <%= collector.created_at ? new Date(collector.created_at).toLocaleDateString('id-ID') : 'No diketahui' %>
+                            </div>
+                        </div>
+                        <div class="collector-stats">
+                            <div class="stat-item">
+                                <div class="stat-value text-success"><%= collector.total_payments || 0 %></div>
+                                <div class="stat-label">Total Payment</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value text-warning">Rp <%= collector.total_commission ? collector.total_commission.toLocaleString('id-ID') : '0' %></div>
+                                <div class="stat-label">Total Komisi</div>
+                            </div>
+                        </div>
+                        <div class="collector-actions">
+                            <button class="action-btn btn-view" onclick="viewCollector('<%= collector.id %>')">
+                                <i class="bi bi-eye me-1"></i>Detail
+                            </button>
+                            <button class="action-btn btn-payments" onclick="viewPayments('<%= collector.id %>')">
+                                <i class="bi bi-credit-card me-1"></i>Payment
+                            </button>
+                            <button class="action-btn btn-assign" onclick="assignCustomers('<%= collector.id %>')">
+                                <i class="bi bi-people me-1"></i>Assign
+                            </button>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div id="emptyState" class="empty-state" style="display: block;">
+                    <i class="bi bi-person-check"></i>
+                    <h5>No ada tukang tagih</h5>
+                    <p>Belum ada tukang tagih yang terdaftar atau sesuai dengan filter yang dipilih.</p>
+                    <button class="btn btn-primary" onclick="addCollector()">
+                        <i class="bi bi-plus me-2"></i>Add Tukang Tagih
+                    </button>
+                </div>
+            <% } %>
+        </div>
+
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="floating-add-btn" onclick="addCollector()" title="Add Tukang Tagih">
+        <i class="bi bi-plus"></i>
+    </button>
+
+    <!-- Floating Payment Button -->
+    <button class="floating-add-btn" onclick="inputPayment()" title="Input Payment" 
+            style="bottom: 160px; background: linear-gradient(135deg, #007bff, #0056b3);">
+        <i class="bi bi-credit-card"></i>
+    </button>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav d-md-none">
+        <a class="nav-item" href="/admin/billing/mobile/customers">
+            <i class="bi bi-people"></i>
+            <span>Customer</span>
+        </a>
+        <a class="nav-item" href="/admin/billing/mobile/invoices">
+            <i class="bi bi-receipt"></i>
+            <span>Bill</span>
+        </a>
+        <a class="nav-item home-button" href="/admin/billing/mobile">
+            <i class="bi bi-house"></i>
+            <span>Home</span>
+        </a>
+        <a class="nav-item" href="/admin/billing/mobile/payments">
+            <i class="bi bi-credit-card"></i>
+            <span>Bayar</span>
+        </a>
+        <a class="nav-item active" href="/admin/billing/mobile/collector">
+            <i class="bi bi-person-check"></i>
+            <span>Tagih</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin-mobile-billing.js"></script>
+    <script>
+        // Collector management functions
+        function addCollector() {
+            window.location.href = '/admin/billing/collectors?action=add';
+        }
+        
+        function viewCollector(id) {
+            window.location.href = `/admin/billing/collectors/${id}`;
+        }
+        
+        function viewPayments(id) {
+            window.location.href = `/admin/billing/collectors/${id}/payments`;
+        }
+        
+        function assignCustomers(id) {
+            window.location.href = `/admin/billing/collectors/${id}/assignments`;
+        }
+        
+        function inputPayment() {
+            window.location.href = '/admin/billing/mobile/collector/payment';
+        }
+        
+        // Search and filter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            const collectorCards = document.querySelectorAll('.collector-card');
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filterCollectors(searchTerm, getActiveFilter());
+            });
+            
+            // Filter functionality
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Filter collectors
+                    const searchTerm = searchInput.value.toLowerCase();
+                    filterCollectors(searchTerm, this.dataset.filter);
+                });
+            });
+        });
+        
+        function getActiveFilter() {
+            const activeTab = document.querySelector('.filter-tab.active');
+            return activeTab ? activeTab.dataset.filter : 'all';
+        }
+        
+        function filterCollectors(searchTerm, statusFilter) {
+            const collectorCards = document.querySelectorAll('.collector-card');
+            let visibleCount = 0;
+            
+            collectorCards.forEach(card => {
+                const collectorName = card.querySelector('.collector-name').textContent.toLowerCase();
+                const collectorPhone = card.querySelector('.info-item').textContent.toLowerCase();
+                const collectorStatus = card.dataset.status;
+                
+                const matchesSearch = collectorName.includes(searchTerm) || collectorPhone.includes(searchTerm);
+                const matchesFilter = statusFilter === 'all' || collectorStatus === statusFilter;
+                
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show/hide empty state
+            const emptyState = document.getElementById('emptyState');
+            const collectorsList = document.getElementById('collectorsList');
+            
+            if (visibleCount === 0) {
+                collectorsList.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                collectorsList.style.display = 'block';
+                emptyState.style.display = 'none';
+            }
+        }
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <%- include('../../partials/mobile-navbar', { currentPage: 'collector' }) %>
+</body>
+</html>

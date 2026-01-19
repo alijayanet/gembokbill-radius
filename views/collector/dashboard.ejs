@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Tukang Tagih - <%= appSettings.companyHeader %></title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Dashboard tukang tagih untuk sistem billing GEMBOK-BILL">
+    <meta name="theme-color" content="#28a745">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Collector">
+    <meta name="msapplication-TileColor" content="#28a745">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest-collector.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    
+    <!-- Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/collector-pwa.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 70px; /* Space for bottom navigation */
+        }
+        
+        .collector-header {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .collector-welcome {
+            text-align: center;
+        }
+        
+        .collector-welcome h2 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .collector-welcome p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        /* Removed .stats-cards grid - now using Bootstrap grid system */
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon.primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+        
+        .stat-icon.success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+        
+        .stat-icon.warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: white;
+        }
+        
+        .stat-icon.info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .quick-actions {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .action-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        .action-btn:hover {
+            border-color: #28a745;
+            background: #f8f9fa;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.2);
+            color: #28a745;
+        }
+        
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .action-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .action-desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .recent-payments {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .payment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .payment-item:last-child {
+            border-bottom: none;
+        }
+        
+        .payment-info h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .payment-info small {
+            color: #6c757d;
+        }
+        
+        .payment-amount {
+            font-weight: 700;
+            color: #28a745;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            /* Bootstrap grid handles responsive layout automatically */
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            
+            .collector-header {
+                padding: 1.5rem 0;
+                margin-bottom: 2rem;
+            }
+            
+            .quick-actions {
+                margin-bottom: 2rem;
+                padding: 1.5rem;
+            }
+            
+            .recent-payments {
+                padding: 1.5rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .action-btn {
+                padding: 1rem;
+            }
+            
+            .action-icon {
+                font-size: 1.5rem;
+            }
+            
+            .navbar {
+                padding: 0.75rem 0;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .logout-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Bootstrap grid handles layout automatically */
+            
+            .collector-welcome h2 {
+                font-size: 1.3rem;
+            }
+            
+            .collector-welcome p {
+                font-size: 0.9rem;
+            }
+            
+            .stat-value {
+                font-size: 1.3rem;
+            }
+            
+            .action-title {
+                font-size: 0.9rem;
+            }
+            
+            .action-desc {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="navbar-brand">
+                    <i class="bi bi-person-check me-2"></i>Tukang Tagih
+                </div>
+                <div>
+                    <span class="me-3">Selamat datang, <%= collector.name %></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="collector-header">
+        <div class="container">
+            <div class="collector-welcome">
+                <h2><i class="bi bi-person-check me-2"></i>Dashboard Tukang Tagih</h2>
+                <p>Kelola pembayaran dan komisi Anda</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-6 col-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="bi bi-credit-card"></i>
+                    </div>
+                    <div class="stat-value">Rp <%= statistics.todayPayments ? Math.round(statistics.todayPayments).toLocaleString('id-ID') : '0' %></div>
+                    <div class="stat-label">Payment Hari Ini</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div class="stat-value">Rp <%= statistics.totalCommission ? Math.round(statistics.totalCommission).toLocaleString('id-ID') : '0' %></div>
+                    <div class="stat-label">Total Komisi</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div class="stat-value"><%= statistics.totalPayments || 0 %></div>
+                    <div class="stat-label">Total Payment</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <div class="stat-value"><%= Math.round(collector.commission_rate || 5) %>%</div>
+                    <div class="stat-label">Rate Komisi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h4 class="mb-3">
+                <i class="bi bi-lightning me-2"></i>Aksi Cepat
+            </h4>
+            <div class="action-grid">
+                <a href="/collector/payment" class="action-btn">
+                    <i class="bi bi-plus-circle action-icon"></i>
+                    <div class="action-title">Input Payment</div>
+                    <div class="action-desc">Catat pembayaran pelanggan</div>
+                </a>
+                
+                <a href="/collector/payments" class="action-btn">
+                    <i class="bi bi-list-ul action-icon"></i>
+                    <div class="action-title">Riwayat Payment</div>
+                    <div class="action-desc">View semua pembayaran</div>
+                </a>
+                
+                <a href="/collector/customers" class="action-btn">
+                    <i class="bi bi-people action-icon"></i>
+                    <div class="action-title">Register Customer</div>
+                    <div class="action-desc">Kelola pelanggan Anda</div>
+                </a>
+                
+                <a href="/collector/profile" class="action-btn">
+                    <i class="bi bi-person action-icon"></i>
+                    <div class="action-title">Profil Saya</div>
+                    <div class="action-desc">Edit informasi pribadi</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Payments -->
+        <div class="recent-payments">
+            <h4 class="mb-3">
+                <i class="bi bi-clock-history me-2"></i>Payment Terbaru
+            </h4>
+            
+            <% if (recentPayments && recentPayments.length > 0) { %>
+                <% recentPayments.forEach(function(payment) { %>
+                    <div class="payment-item">
+                        <div class="payment-info">
+                            <h6><%= payment.customer_name || 'Customer' %></h6>
+                            <small>
+                                <i class="bi bi-calendar me-1"></i>
+                                <%= payment.collected_at ? new Date(payment.collected_at).toLocaleDateString('id-ID') : 'No diketahui' %>
+                            </small>
+                        </div>
+                        <div class="payment-amount">
+                            Rp <%= parseFloat(payment.payment_amount || 0).toLocaleString('id-ID') %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="empty-state">
+                    <i class="bi bi-credit-card"></i>
+                    <h6>Belum ada pembayaran</h4>
+                    <p>Mulai dengan mencatat pembayaran pertama Anda.</p>
+                    <a href="/collector/payment" class="btn btn-primary">
+                        <i class="bi bi-plus me-2"></i>Input Payment
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <%- include('../partials/collector-bottom-nav', { currentPage: 'dashboard' }) %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/collector-pwa.js"></script>
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('/collector/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/collector/login';
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed logout'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    // Force redirect even if request fails
+                    window.location.href = '/collector/login';
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title><% if (typeof isTechnicianView !== 'undefined' && isTechnicianView) { %>Dashboard Technician<% } else { %>Dashboard Admin<% } %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/responsive-admin.css" rel="stylesheet">
+    <style>
+        body { background: #f5f6fa; }
+        
+        /* Mobile responsive fixes */
+        @media (max-width: 767.98px) {
+            .main-content {
+                margin-top: 70px !important; /* Extra space for mobile navbar */
+                padding: 10px !important;
+                margin-left: 0 !important;
+                z-index: 1;
+            }
+            
+            .container-fluid {
+                padding: 0;
+            }
+            
+            .card {
+                z-index: 1;
+                margin-bottom: 1rem;
+            }
+            
+            /* Pastikan cards tidak overlap dengan mobile navbar */
+            .row.mb-4:first-of-type {
+                margin-top: 10px;
+            }
+            
+            /* Stats cards responsive */
+            .card-body {
+                padding: 1rem 0.75rem;
+            }
+            
+            .fs-3 {
+                font-size: 1.5rem !important;
+            }
+            
+            .fs-2 {
+                font-size: 1.3rem !important;
+            }
+            
+            .fw-bold {
+                font-size: 0.9rem;
+            }
+            
+            /* Interface selector responsive */
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            #interfaceSelect {
+                width: 100% !important;
+                font-size: 0.85rem !important;
+            }
+            
+            /* Bandwidth cards responsive */
+            .bandwidth-card .card-body {
+                padding: 0.5rem !important;
+            }
+            
+            .bandwidth-card small {
+                font-size: 0.7rem !important;
+            }
+            
+            .bandwidth-card strong {
+                font-size: 0.9rem !important;
+            }
+            
+            /* Chart responsive */
+            .traffic-chart-card .card-body {
+                padding: 10px !important;
+            }
+            
+            .traffic-chart-card .card-body > div {
+                height: 200px !important;
+            }
+            
+            /* Form controls */
+            .form-select, .form-control {
+                padding: 8px 12px;
+                font-size: 14px;
+                min-height: 38px;
+            }
+            
+            /* Button responsive */
+            .btn {
+                padding: 8px 16px;
+                font-size: 14px;
+                min-height: 42px;
+                touch-action: manipulation;
+            }
+            
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 12px;
+                min-height: 36px;
+            }
+            
+            /* Responsive notification positioning */
+            #restartNotif {
+                top: 80px !important; /* Below mobile navbar */
+                right: 10px !important;
+                left: 10px !important;
+                width: auto !important;
+            }
+            
+            /* Alert responsive */
+            .alert {
+                font-size: 0.9rem;
+                padding: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Table responsive if any */
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            
+            /* Modal responsive */
+            .modal-dialog {
+                margin: 10px;
+                max-width: calc(100vw - 20px);
+            }
+            
+            .modal-body {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 5px !important;
+            }
+            
+            .card-body {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .fs-3 {
+                font-size: 1.3rem !important;
+            }
+            
+            .fw-bold {
+                font-size: 0.85rem;
+            }
+            
+            .bandwidth-card .card-body {
+                padding: 0.4rem !important;
+            }
+            
+            .bandwidth-card small {
+                font-size: 0.65rem !important;
+            }
+            
+            .bandwidth-card strong {
+                font-size: 0.8rem !important;
+            }
+            
+            /* Very small screen adjustments */
+            .col-md-4.mb-3 {
+                margin-bottom: 0.75rem !important;
+            }
+            
+            .row.mb-4 {
+                margin-bottom: 1rem !important;
+            }
+        }
+        
+        /* Traffic Chart Styling */
+        .traffic-chart-card {
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .traffic-chart-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .traffic-chart-card .card-header {
+            border-bottom: none;
+            background: transparent;
+            padding: 15px 20px;
+        }
+        
+        .traffic-chart-card .card-body {
+            padding: 20px;
+        }
+        
+        /* Bandwidth Status Cards */
+        .bandwidth-card {
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .bandwidth-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* Touch improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .card:hover {
+                transform: none;
+            }
+            
+            .bandwidth-card:hover,
+            .traffic-chart-card:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Include Responsive Sidebar (Admin or Technician based on context) -->
+        <% if (typeof isTechnicianView !== 'undefined' && isTechnicianView) { %>
+        <%- include('partials/technician-responsive-sidebar', { page: page || 'dashboard', settings: settings, technician: technician }) %>
+        <% } else { %>
+        <%- include('partials/admin-responsive-sidebar', { page: 'dashboard', settings: settings }) %>
+        <% } %>
+        
+        <main class="col-md-10 ms-sm-auto main-content">
+            <!-- CONFIGURATION VALIDATION ALERTS -->
+            <% if (configValidation && configValidation.hasValidationRun) { %>
+                <% if (configValidation.summary && configValidation.summary.status !== 'valid') { %>
+                <div class="alert alert-warning alert-dismissible fade show mb-3 auto-dismiss" role="alert" data-auto-dismiss="12000">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            <strong>⚠️ Konfigurasi Sistem Perlu Diperbaiki!</strong>
+                            <div class="mt-1">
+                                <%= configValidation.summary.message %>
+                            </div>
+                            <div class="mt-2">
+                                <strong>Solusi:</strong> Silakan periksa dan perbaiki konfigurasi GenieACS dan Mikrotik di halaman pengaturan.
+                            </div>
+                            <div class="mt-2">
+                                <a href="/admin/settings" class="btn btn-warning btn-sm">
+                                    <i class="bi bi-gear-fill me-1"></i>Perbaiki Konfigurasi Sekarang
+                                </a>
+                                <button type="button" class="btn btn-outline-warning btn-sm ms-2" onclick="clearConfigWarning()">
+                                    <i class="bi bi-eye-slash me-1"></i>Sembunyikan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% } %>
+                
+                <% if (configValidation.defaultSettingsWarnings && configValidation.defaultSettingsWarnings.length > 0) { %>
+                <div class="alert alert-info alert-dismissible fade show mb-3 auto-dismiss" role="alert" data-auto-dismiss="6000">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            <strong>Rekomendasi Keamanan:</strong>
+                            <ul class="mb-2 mt-1">
+                                <% configValidation.defaultSettingsWarnings.forEach(function(warning) { %>
+                                <li><%= warning %></li>
+                                <% }); %>
+                            </ul>
+                            <div>
+                                <a href="/admin/settings" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-shield-check me-1"></i>Update Pengaturan Keamanan
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearConfigWarning()">
+                                    <i class="bi bi-eye-slash me-1"></i>Sembunyikan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% } %>
+                
+                <% if (configValidation.results && configValidation.results.genieacs && !configValidation.results.genieacs.isValid) { %>
+                <div class="alert alert-danger alert-dismissible fade show mb-3 auto-dismiss" role="alert" data-auto-dismiss="10000">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-x-circle-fill me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            <strong>GenieACS Bermasalah:</strong>
+                            <div class="mt-1">
+                                <% if (configValidation.results.genieacs.errors.length > 0) { %>
+                                    <ul class="mb-2">
+                                        <% configValidation.results.genieacs.errors.forEach(function(error) { %>
+                                        <li><%= error %></li>
+                                        <% }); %>
+                                    </ul>
+                                <% } %>
+                            </div>
+                            <div>
+                                <a href="/admin/settings" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-wrench me-1"></i>Perbaiki Konfigurasi GenieACS
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearConfigWarning()">
+                                    <i class="bi bi-eye-slash me-1"></i>Sembunyikan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% } %>
+                
+                <% if (configValidation.results && configValidation.results.mikrotik && !configValidation.results.mikrotik.isValid) { %>
+                <div class="alert alert-danger alert-dismissible fade show mb-3 auto-dismiss" role="alert" data-auto-dismiss="10000">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-x-circle-fill me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            <strong>Mikrotik Bermasalah:</strong>
+                            <div class="mt-1">
+                                <% if (configValidation.results.mikrotik.errors.length > 0) { %>
+                                    <ul class="mb-2">
+                                        <% configValidation.results.mikrotik.errors.forEach(function(error) { %>
+                                        <li><%= error %></li>
+                                        <% }); %>
+                                    </ul>
+                                <% } %>
+                            </div>
+                            <div>
+                                <a href="/admin/settings" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-router me-1"></i>Perbaiki Konfigurasi Mikrotik
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearConfigWarning()">
+                                    <i class="bi bi-eye-slash me-1"></i>Sembunyikan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% } %>
+                
+                <% if (configValidation.summary && configValidation.summary.status === 'valid') { %>
+                <div class="alert alert-success alert-dismissible fade show mb-3 auto-dismiss" role="alert" data-auto-dismiss="4000">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                        <div class="flex-grow-1">
+                            <strong>Sistem Siap Digunakan!</strong>
+                            <div class="mt-1">
+                                <%= configValidation.summary.message %>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% } %>
+            <% } %>
+
+            <!-- MANUAL VALIDATION BUTTON -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Dashboard Sistem</h5>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="validateConfigBtn">
+                                <i class="bi bi-gear-fill me-1"></i>Validasi Konfigurasi
+                            </button>
+                            <a href="/admin/settings" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="bi bi-sliders me-1"></i>Pengaturan Sistem
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="refreshDashboardBtn">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GENIEACS CARDS -->
+            <div class="row mb-4">
+              <div class="col-md-4 mb-3">
+                <div class="card text-bg-primary">
+                  <div class="card-body text-center">
+                    <i class="bi bi-hdd-network fs-2 mb-2"></i>
+                    <div class="fw-bold">Total Device GenieACS</div>
+                    <div class="fs-3" id="genieacs-total">
+                      <% if (typeof genieacsTotal !== 'undefined' && genieacsTotal !== null) { %>
+                        <%= genieacsTotal %>
+                      <% } else { %>
+                        <i class="bi bi-hourglass-split"></i> Loading...
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="card text-bg-success">
+                  <div class="card-body text-center">
+                    <i class="bi bi-wifi fs-2 mb-2"></i>
+                    <div class="fw-bold">Device Online</div>
+                    <div class="fs-3" id="genieacs-online">
+                      <% if (typeof genieacsOnline !== 'undefined' && genieacsOnline !== null) { %>
+                        <%= genieacsOnline %>
+                      <% } else { %>
+                        <i class="bi bi-hourglass-split"></i> Loading...
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="card text-bg-danger">
+                  <div class="card-body text-center">
+                    <i class="bi bi-wifi-off fs-2 mb-2"></i>
+                    <div class="fw-bold">Device Offline</div>
+                    <div class="fs-3" id="genieacs-offline">
+                      <% if (typeof genieacsOffline !== 'undefined' && genieacsOffline !== null) { %>
+                        <%= genieacsOffline %>
+                      <% } else { %>
+                        <i class="bi bi-hourglass-split"></i> Loading...
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- MIKROTIK CARDS -->
+            <div class="row mb-4">
+              <div class="col-md-4 mb-3">
+                <div class="card text-bg-secondary">
+                  <div class="card-body text-center">
+                    <i class="bi bi-person-badge fs-2 mb-2"></i>
+                    <div class="fw-bold">Total User PPPoE</div>
+                    <div class="fs-3" id="mikrotik-total"><%= typeof mikrotikTotal !== 'undefined' ? mikrotikTotal : '-' %></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="card text-bg-success">
+                  <div class="card-body text-center">
+                    <i class="bi bi-person-check fs-2 mb-2"></i>
+                    <div class="fw-bold">PPPoE Active</div>
+                    <div class="fs-3" id="mikrotik-aktif"><%= typeof mikrotikActive !== 'undefined' ? mikrotikActive : '-' %></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <div class="card text-bg-danger">
+                  <div class="card-body text-center">
+                    <i class="bi bi-person-x fs-2 mb-2"></i>
+                    <div class="fw-bold">PPPoE Offline</div>
+                    <div class="fs-3" id="mikrotik-offline"><%= typeof mikrotikOffline !== 'undefined' ? mikrotikOffline : '-' %></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- GRAFIK INTERNET -->
+            <div class="row mb-4">
+              <div class="col-md-12">
+                <div class="card text-bg-info">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="fw-bold" style="font-size: 1.1rem;"><i class="bi bi-graph-up-arrow"></i> Grafik Traffic Internet - <span id="currentInterface">Ether1</span></div>
+                      <div class="d-flex align-items-center">
+                        <label for="interfaceSelect" class="form-label me-2 mb-0" style="font-size: 0.9rem;">Interface:</label>
+                        <select id="interfaceSelect" class="form-select form-select-sm" style="width: auto; font-size: 0.9rem;">
+                          <option value="ether1-ISP">Ether1-ISP (ISP)</option>
+                          <!-- Interface akan di-load secara dinamis -->
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <!-- Real-time bandwidth info -->
+                    <div class="row mb-2">
+                      <div class="col-md-3">
+                        <div class="card bg-primary text-white bandwidth-card">
+                          <div class="card-body text-center py-1">
+                            <small class="d-block" style="font-size: 0.75rem;">Download</small>
+                            <strong id="currentRx" style="font-size: 1.1rem;">0 Mbps</strong>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="card bg-success text-white bandwidth-card">
+                          <div class="card-body text-center py-1">
+                            <small class="d-block" style="font-size: 0.75rem;">Upload</small>
+                            <strong id="currentTx" style="font-size: 1.1rem;">0 Mbps</strong>
+                            </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="card bg-info text-white bandwidth-card">
+                          <div class="card-body text-center py-1">
+                            <small class="d-block" style="font-size: 0.75rem;">Total</small>
+                            <strong id="currentTotal" style="font-size: 1.1rem;">0 Mbps</strong>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="card bg-warning text-white bandwidth-card">
+                          <div class="card-body text-center py-1">
+                            <small class="d-block" style="font-size: 0.75rem;">Status</small>
+                            <strong id="currentStatus" style="font-size: 1.1rem;">Idle</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Grafik Traffic Terpisah -->
+                    <div class="row">
+                      <!-- Grafik Download (RX) -->
+                      <div class="col-md-6">
+                        <div class="card bg-primary text-white traffic-chart-card">
+                          <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-download"></i> Download Traffic (RX)</h6>
+                          </div>
+                          <div class="card-body">
+                            <div style="height: 250px;">
+                              <canvas id="rxChart"></canvas>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Grafik Upload (TX) -->
+                      <div class="col-md-6">
+                        <div class="card bg-success text-white traffic-chart-card">
+                          <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-upload"></i> Upload Traffic (TX)</h6>
+                          </div>
+                          <div class="card-body">
+                            <div style="height: 250px;">
+                              <canvas id="txChart"></canvas>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Grafik Combined (Opsional) -->
+                    <div class="row mt-3">
+                      <div class="col-md-12">
+                        <div class="card traffic-chart-card">
+                          <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-graph-up"></i> Combined Traffic Overview</h6>
+                          </div>
+                          <div class="card-body">
+                            <div style="height: 200px;">
+                              <canvas id="combinedChart"></canvas>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+                        <script>
+            // Grafik bandwidth real-time dengan 3 chart terpisah
+            const maxPoints = 30; // tampilkan 30 data terakhir
+            let currentInterface = localStorage.getItem('selectedInterface') || 'ether1-ISP';
+            
+            // Utility function untuk format bandwidth
+            function formatBandwidth(bytesPerSec) {
+              if (bytesPerSec >= 1000000000) { // 1 Gbps
+                return (bytesPerSec / 1000000000).toFixed(2) + ' Gbps';
+              } else if (bytesPerSec >= 1000000) { // 1 Mbps
+                return (bytesPerSec / 1000000).toFixed(2) + ' Mbps';
+              } else if (bytesPerSec >= 1000) { // 1 Kbps
+                return (bytesPerSec / 1000).toFixed(2) + ' Kbps';
+              } else {
+                return bytesPerSec.toFixed(2) + ' bps';
+              }
+            }
+            
+            // Utility function untuk format bandwidth tanpa unit (untuk chart)
+            function formatBandwidthValue(bytesPerSec) {
+              if (bytesPerSec >= 1000000000) { // 1 Gbps
+                return (bytesPerSec / 1000000000).toFixed(3);
+              } else if (bytesPerSec >= 1000000) { // 1 Mbps
+                return (bytesPerSec / 1000000).toFixed(3);
+              } else if (bytesPerSec >= 1000) { // 1 Kbps
+                return (bytesPerSec / 1000).toFixed(3);
+              } else {
+                return bytesPerSec.toFixed(3);
+              }
+            }
+            
+            // Utility function untuk mendapatkan unit yang sesuai
+            function getBandwidthUnit(bytesPerSec) {
+              if (bytesPerSec >= 1000000000) return 'Gbps';
+              if (bytesPerSec >= 1000000) return 'Mbps';
+              if (bytesPerSec >= 1000) return 'Kbps';
+              return 'bps';
+            }
+            
+            // Chart Configuration
+            const chartConfig = {
+              type: 'line',
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 750, easing: 'easeInOutQuart' },
+                transitions: { active: { animation: { duration: 300 } } },
+                responsiveAnimationDuration: 0,
+                hover: { animationDuration: 0 },
+                plugins: { 
+                  legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: { padding: 10, usePointStyle: true }
+                  },
+                  tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    callbacks: {
+                      label: function(context) {
+                        const value = context.parsed.y;
+                        const unit = getBandwidthUnit(value * 1000000); // Convert back to bytes
+                        return context.dataset.label + ': ' + value + ' ' + unit;
+                      }
+                    }
+                  }
+                },
+                scales: { 
+                  y: { 
+                    beginAtZero: true,
+                    title: { display: true, text: 'Bandwidth', font: { size: 12 } },
+                    ticks: {
+                      callback: function(value) {
+                        const unit = getBandwidthUnit(value * 1000000);
+                        return value + ' ' + unit;
+                      },
+                      font: { size: 10 }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.1)' }
+                  },
+                  x: {
+                    title: { display: true, text: 'Time', font: { size: 12 } },
+                    ticks: { font: { size: 10 } },
+                    grid: { color: 'rgba(0,0,0,0.1)' },
+                    min: 0,
+                    max: maxPoints - 1
+                  }
+                },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                elements: {
+                  point: { radius: 0, hoverRadius: 4 },
+                  line: { borderWidth: 2 }
+                },
+                performance: { maxDataPoints: maxPoints, maxDatasetPoints: maxPoints }
+              }
+            };
+            
+            // Initialize Charts
+            let rxChart, txChart, combinedChart;
+            
+            // RX Chart (Download)
+            const rxCtx = document.getElementById('rxChart').getContext('2d');
+            rxChart = new Chart(rxCtx, {
+              ...chartConfig,
+              data: {
+                labels: [],
+                datasets: [{
+                  label: 'Download (RX)',
+                  data: [],
+                  fill: true,
+                  backgroundColor: 'rgba(13,202,240,0.2)',
+                  borderColor: 'rgba(13,202,240,1)',
+                  tension: 0.4,
+                  pointRadius: 0,
+                  pointHoverRadius: 4,
+                  borderWidth: 2
+                }]
+              }
+            });
+            
+            // TX Chart (Upload)
+            const txCtx = document.getElementById('txChart').getContext('2d');
+            txChart = new Chart(txCtx, {
+              ...chartConfig,
+              data: {
+                labels: [],
+                datasets: [{
+                  label: 'Upload (TX)',
+                  data: [],
+                  fill: true,
+                  backgroundColor: 'rgba(40,167,69,0.2)',
+                  borderColor: 'rgba(40,167,69,1)',
+                  tension: 0.4,
+                  pointRadius: 0,
+                  pointHoverRadius: 4,
+                  borderWidth: 2
+                }]
+              }
+            });
+            
+            // Combined Chart
+            const combinedCtx = document.getElementById('combinedChart').getContext('2d');
+            combinedChart = new Chart(combinedCtx, {
+              ...chartConfig,
+              data: {
+                labels: [],
+                datasets: [
+                  {
+                    label: 'Download (RX)',
+                    data: [],
+                    fill: false,
+                    backgroundColor: 'rgba(13,202,240,0.2)',
+                    borderColor: 'rgba(13,202,240,1)',
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    borderWidth: 2
+                  },
+                  {
+                    label: 'Upload (TX)',
+                    data: [],
+                    fill: false,
+                    backgroundColor: 'rgba(40,167,69,0.2)',
+                    borderColor: 'rgba(40,167,69,1)',
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    borderWidth: 2
+                  }
+                ]
+              }
+            });
+
+function addTrafficData(rx, tx, interface) {
+  const now = new Date();
+  const label = now.toLocaleTimeString('id-ID', { hour12: false });
+  
+  // Validasi dan konversi data
+  const rxBytes = parseInt(rx) || 0;
+  const txBytes = parseInt(tx) || 0;
+  
+  // Format bandwidth untuk display
+  const rxFormatted = formatBandwidth(rxBytes);
+  const txFormatted = formatBandwidth(txBytes);
+  const totalFormatted = formatBandwidth(rxBytes + txBytes);
+  
+  // Debug logging untuk troubleshooting
+  console.log(`📊 Traffic Data [${interface}]:`, {
+    raw: { rx: rxBytes, tx: txBytes },
+    formatted: { rx: rxFormatted, tx: txFormatted, total: totalFormatted },
+    time: label
+  });
+  
+  // Update real-time info dengan format yang sesuai
+  document.getElementById('currentRx').textContent = rxFormatted;
+  document.getElementById('currentTx').textContent = txFormatted;
+  document.getElementById('currentTotal').textContent = totalFormatted;
+  
+  // Update status berdasarkan traffic (support bandwidth tinggi)
+  const statusElement = document.getElementById('currentStatus');
+  const totalMbps = (rxBytes + txBytes) / 1000000;
+  
+  if (totalMbps > 1000) { // > 1 Gbps
+    statusElement.textContent = 'Ultra High';
+    statusElement.parentElement.parentElement.className = 'card bg-danger text-white';
+  } else if (totalMbps > 500) { // > 500 Mbps
+    statusElement.textContent = 'Very High';
+    statusElement.parentElement.parentElement.className = 'card bg-danger text-white';
+  } else if (totalMbps > 100) { // > 100 Mbps
+    statusElement.textContent = 'High';
+    statusElement.parentElement.parentElement.className = 'card bg-warning text-white';
+  } else if (totalMbps > 10) { // > 10 Mbps
+    statusElement.textContent = 'Medium';
+    statusElement.parentElement.parentElement.className = 'card bg-info text-white';
+  } else if (totalMbps > 1) { // > 1 Mbps
+    statusElement.textContent = 'Low';
+    statusElement.parentElement.parentElement.className = 'card bg-secondary text-white';
+  } else {
+    statusElement.textContent = 'Idle';
+    statusElement.parentElement.parentElement.className = 'card bg-secondary text-white';
+  }
+  
+  // Update semua chart
+  updateAllCharts(label, rxBytes, txBytes);
+  
+  // Log status chart update
+  console.log(`🔄 Charts updated: RX: ${rxFormatted}, TX: ${txFormatted}`);
+}
+
+function updateAllCharts(label, rxBytes, txBytes) {
+  // Convert to appropriate unit for charts
+  const rxValue = formatBandwidthValue(rxBytes);
+  const txValue = formatBandwidthValue(txBytes);
+  
+  // Update RX Chart
+  updateChart(rxChart, label, rxValue, 'RX');
+  
+  // Update TX Chart
+  updateChart(txChart, label, txValue, 'TX');
+  
+  // Update Combined Chart
+  updateCombinedChart(label, rxValue, txValue);
+}
+
+function updateChart(chart, label, value, type) {
+  // Remove old data if needed
+  if (chart.data.labels.length >= maxPoints) {
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+  
+  // Add new data
+  chart.data.labels.push(label);
+  chart.data.datasets[0].data.push(parseFloat(value));
+  
+  // Update chart
+  chart.update('none');
+  
+  // Auto-scroll
+  if (chart.data.labels.length >= maxPoints) {
+    chart.options.scales.x.min = chart.data.labels.length - maxPoints;
+    chart.options.scales.x.max = chart.data.labels.length - 1;
+  }
+  
+  // Auto-adjust Y-axis
+  adjustChartYAxis(chart);
+}
+
+function updateCombinedChart(label, rxValue, txValue) {
+  // Remove old data if needed
+  if (combinedChart.data.labels.length >= maxPoints) {
+    combinedChart.data.labels.shift();
+    combinedChart.data.datasets[0].data.shift();
+    combinedChart.data.datasets[1].data.shift();
+  }
+  
+  // Add new data
+  combinedChart.data.labels.push(label);
+  combinedChart.data.datasets[0].data.push(parseFloat(rxValue));
+  combinedChart.data.datasets[1].data.push(parseFloat(txValue));
+  
+  // Update chart
+  combinedChart.update('none');
+  
+  // Auto-scroll
+  if (combinedChart.data.labels.length >= maxPoints) {
+    combinedChart.options.scales.x.min = combinedChart.data.labels.length - maxPoints;
+    combinedChart.options.scales.x.max = combinedChart.data.labels.length - 1;
+  }
+  
+  // Auto-adjust Y-axis
+  adjustChartYAxis(combinedChart);
+}
+
+function adjustChartYAxis(chart) {
+  if (chart.data.datasets[0].data.length === 0) return;
+  
+  // Get all data from all datasets
+  let allData = [];
+  chart.data.datasets.forEach(dataset => {
+    allData = allData.concat(dataset.data);
+  });
+  
+  if (allData.length === 0) return;
+  
+  // Calculate min and max
+  const minValue = Math.min(...allData);
+  const maxValue = Math.max(...allData);
+  
+  // Handle very small values
+  if (maxValue <= 0.001) {
+    chart.options.scales.y.min = 0;
+    chart.options.scales.y.max = 1;
+    return;
+  }
+  
+  // Add 20% margin
+  const margin = (maxValue - minValue) * 0.2;
+  const newMin = Math.max(0, minValue - margin);
+  const newMax = maxValue + margin;
+  
+  // Update if significant change
+  if (Math.abs(chart.options.scales.y.min - newMin) > 0.1 || 
+      Math.abs(chart.options.scales.y.max - newMax) > 0.1) {
+    
+    chart.options.scales.y.min = newMin;
+    chart.options.scales.y.max = newMax;
+    
+    console.log(`📏 Y-axis adjusted: ${newMin.toFixed(3)} - ${newMax.toFixed(3)}`);
+  }
+}
+
+function resetAllCharts() {
+  // Reset semua chart data ketika interface berubah
+  rxChart.data.labels = [];
+  rxChart.data.datasets[0].data = [];
+  rxChart.update('none');
+  
+  txChart.data.labels = [];
+  txChart.data.datasets[0].data = [];
+  txChart.update('none');
+  
+  combinedChart.data.labels = [];
+  combinedChart.data.datasets[0].data = [];
+  combinedChart.data.datasets[1].data = [];
+  combinedChart.update('none');
+  
+  console.log('🔄 All charts reset successfully');
+}
+
+async function fetchTraffic() {
+  try {
+    const res = await fetch(`/api/dashboard/traffic?interface=${currentInterface}`);
+    const data = await res.json();
+    if (data.success) {
+      // Gunakan requestAnimationFrame untuk update yang lebih smooth
+      requestAnimationFrame(() => {
+        addTrafficData(data.rx, data.tx, data.interface);
+      });
+    }
+  } catch (e) { 
+    console.error('Error fetching traffic data:', e);
+  }
+}
+
+// Load interface secara dinamis dari Mikrotik
+async function loadInterfaces() {
+  try {
+    console.log('🔄 Loading interfaces from Mikrotik...');
+    const response = await fetch('/api/dashboard/interfaces');
+    const data = await response.json();
+    
+    console.log('📋 API Response:', data);
+    
+    if (data.success && data.interfaces && data.interfaces.length > 0) {
+      const select = document.getElementById('interfaceSelect');
+      
+      // Delete semua option kecuali yang pertama (default)
+      while (select.children.length > 1) {
+        select.removeChild(select.lastChild);
+      }
+      
+      // Addkan interface yang terdeteksi
+      data.interfaces.forEach(iface => {
+        const option = document.createElement('option');
+        option.value = iface.name;
+        
+        // Buat label yang informatif
+        let label = iface.name;
+        
+        // Addkan label khusus untuk interface tertentu
+        if (iface.name === 'ether1-ISP') {
+          label = 'ether1-ISP (ISP)';
+        } else if (iface.name === 'ether2-CADANGAN ISP') {
+          label = 'ether2-CADANGAN ISP (Backup)';
+        } else if (iface.name === 'ether3-LOKAL') {
+          label = 'ether3-LOKAL (Local)';
+        } else if (iface.name === 'ether4-LOKAL-LEPTOP') {
+          label = 'ether4-LOKAL-LEPTOP (Laptop)';
+        } else if (iface.name === 'ether5-LOKAL-REMOT OLT') {
+          label = 'ether5-LOKAL-REMOT OLT (Remote)';
+        } else if (iface.name === 'ether6-OLT-SFP1-TANJUNGPURA') {
+          label = 'ether6-OLT-SFP1-TANJUNGPURA (OLT1)';
+        } else if (iface.name === 'ether7-OLT-SFP2-TANJUNGPURA2') {
+          label = 'ether7-OLT-SFP2-TANJUNGPURA2 (OLT2)';
+        } else if (iface.name === 'ether8-HOTSPOT-RADIO') {
+          label = 'ether8-HOTSPOT-RADIO (Hotspot)';
+        } else if (iface.name === 'ether9-HOTSPOT-SWICTHHUB') {
+          label = 'ether9-HOTSPOT-SWICTHHUB (Switch)';
+        } else if (iface.name === 'ether10-POP PEGAGAN/JANGGAR') {
+          label = 'ether10-POP PEGAGAN/JANGGAR (POP)';
+        } else if (iface.name === 'bridge1-HOTSPOT') {
+          label = 'bridge1-HOTSPOT (Bridge)';
+        } else if (iface.name === 'bridge2_OLT') {
+          label = 'bridge2_OLT (Bridge OLT)';
+        } else if (iface.name === 'vlan6-1100') {
+          label = 'vlan6-1100 (VLAN)';
+        }
+        
+        // Addkan status
+        if (iface.disabled) {
+          label += ' [Disabled]';
+        } else if (!iface.running) {
+          label += ' [Down]';
+        } else {
+          label += ' [Active]';
+        }
+        
+        option.textContent = label;
+        select.appendChild(option);
+      });
+      
+      console.log(`✅ Loaded ${data.interfaces.length} interfaces from Mikrotik`);
+      
+      // Update current interface jika tidak ada di list
+      const currentOption = select.querySelector(`option[value="${currentInterface}"]`);
+      if (!currentOption && data.interfaces.length > 0) {
+        currentInterface = data.interfaces[0].name;
+        localStorage.setItem('selectedInterface', currentInterface);
+        document.getElementById('currentInterface').textContent = currentInterface;
+        select.value = currentInterface;
+      }
+      
+    } else {
+      console.warn('⚠️ Failed to load interfaces, using default options');
+      console.warn('Response:', data);
+    }
+  } catch (error) {
+    console.error('❌ Error loading interfaces:', error);
+    console.error('Error details:', error.message);
+  }
+}
+
+// Set interface yang tersimpan ke dropdown
+document.getElementById('interfaceSelect').value = currentInterface;
+document.getElementById('currentInterface').textContent = currentInterface;
+
+// Event listener untuk perubahan interface
+document.getElementById('interfaceSelect').addEventListener('change', function() {
+  currentInterface = this.value;
+  localStorage.setItem('selectedInterface', currentInterface); // Save ke localStorage
+  document.getElementById('currentInterface').textContent = currentInterface; // Update tampilan
+  console.log('Interface changed to:', currentInterface);
+  resetAllCharts(); // Reset semua chart data
+  fetchTraffic(); // Fetch data baru segera
+});
+
+// Load interfaces saat halaman dimuat
+loadInterfaces();
+
+// Set interval untuk update data - interval yang lebih optimal untuk grafik
+setInterval(fetchTraffic, 3000); // Update setiap 3 detik untuk grafik yang lebih smooth
+fetchTraffic(); // Fetch data pertama kali
+</script>
+<script>
+// Fungsi untuk me-refresh logo dengan timestamp baru
+function refreshLogo() {
+    const logo = document.getElementById('logoImage');
+    if (logo) {
+        // Addkan parameter timestamp baru untuk memaksa reload gambar
+        const timestamp = new Date().getTime();
+        const src = logo.src.split('?')[0]; // Delete parameter yang ada
+        logo.src = `${src}?v=${timestamp}`;
+    }
+}
+
+// Refresh logo setiap 5 detik
+setInterval(refreshLogo, 5000);
+
+// Refresh logo saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    refreshLogo();
+});
+</script>
+            </main>
+    </div>
+</div>
+<!-- Modal Confirm Restart Mikrotik -->
+<div class="modal fade" id="restartMikrotikModal" tabindex="-1" aria-labelledby="restartMikrotikModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="restartMikrotikModalLabel"><i class="bi bi-arrow-repeat"></i> Confirm Restart Mikrotik</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to <b>restart Mikrotik</b>?<br>Router akan reboot dan koneksi internet pelanggan akan terputus sementara.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRestartMikrotik">Restart</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Toast Container -->
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Fungsi toast notification
+function showToast(type, title, message, duration = 5000) {
+    const toastId = 'toast-' + Date.now();
+    const iconClass = type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-x-circle' : 'bi-info-circle';
+    const bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-primary';
+    
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 300px;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi ${iconClass} me-2"></i>
+                    <strong>${title}</strong><br>
+                    <small>${message}</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    
+    $('#toast-container').append(toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: duration });
+    toast.show();
+    
+    // Auto remove after hide
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+$(function() {
+  $(document).on('click', '#restartMikrotikBtn', function(e) {
+    e.preventDefault();
+    $('#restartMikrotikModal').modal('show');
+  });
+  
+  $('#confirmRestartMikrotik').on('click', function() {
+    const $btn = $(this);
+    const originalText = $btn.html();
+    
+    // Loading state
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Restarting...');
+    $('#restartMikrotikModal').modal('hide');
+    
+    $.ajax({
+      url: '/admin/mikrotik/restart',
+      method: 'POST',
+      success: function(res) {
+        if(res.success) {
+          showToast('success', 'Restart Successful', res.message || 'Mikrotik berhasil direstart!');
+        } else {
+          showToast('error', 'Restart Failed', res.message || 'Failed restart Mikrotik!');
+        }
+      },
+      error: function() {
+        showToast('error', 'Error', 'Failed menghubungi server!');
+      },
+      complete: function() {
+        // Reset button
+        $btn.prop('disabled', false).html(originalText);
+      }
+    });
+  });
+  
+  // Handler untuk tombol validasi konfigurasi
+  $('#validateConfigBtn').on('click', function() {
+    const $btn = $(this);
+    const originalText = $btn.html();
+    
+    // Loading state
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Memvalidasi...');
+    
+    $.ajax({
+      url: '/admin/config/validate',
+      method: 'GET',
+      success: function(response) {
+        if (response.success) {
+          showToast('success', 'Validasi Selesai', 'Konfigurasi sistem telah divalidasi. Halaman akan di-refresh untuk menampilkan hasil.');
+          
+          // Refresh halaman setelah 2 detik untuk menampilkan hasil validasi
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          showToast('error', 'Validasi Failed', response.message || 'Failed menjalankan validasi konfigurasi');
+        }
+      },
+      error: function(xhr) {
+        const errorMsg = xhr.responseJSON?.message || 'Failed menghubungi server';
+        showToast('error', 'Error', errorMsg);
+      },
+      complete: function() {
+        // Reset button
+        $btn.prop('disabled', false).html(originalText);
+      }
+    });
+  });
+  
+  // Handler untuk tombol refresh dashboard
+  $('#refreshDashboardBtn').on('click', function() {
+    const $btn = $(this);
+    const originalText = $btn.html();
+    
+    // Loading state
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Refresh...');
+    
+    // Refresh halaman
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  });
+  
+  // Auto-dismiss untuk alert konfigurasi
+  function initAutoDismissAlerts() {
+    $('.auto-dismiss').each(function() {
+      const $alert = $(this);
+      const autoDismissTime = parseInt($alert.data('auto-dismiss')) || 5000;
+      
+      // Set timer untuk auto dismiss
+      setTimeout(() => {
+        if ($alert.is(':visible')) {
+          $alert.fadeOut(500, function() {
+            $(this).remove();
+          });
+        }
+      }, autoDismissTime);
+      
+      // Hover pause - jika user hover alert, pause auto dismiss
+      let autoDismissTimer;
+      let isPaused = false;
+      
+      const startTimer = () => {
+        if (!isPaused) {
+          autoDismissTimer = setTimeout(() => {
+            if ($alert.is(':visible')) {
+              $alert.fadeOut(500, function() {
+                $(this).remove();
+              });
+            }
+          }, autoDismissTime);
+        }
+      };
+      
+      const pauseTimer = () => {
+        isPaused = true;
+        if (autoDismissTimer) {
+          clearTimeout(autoDismissTimer);
+        }
+      };
+      
+      const resumeTimer = () => {
+        isPaused = false;
+        startTimer();
+      };
+      
+      // Event handlers
+      $alert.on('mouseenter', pauseTimer);
+      $alert.on('mouseleave', resumeTimer);
+      
+      // Start initial timer
+      startTimer();
+    });
+  }
+  
+  // Initialize auto-dismiss saat halaman load
+  initAutoDismissAlerts();
+  
+  // Auto-refresh dashboard data jika ada loading indicators
+  function checkAndRefreshDashboard() {
+    const loadingElements = $('.fs-3:contains("Loading...")');
+    if (loadingElements.length > 0) {
+      console.log('🔄 [DASHBOARD] Detected loading indicators, refreshing in 10 seconds...');
+      setTimeout(() => {
+        window.location.reload();
+      }, 10000);
+    }
+  }
+  
+  // Check untuk loading indicators setiap 5 detik
+  setInterval(checkAndRefreshDashboard, 5000);
+});
+
+// Fungsi untuk clear config warning
+function clearConfigWarning() {
+  // Send request untuk clear hasil validasi dari session
+  $.ajax({
+    url: '/admin/config/clear',
+    method: 'POST',
+    success: function(response) {
+      if (response.success) {
+        showToast('success', 'Warning Dihapus', 'Hasil validasi konfigurasi telah dihapus. Warning tidak akan muncul lagi sampai konfigurasi berubah.');
+        
+        // Sembunyikan semua alert konfigurasi
+        $('.alert').fadeOut(500, function() {
+          $(this).remove();
+        });
+      } else {
+        showToast('error', 'Failed', 'Failed menghapus warning: ' + (response.message || 'Unknown error'));
+      }
+    },
+    error: function(xhr) {
+      const errorMsg = xhr.responseJSON?.message || 'Failed menghubungi server';
+      showToast('error', 'Error', errorMsg);
+    }
+  });
+}
+</script>
+
+</body>
+</html>

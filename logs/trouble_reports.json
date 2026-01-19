@@ -1,0 +1,204 @@
+[
+  {
+    "id": "TR833424MTG",
+    "status": "closed",
+    "createdAt": "2025-08-23T02:23:53.424Z",
+    "updatedAt": "2025-08-29T07:14:40.258Z",
+    "phone": "081321960111",
+    "name": "testing",
+    "location": "Jln. Pantai Tanjungpura Desa Ujunggebang Kecamatan Sukra - Indramayu",
+    "category": "Tidak Bisa Browsing",
+    "description": "tester saja",
+    "notes": [
+      {
+        "timestamp": "2025-08-25T03:35:49.081Z",
+        "content": "test",
+        "status": "resolved",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:11:00.570Z",
+        "content": "[TEST] Status updated to open by test script",
+        "status": "open"
+      },
+      {
+        "timestamp": "2025-08-29T07:11:00.573Z",
+        "content": "[TEST] Status updated to in_progress by test script",
+        "status": "in_progress"
+      },
+      {
+        "timestamp": "2025-08-29T07:11:00.575Z",
+        "content": "[TEST] Status updated to resolved by test script",
+        "status": "resolved"
+      },
+      {
+        "timestamp": "2025-08-29T07:11:00.577Z",
+        "content": "[TEST] Status updated to closed by test script",
+        "status": "closed"
+      },
+      {
+        "timestamp": "2025-08-29T07:11:57.171Z",
+        "content": "[Teknisi]: Report reopened by technician",
+        "status": "open",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:11:57.235Z",
+        "content": "[Teknisi]: Working on the issue",
+        "status": "in_progress",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:11:57.251Z",
+        "content": "[Teknisi]: Issue has been fixed",
+        "status": "resolved",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:11:57.266Z",
+        "content": "[Teknisi]: Report closed by technician",
+        "status": "closed",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:14:40.053Z",
+        "content": "[Teknisi]: Testing open status",
+        "status": "open",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:14:40.246Z",
+        "content": "[Teknisi]: Testing in progress status",
+        "status": "in_progress",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:14:40.253Z",
+        "content": "[Teknisi]: Testing resolved status",
+        "status": "resolved",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-29T07:14:40.258Z",
+        "content": "[Teknisi]: Testing closed status",
+        "status": "closed",
+        "notificationSent": true
+      }
+    ]
+  },
+  {
+    "id": "TR984063C3E",
+    "status": "open",
+    "createdAt": "2025-08-23T02:59:44.063Z",
+    "updatedAt": "2025-08-23T02:59:44.064Z",
+    "phone": "081234567890",
+    "name": "Test Customer Admin Notification",
+    "location": "Test Location for Admin",
+    "category": "Test Category",
+    "description": "Test trouble report untuk memastikan admin juga menerima notifikasi."
+  },
+  {
+    "id": "TR756171FCJ",
+    "status": "closed",
+    "createdAt": "2025-08-23T03:12:36.171Z",
+    "updatedAt": "2025-08-25T12:41:44.341Z",
+    "phone": "081234567890",
+    "name": "Test Date Format",
+    "location": "Test Location",
+    "category": "Test Category",
+    "description": "Test untuk format tanggal yang benar",
+    "notes": [
+      {
+        "timestamp": "2025-08-25T12:41:44.341Z",
+        "content": "test",
+        "status": "closed",
+        "notificationSent": true
+      }
+    ]
+  },
+  {
+    "id": "TR40511699U",
+    "status": "closed",
+    "createdAt": "2025-08-27T00:43:25.116Z",
+    "updatedAt": "2025-08-27T00:48:47.049Z",
+    "phone": "6281947215703",
+    "name": "testing",
+    "location": "Jln. Pantai Tanjungpura Desa Ujunggebang Kecamatan Sukra - Indramayu",
+    "category": "Tidak Bisa Browsing",
+    "description": "tester",
+    "notes": [
+      {
+        "timestamp": "2025-08-27T00:47:27.501Z",
+        "content": "lagi di kerjakan",
+        "status": "in_progress",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-27T00:48:21.905Z",
+        "content": "selesai",
+        "status": "resolved",
+        "notificationSent": true
+      },
+      {
+        "timestamp": "2025-08-27T00:48:47.049Z",
+        "content": "ttup",
+        "status": "closed",
+        "notificationSent": true
+      }
+    ]
+  },
+  {
+    "id": "TR2290062ZF",
+    "status": "in_progress",
+    "createdAt": "2025-08-28T14:27:09.006Z",
+    "updatedAt": "2025-08-29T07:23:45.926Z",
+    "phone": "081321960111",
+    "name": "Testing Customer",
+    "location": "Jl. Test No. 123, Kota Test",
+    "category": "Internet Lambat",
+    "description": "TEST NOTIFICATION: Internet sangat lambat sejak pagi ini. Sudah restart modem tapi belum ada perbaikan.",
+    "notes": [
+      {
+        "timestamp": "2025-08-29T07:23:45.926Z",
+        "content": "[Teknisi]: maning",
+        "status": "in_progress",
+        "notificationSent": true
+      }
+    ]
+  },
+  {
+    "id": "TR231073KX6",
+    "status": "resolved",
+    "createdAt": "2025-08-28T14:27:11.073Z",
+    "updatedAt": "2025-08-29T07:23:30.433Z",
+    "phone": "081234567890",
+    "name": "Admin Test Customer",
+    "location": "Admin Test Location",
+    "category": "Tidak Bisa Browsing",
+    "description": "TEST NOTIFICATION: Tidak bisa mengakses website apapun. Connection timeout terus.",
+    "notes": [
+      {
+        "timestamp": "2025-08-29T07:23:30.433Z",
+        "content": "[Teknisi]:  testre",
+        "status": "resolved",
+        "notificationSent": true
+      }
+    ]
+  },
+  {
+    "id": "TR315012R67",
+    "status": {
+      "status": "resolved",
+      "technician_notes": "test",
+      "assigned_technician_id": 52,
+      "updated_at": "2025-08-29T07:07:03.798Z"
+    },
+    "createdAt": "2025-08-28T14:28:35.012Z",
+    "updatedAt": "2025-08-29T07:07:03.798Z",
+    "phone": "081234567890",
+    "name": "Test Notification Customer",
+    "location": "Test Location - Cek Notifikasi",
+    "category": "Test Category",
+    "description": "TEST MANUAL: Cek apakah notifikasi WhatsApp ke teknisi berjalan dengan benar."
+  }
+]

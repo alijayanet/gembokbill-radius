@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Dashboard agent untuk sistem billing GEMBOK-BILL">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Agent">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest-agent.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <title>Agent Mobile - <%= appSettings.company_name || 'Gembok Bill' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/agent-pwa.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .mobile-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .mobile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+            text-align: center;
+        }
+        .quick-action {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 0.5rem;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .quick-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .quick-action i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .quick-action.primary { border-left: 4px solid #667eea; }
+        .quick-action.success { border-left: 4px solid #28a745; }
+        .quick-action.warning { border-left: 4px solid #ffc107; }
+        .quick-action.info { border-left: 4px solid #17a2b8; }
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin: 0.5rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .notification-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 0.5rem;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .notification-item.unread {
+            background: #f8f9ff;
+            border-left-color: #667eea;
+        }
+        .floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 0.5rem;
+            z-index: 1000;
+        }
+        .nav-item {
+            text-align: center;
+            padding: 0.5rem;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .nav-item.active {
+            color: #667eea;
+        }
+        .nav-item i {
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        .nav-item span {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="mobile-header">
+            <h4 class="mb-1">
+                <i class="fas fa-user-tie me-2"></i>
+                Agent Portal
+            </h4>
+            <p class="mb-0 opacity-75">Selamat datang, <%= agent.name %>!</p>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <h5 class="mb-2">
+                <i class="fas fa-wallet me-2"></i>
+                Balance Tersedia
+            </h5>
+            <h2 class="mb-0">Rp <%= balance.toLocaleString() %></h2>
+            <small class="opacity-75">Balance dapat digunakan untuk menjual voucher</small>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mx-1">
+            <div class="col-6">
+                <div class="quick-action primary" onclick="location.href='/agent/vouchers'">
+                    <i class="fas fa-ticket-alt text-primary"></i>
+                    <h6 class="mb-1">Jual Voucher</h6>
+                    <small class="text-muted">Buat voucher hotspot</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="quick-action success" onclick="location.href='/agent/payments'">
+                    <i class="fas fa-credit-card text-success"></i>
+                    <h6 class="mb-1">Terima Payment</h6>
+                    <small class="text-muted">Proses pembayaran</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mx-1">
+            <div class="col-6">
+                <div class="quick-action warning" onclick="location.href='/agent/balance'">
+                    <i class="fas fa-wallet text-warning"></i>
+                    <h6 class="mb-1">Kelola Balance</h6>
+                    <small class="text-muted">Request saldo</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="quick-action info" onclick="location.href='/agent/transactions'">
+                    <i class="fas fa-history text-info"></i>
+                    <h6 class="mb-1">Riwayat</h6>
+                    <small class="text-muted">View transaksi</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-card">
+            <h6 class="mb-3">
+                <i class="fas fa-chart-pie me-2"></i>
+                Statistik Hari Ini
+            </h6>
+            <div class="row text-center">
+                <div class="col-4">
+                    <h6 class="text-primary mb-1"><%= stats.total_vouchers || 0 %></h6>
+                    <small class="text-muted">Voucher</small>
+                </div>
+                <div class="col-4">
+                    <h6 class="text-success mb-1"><%= stats.total_payments || 0 %></h6>
+                    <small class="text-muted">Payment</small>
+                </div>
+                <div class="col-4">
+                    <h6 class="text-warning mb-1">Rp <%= (stats.voucher_commission || 0).toLocaleString() %></h6>
+                    <small class="text-muted">Komisi</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="stats-card">
+            <h6 class="mb-3">
+                <i class="fas fa-bell me-2"></i>
+                Notifikasi Terbaru
+            </h6>
+            <% if (notifications.length > 0) { %>
+                <% notifications.slice(0, 3).forEach(notification => { %>
+                    <div class="notification-item <%= notification.is_read ? '' : 'unread' %>">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-<%= notification.notification_type === 'voucher_sold' ? 'ticket-alt' : notification.notification_type === 'payment_received' ? 'credit-card' : notification.notification_type === 'balance_updated' ? 'wallet' : 'bell' %> text-<%= notification.notification_type === 'voucher_sold' ? 'info' : notification.notification_type === 'payment_received' ? 'success' : notification.notification_type === 'balance_updated' ? 'warning' : 'primary' %>"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1"><%= notification.title %></h6>
+                                <p class="mb-1 text-muted small"><%= notification.message %></p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <%= new Date(notification.created_at).toLocaleString('id-ID') %>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                    <p>No ada notifikasi</p>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="stats-card">
+            <h6 class="mb-3">
+                <i class="fas fa-receipt me-2"></i>
+                Transaction Terbaru
+            </h6>
+            <% if (recentTransactions.length > 0) { %>
+                <% recentTransactions.slice(0, 3).forEach(transaction => { %>
+                    <div class="notification-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1"><%= transaction.description %></h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <%= new Date(transaction.created_at).toLocaleString('id-ID') %>
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold <%= transaction.amount > 0 ? 'text-success' : 'text-danger' %>">
+                                    <%= transaction.amount > 0 ? '+' : '' %>Rp <%= Math.abs(transaction.amount).toLocaleString() %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-receipt fa-2x mb-2"></i>
+                    <p>Belum ada transaksi</p>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav d-md-none">
+            <div class="row">
+                <div class="col-3">
+                    <a href="/agent/dashboard" class="nav-item active">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </div>
+                <div class="col-3">
+                    <a href="/agent/vouchers" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Voucher</span>
+                    </a>
+                </div>
+                <div class="col-3">
+                    <a href="/agent/payments" class="nav-item">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Bayar</span>
+                    </a>
+                </div>
+                <div class="col-3">
+                    <a href="/agent/transactions" class="nav-item">
+                        <i class="fas fa-history"></i>
+                        <span>Riwayat</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-btn" onclick="location.href='/agent/vouchers'" title="Jual Voucher">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto refresh stats every 30 seconds
+        setInterval(function() {
+            fetch('/agent/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update stats if needed
+                        console.log('Stats updated');
+                    }
+                })
+                .catch(error => console.error('Error updating stats:', error));
+        }, 30000);
+
+        // Mark notifications as read when clicked
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const notificationId = this.dataset.notificationId;
+                if (notificationId) {
+                    fetch('/agent/mark-notification-read', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ notificationId: notificationId })
+                    });
+                }
+            });
+        });
+
+        // Add touch feedback for quick actions
+        document.querySelectorAll('.quick-action').forEach(action => {
+            action.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            action.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+    <script src="/js/agent-pwa.js"></script>
+</body>
+</html>

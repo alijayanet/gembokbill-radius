@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title || 'Tukang Tagih' %> - Portal Technician</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link href="/css/responsive-admin.css" rel="stylesheet">
+    <style>
+        body { background: #f5f6fa; }
+        
+        .technician-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 24px;
+        }
+        
+        .technician-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .collector-item {
+            border-left: 4px solid #dee2e6;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #fff;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .collector-item:hover {
+            border-left-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .user-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .back-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                margin-top: 70px !important;
+                padding: 10px !important;
+                margin-left: 0 !important;
+            }
+            
+            .stats-card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .stats-number {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-tech">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/technician/dashboard">
+                <i class="bx bx-wrench me-2"></i>Portal Technician
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <i class="bx bx-user-circle me-1"></i>
+                    <%= technician.name %>
+                </span>
+                <a href="/technician/logout" class="logout-btn">
+                    <i class="bx bx-log-out me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Include Technician Responsive Sidebar -->
+            <%- include('../partials/technician-responsive-sidebar', { page: 'collectors', technician: technician }) %>
+            
+            <main class="col-md-10 ms-sm-auto main-content">
+                <!-- Welcome Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="user-info">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-1">
+                                        <i class="bx bx-credit-card me-2"></i>Tukang Tagih
+                                    </h4>
+                                    <p class="mb-0 opacity-75">
+                                        <i class="bx bx-user-circle me-1"></i>Technician: <%= technician.name %> | 
+                                        <i class="bx bx-briefcase me-1"></i>Role: <%= technician.role || 'Technician' %>
+                                    </p>
+                                </div>
+                                <a href="/technician/dashboard" class="back-button">
+                                    <i class="bx bx-arrow-back me-1"></i>Back
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-6 col-6 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number"><%= collectors.length || 0 %></div>
+                            <div class="stats-label">Total Tukang Tagih</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-6 mb-3">
+                        <div class="stats-card text-center" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                            <div class="stats-number"><%= collectors.reduce((sum, c) => sum + (c.total_payments || 0), 0) %></div>
+                            <div class="stats-label">Total Payment</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collectors List -->
+                <div class="card technician-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bx bx-list-ul me-2"></i>Register Tukang Tagih
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (collectors && collectors.length > 0) { %>
+                            <% collectors.forEach(collector => { %>
+                                <div class="collector-item">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">
+                                            <h6 class="mb-1">
+                                                <i class="bx bx-user me-2"></i><%= collector.name %>
+                                            </h6>
+                                            <small class="text-muted">
+                                                <i class="bx bx-phone me-1"></i><%= collector.phone || 'N/A' %>
+                                            </small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="mb-1">Total Payment</h6>
+                                            <small class="text-muted">
+                                                <%= collector.total_payments || 0 %> transaksi
+                                            </small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="mb-1">Total Amount</h6>
+                                            <small class="text-muted">
+                                                Rp <%= collector.total_amount ? new Intl.NumberFormat('id-ID').format(collector.total_amount) : '0' %>
+                                            </small>
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <a href="/admin/billing/mobile-collector/<%= collector.id %>" class="btn btn-sm btn-primary">
+                                                <i class="bx bx-eye me-1"></i>Detail
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center py-5">
+                                <i class="bx bx-credit-card text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3 text-muted">No ada tukang tagih</h5>
+                                <p class="text-muted">No data yet tukang tagih yang tersedia</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <%- include('partials/mobile-navbar', { currentPage: 'collectors' }) %>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

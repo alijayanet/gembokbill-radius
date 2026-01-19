@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Laporan Gangguan - <%= companyHeader %></title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0B1437">
+    <link rel="apple-touch-icon" href="/img/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/pwa.css">
+    <link rel="stylesheet" href="/css/customer-responsive.css">
+    <script defer src="/js/pwa-install.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/customer-portal.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #6b7280;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            margin: 2rem auto;
+            overflow: hidden;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header-section h2 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-section h4 {
+            font-weight: 400;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-section {
+            padding: 2rem;
+        }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--light-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .action-header h5 {
+            margin: 0;
+            color: var(--primary-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-secondary {
+            border: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+            background: transparent;
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--secondary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .report-item {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .report-item.open::before {
+            background: linear-gradient(to bottom, var(--danger-color), #dc2626);
+        }
+
+        .report-item.in_progress::before {
+            background: linear-gradient(to bottom, var(--warning-color), #d97706);
+        }
+
+        .report-item.resolved::before {
+            background: linear-gradient(to bottom, var(--success-color), #059669);
+        }
+
+        .report-item.closed::before {
+            background: linear-gradient(to bottom, var(--secondary-color), #4b5563);
+        }
+
+        .report-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .report-item:hover::before {
+            width: 8px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .report-title {
+            margin: 0;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: var(--shadow);
+        }
+
+        .status-open {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+        }
+
+        .status-in_progress {
+            background: linear-gradient(135deg, var(--warning-color), #d97706);
+            color: white;
+        }
+
+        .status-resolved {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+        }
+
+        .status-closed {
+            background: linear-gradient(135deg, var(--secondary-color), #4b5563);
+            color: white;
+        }
+
+        .report-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        .info-item i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+
+        .report-description {
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary-color);
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .report-description.truncated {
+            position: relative;
+            max-height: 4.8em;
+            overflow: hidden;
+        }
+
+        .report-description.truncated::after {
+            content: '...';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--light-bg);
+            padding-left: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        .report-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--secondary-color);
+            background: var(--light-bg);
+            border-radius: 16px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .empty-state h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .footer-section {
+            background: var(--light-bg);
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--secondary-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .stat-open .stat-number { color: var(--danger-color); }
+        .stat-in_progress .stat-number { color: var(--warning-color); }
+        .stat-resolved .stat-number { color: var(--success-color); }
+        .stat-closed .stat-number { color: var(--secondary-color); }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 1rem;
+                border-radius: 16px;
+            }
+            
+            .header-section {
+                padding: 1.5rem;
+            }
+            
+            .header-section h2 {
+                font-size: 2rem;
+            }
+            
+            .content-section {
+                padding: 1.5rem;
+            }
+            
+            .action-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .report-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h2><i class="fas fa-exclamation-triangle me-3"></i><%= companyHeader %></h2>
+                <h4>Register Laporan Gangguan</h4>
+            </div>
+            
+            <!-- Content Section -->
+            <div class="content-section">
+                <!-- Action Header -->
+                <div class="action-header">
+                    <h5><i class="fas fa-list-alt me-2"></i>Riwayat Laporan Gangguan</h5>
+                    <a href="/customer/trouble/report" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Buat Laporan Baru
+                    </a>
+                </div>
+
+                <!-- Statistics Summary -->
+                <% if (reports && reports.length > 0) { %>
+                    <div class="stats-summary">
+                        <div class="stat-card stat-open">
+                            <div class="stat-number">
+                                <%= reports.filter(r => r.status === 'open').length %>
+                            </div>
+                            <div class="stat-label">Dibuka</div>
+                        </div>
+                        <div class="stat-card stat-in_progress">
+                            <div class="stat-number">
+                                <%= reports.filter(r => r.status === 'in_progress').length %>
+                            </div>
+                            <div class="stat-label">Sedang Ditangani</div>
+                        </div>
+                        <div class="stat-card stat-resolved">
+                            <div class="stat-number">
+                                <%= reports.filter(r => r.status === 'resolved').length %>
+                            </div>
+                            <div class="stat-label">Terselesaikan</div>
+                        </div>
+                        <div class="stat-card stat-closed">
+                            <div class="stat-number">
+                                <%= reports.filter(r => r.status === 'closed').length %>
+                            </div>
+                            <div class="stat-label">Ditutup</div>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <!-- Reports List -->
+                <% if (reports && reports.length > 0) { %>
+                    <% reports.forEach(report => { %>
+                        <div class="report-item <%= report.status %>">
+                            <div class="report-header">
+                                <h6 class="report-title">
+                                    <i class="fas fa-ticket-alt me-2"></i>Tiket #<%= report.id %>
+                                </h6>
+                                <span class="status-badge status-<%= report.status %>">
+                                    <i class="fas fa-<%= report.status === 'open' ? 'exclamation-circle' : 
+                                                       report.status === 'in_progress' ? 'clock' : 
+                                                       report.status === 'resolved' ? 'check-circle' : 'times-circle' %>"></i>
+                                    <%= report.status === 'open' ? 'Dibuka' : 
+                                       report.status === 'in_progress' ? 'Sedang Ditangani' : 
+                                       report.status === 'resolved' ? 'Terselesaikan' : 'Ditutup' %>
+                                </span>
+                            </div>
+                            
+                            <div class="report-info">
+                                <div class="info-item">
+                                    <i class="fas fa-tag"></i>
+                                    <span><strong>Kategori:</strong> <%= report.category %></span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span><strong>Date:</strong> <%= new Date(report.createdAt).toLocaleDateString('id-ID') %></span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span><strong>Time:</strong> <%= new Date(report.createdAt).toLocaleTimeString('id-ID') %></span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-history"></i>
+                                    <span><strong>Update:</strong> <%= new Date(report.updatedAt).toLocaleDateString('id-ID') %></span>
+                                </div>
+                            </div>
+                            
+                            <div class="report-description <%= report.description.length > 100 ? 'truncated' : '' %>">
+                                <strong>Deskripsi Masalah:</strong><br>
+                                <%= report.description %>
+                            </div>
+                            
+                            <div class="report-actions">
+                                <div class="report-meta">
+                                    <div class="meta-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span><%= new Date(report.createdAt).toLocaleDateString('id-ID', { 
+                                            weekday: 'long', 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric' 
+                                        }) %></span>
+                                    </div>
+                                </div>
+                                
+                                <a href="/customer/trouble/detail/<%= report.id %>" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye me-2"></i>View Detail
+                                </a>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h6>Belum Ada Laporan Gangguan</h6>
+                        <p>Anda belum pernah membuat laporan gangguan sebelumnya. Mulai buat laporan pertama Anda untuk mendapatkan bantuan dari tim teknisi kami.</p>
+                        <a href="/customer/trouble/report" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Buat Laporan Baru
+                        </a>
+                    </div>
+                <% } %>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center mt-4">
+                    <a href="/customer/dashboard" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back ke Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Footer Section -->
+            <div class="footer-section">
+                <p class="mb-0"><%= footerInfo %></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/customer-mobile.js"></script>
+
+    <!-- Bottom nav (mobile) 5 menu -->
+    <nav class="bottom-nav d-md-none">
+        <a class="nav-item" href="/customer/billing/dashboard">
+            <i class="fas fa-gauge"></i>
+            <span>Billing</span>
+        </a>
+        <a class="nav-item" href="/customer/trouble/report">
+            <i class="fas fa-plus"></i>
+            <span>Laporan</span>
+        </a>
+        <a class="nav-item home-button" href="/customer/dashboard">
+            <i class="bi bi-house"></i>
+            <span>Home</span>
+        </a>
+        <a class="nav-item" href="/customer/billing/invoices">
+            <i class="fas fa-receipt"></i>
+            <span>Invoice</span>
+        </a>
+        <a class="nav-item" href="/customer/billing/profile">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click event to expand truncated descriptions
+            const truncatedDescriptions = document.querySelectorAll('.report-description.truncated');
+            
+            truncatedDescriptions.forEach(desc => {
+                desc.addEventListener('click', function() {
+                    this.classList.remove('truncated');
+                    this.style.maxHeight = 'none';
+                });
+            });
+
+            // Add hover effect for better UX
+            const reportItems = document.querySelectorAll('.report-item');
+            
+            reportItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

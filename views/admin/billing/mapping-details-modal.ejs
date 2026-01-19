@@ -1,0 +1,432 @@
+<!-- ODP Details Modal -->
+<div class="modal fade" id="odpDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-broadcast-tower"></i> ODP Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Basic Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Name:</strong></td><td id="odp-name">-</td></tr>
+                            <tr><td><strong>Code:</strong></td><td id="odp-code">-</td></tr>
+                            <tr><td><strong>Status:</strong></td><td id="odp-status">-</td></tr>
+                            <tr><td><strong>Capacity:</strong></td><td id="odp-capacity">-</td></tr>
+                            <tr><td><strong>Used Ports:</strong></td><td id="odp-used-ports">-</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Location Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Address:</strong></td><td id="odp-address">-</td></tr>
+                            <tr><td><strong>Latitude:</strong></td><td id="odp-latitude">-</td></tr>
+                            <tr><td><strong>Longitude:</strong></td><td id="odp-longitude">-</td></tr>
+                            <tr><td><strong>Installation Date:</strong></td><td id="odp-installation-date">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-primary">Port Usage</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" id="odp-progress-bar" role="progressbar" style="width: 0%">
+                                0 / 0 ports
+                            </div>
+                        </div>
+                        <small class="text-muted" id="odp-capacity-text">0% capacity used</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="edit-odp-btn">Edit ODP</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Details Modal -->
+<div class="modal fade" id="customerDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-home"></i> Customer Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-info">Personal Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Name:</strong></td><td id="customer-name">-</td></tr>
+                            <tr><td><strong>Phone:</strong></td><td id="customer-phone">-</td></tr>
+                            <tr><td><strong>Email:</strong></td><td id="customer-email">-</td></tr>
+                            <tr><td><strong>Status:</strong></td><td id="customer-status">-</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info">Service Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Package:</strong></td><td id="customer-package">-</td></tr>
+                            <tr><td><strong>Address:</strong></td><td id="customer-address">-</td></tr>
+                            <tr><td><strong>Latitude:</strong></td><td id="customer-latitude">-</td></tr>
+                            <tr><td><strong>Longitude:</strong></td><td id="customer-longitude">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" id="edit-customer-btn">Edit Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ONU Details Modal -->
+<div class="modal fade" id="onuDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-wifi"></i> ONU Device Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Device Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Device ID:</strong></td><td><code id="onu-id">-</code></td></tr>
+                            <tr><td><strong>Name:</strong></td><td id="onu-name">-</td></tr>
+                            <tr><td><strong>Serial Number:</strong></td><td id="onu-serial">-</td></tr>
+                            <tr><td><strong>Model:</strong></td><td id="onu-model">-</td></tr>
+                            <tr><td><strong>Status:</strong></td><td id="onu-status">-</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Network Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>SSID:</strong></td><td id="onu-ssid">-</td></tr>
+                            <tr><td><strong>IP Address:</strong></td><td><code id="onu-ip">-</code></td></tr>
+                            <tr><td><strong>MAC Address:</strong></td><td><code id="onu-mac">-</code></td></tr>
+                            <tr><td><strong>Firmware:</strong></td><td id="onu-firmware">-</td></tr>
+                            <tr><td><strong>Hardware:</strong></td><td id="onu-hardware">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Signal Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>RX Power:</strong></td><td id="onu-rx-power">-</td></tr>
+                            <tr><td><strong>TX Power:</strong></td><td id="onu-tx-power">-</td></tr>
+                            <tr><td><strong>Temperature:</strong></td><td id="onu-temperature">-</td></tr>
+                            <tr><td><strong>Uptime:</strong></td><td id="onu-uptime">-</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">Customer Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Customer Name:</strong></td><td id="onu-customer-name">-</td></tr>
+                            <tr><td><strong>Customer Phone:</strong></td><td id="onu-customer-phone">-</td></tr>
+                            <tr><td><strong>PPPoE Username:</strong></td><td><code id="onu-pppoe">-</code></td></tr>
+                            <tr><td><strong>Package:</strong></td><td id="onu-package">-</td></tr>
+                            <tr><td><strong>ODP Name:</strong></td><td id="onu-odp">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-warning">Location Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Address:</strong></td><td id="onu-address">-</td></tr>
+                            <tr><td><strong>Latitude:</strong></td><td id="onu-latitude">-</td></tr>
+                            <tr><td><strong>Longitude:</strong></td><td id="onu-longitude">-</td></tr>
+                            <tr><td><strong>Last Inform:</strong></td><td id="onu-last-inform">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" id="edit-onu-btn">Edit ONU</button>
+                <button type="button" class="btn btn-danger" id="restart-onu-btn">Restart ONU</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit ONU Modal -->
+<div class="modal fade" id="editONUModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Edit ONU Device
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editONUForm">
+                    <input type="hidden" id="editOnuId" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Basic Information</h6>
+                            <div class="mb-3">
+                                <label for="editOnuName" class="form-label">Device Name</label>
+                                <input type="text" class="form-control" id="editOnuName" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuSerial" class="form-label">Serial Number</label>
+                                <input type="text" class="form-control" id="editOnuSerial" name="serial_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuMac" class="form-label">MAC Address</label>
+                                <input type="text" class="form-control" id="editOnuMac" name="mac_address" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuIp" class="form-label">IP Address</label>
+                                <input type="text" class="form-control" id="editOnuIp" name="ip_address">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editOnuStatus" name="status" required>
+                                    <option value="online">Online</option>
+                                    <option value="offline">Offline</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">Location Information</h6>
+                            <div class="mb-3">
+                                <label for="editOnuLat" class="form-label">Latitude</label>
+                                <input type="number" class="form-control" id="editOnuLat" name="latitude" step="any">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuLng" class="form-label">Longitude</label>
+                                <input type="number" class="form-control" id="editOnuLng" name="longitude" step="any">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuCustomerId" class="form-label">Customer ID</label>
+                                <select class="form-select" id="editOnuCustomerId" name="customer_id">
+                                    <option value="">Select Customer</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOnuOdpId" class="form-label">ODP ID</label>
+                                <select class="form-select" id="editOnuOdpId" name="odp_id">
+                                    <option value="">Select ODP</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- WiFi Configuration Section -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-warning">
+                                <i class="fas fa-wifi"></i> WiFi Configuration
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editOnuSsid" class="form-label">SSID</label>
+                                <input type="text" class="form-control" id="editOnuSsid" name="ssid" placeholder="Enter WiFi SSID">
+                                <div class="form-text">WiFi network name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editOnuPassword" class="form-label">WiFi Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="editOnuPassword" name="password" placeholder="Enter WiFi password">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">WiFi network password</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="saveOnuBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit ODP Modal -->
+<div class="modal fade" id="editODPModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Edit ODP
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editODPForm">
+                    <input type="hidden" id="editOdpId" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Basic Information</h6>
+                            <div class="mb-3">
+                                <label for="editOdpName" class="form-label">ODP Name</label>
+                                <input type="text" class="form-control" id="editOdpName" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpCode" class="form-label">ODP Code</label>
+                                <input type="text" class="form-control" id="editOdpCode" name="code" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpCapacity" class="form-label">Capacity</label>
+                                <input type="number" class="form-control" id="editOdpCapacity" name="capacity" min="1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpUsedPorts" class="form-label">Used Ports</label>
+                                <input type="number" class="form-control" id="editOdpUsedPorts" name="used_ports" min="0">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editOdpStatus" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Location Information</h6>
+                            <div class="mb-3">
+                                <label for="editOdpAddress" class="form-label">Address</label>
+                                <textarea class="form-control" id="editOdpAddress" name="address" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpLat" class="form-label">Latitude</label>
+                                <input type="number" class="form-control" id="editOdpLat" name="latitude" step="any">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpLng" class="form-label">Longitude</label>
+                                <input type="number" class="form-control" id="editOdpLng" name="longitude" step="any">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editOdpInstallationDate" class="form-label">Installation Date</label>
+                                <input type="date" class="form-control" id="editOdpInstallationDate" name="installation_date">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveOdpBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Edit Customer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomerForm">
+                    <input type="hidden" id="editCustomerId" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-info">Personal Information</h6>
+                            <div class="mb-3">
+                                <label for="editCustomerName" class="form-label">Customer Name</label>
+                                <input type="text" class="form-control" id="editCustomerName" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerPhone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="editCustomerPhone" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="editCustomerEmail" name="email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerPppoeUsername" class="form-label">PPPoE Username</label>
+                                <input type="text" class="form-control" id="editCustomerPppoeUsername" name="pppoe_username">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editCustomerStatus" name="status" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info">Service & Location Information</h6>
+                            <div class="mb-3">
+                                <label for="editCustomerPackage" class="form-label">Package</label>
+                                <select class="form-select" id="editCustomerPackage" name="package_id">
+                                    <option value="">Select Package</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerOdp" class="form-label">ODP</label>
+                                <select class="form-select" id="editCustomerOdp" name="odp_id">
+                                    <option value="">Select ODP</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerAddress" class="form-label">Address</label>
+                                <textarea class="form-control" id="editCustomerAddress" name="address" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerLat" class="form-label">Latitude</label>
+                                <input type="number" class="form-control" id="editCustomerLat" name="latitude" step="any">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerLng" class="form-label">Longitude</label>
+                                <input type="number" class="form-control" id="editCustomerLng" name="longitude" step="any">
+                            </div>
+                            <div class="mb-3">
+                                <label for="editCustomerJoinDate" class="form-label">Join Date</label>
+                                <input type="date" class="form-control" id="editCustomerJoinDate" name="join_date">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-info" id="saveCustomerBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Kelola Customer' %> - <%= settings.company_header || 'GEMBOK' %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Technician Mobile CSS -->
+    <link href="/css/technician-mobile.css" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Portal Technician">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/img/icons/icon-192.png">
+</head>
+<body data-technician-role="<%= technician.role || 'technician' %>">
+    <!-- Mobile Header -->
+    <div class="tech-mobile-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4><i class="bi bi-people me-2"></i>Kelola Customer</h4>
+                <p>Kelola data pelanggan dan paket</p>
+            </div>
+            <div class="text-end">
+                <button class="btn btn-outline-light btn-sm me-2" onclick="showAddCustomerModal()">
+                    <i class="bi bi-person-plus"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/technician/dashboard"><i class="bi bi-house me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/technician/monitoring"><i class="bi bi-wifi me-2"></i>Monitoring</a></li>
+                        <li><a class="dropdown-item" href="/technician/mapping"><i class="bi bi-geo-alt me-2"></i>Peta Jaringan</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/technician/logout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid px-3">
+        <!-- Search and Filter -->
+        <div class="tech-quick-actions">
+            <div class="row g-2">
+                <div class="col-8">
+                    <input type="text" class="form-control" id="search-customer" placeholder="Cari pelanggan..." value="<%= search || '' %>">
+                </div>
+                <div class="col-4">
+                    <select class="form-select" id="status-filter">
+                        <option value="all">Semua Status</option>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspend</option>
+                        <option value="inactive">No Active</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Stats -->
+        <div class="tech-stats-grid">
+            <div class="tech-stat-card">
+                <div class="tech-stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="tech-stat-value"><%= pagination.totalCustomers || 0 %></div>
+                <div class="tech-stat-label">Total Customer</div>
+            </div>
+            
+            <div class="tech-stat-card">
+                <div class="tech-stat-icon">
+                    <i class="bi bi-check-circle text-success"></i>
+                </div>
+                <div class="tech-stat-value text-success" id="active-customers"><%= customers.filter(c => c.status === 'active').length %></div>
+                <div class="tech-stat-label">Active</div>
+            </div>
+            
+            <div class="tech-stat-card">
+                <div class="tech-stat-icon">
+                    <i class="bi bi-pause-circle text-warning"></i>
+                </div>
+                <div class="tech-stat-value text-warning" id="suspended-customers"><%= customers.filter(c => c.status === 'suspended').length %></div>
+                <div class="tech-stat-label">Suspend</div>
+            </div>
+            
+            <div class="tech-stat-card">
+                <div class="tech-stat-icon">
+                    <i class="bi bi-plus-circle text-primary"></i>
+                </div>
+                <div class="tech-stat-value text-primary" id="new-customers"><%= customers.length %></div>
+                <div class="tech-stat-label">Baru</div>
+            </div>
+        </div>
+
+        <!-- Customer List -->
+        <div class="tech-quick-actions">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5><i class="bi bi-list-ul me-2"></i>Register Customer</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="toggleView('list')">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="toggleView('grid')">
+                        <i class="bi bi-grid-3x3"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="customer-list">
+                <% if (customers && customers.length > 0) { %>
+                    <% customers.forEach((customer, index) => { %>
+                        <div class="customer-item mb-3" data-customer-id="<%= customer.id %>" data-status="<%= customer.status || 'active' %>">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="card-title mb-1">
+                                                <%= customer.name %>
+                                                <span class="badge bg-<%= customer.status === 'active' ? 'success' : customer.status === 'suspended' ? 'warning' : 'secondary' %> ms-2">
+                                                    <%= customer.status === 'active' ? 'Active' : customer.status === 'suspended' ? 'Suspend' : 'No Active' %>
+                                                </span>
+                                            </h6>
+                                            <p class="card-text small text-muted mb-0">
+                                                <i class="bi bi-telephone me-1"></i><%= customer.phone %>
+                                            </p>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="viewCustomerDetails('<%= customer.id %>')">
+                                                    <i class="bi bi-eye me-2"></i>Detail
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="editCustomer('<%= customer.id %>')">
+                                                    <i class="bi bi-pencil me-2"></i>Edit
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="viewCustomerInvoices('<%= customer.id %>')">
+                                                    <i class="bi bi-receipt me-2"></i>Bill
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-<%= customer.status === 'active' ? 'warning' : 'success' %>" href="#" onclick="toggleCustomerStatus('<%= customer.id %>', '<%= customer.status === 'active' ? 'suspended' : 'active' %>')">
+                                                    <i class="bi bi-<%= customer.status === 'active' ? 'pause' : 'play' %> me-2"></i>
+                                                    <%= customer.status === 'active' ? 'Suspend' : 'Activekan' %>
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="small">
+                                                <strong>Username:</strong> <%= customer.username || '-' %>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="small">
+                                                <strong>Paket:</strong> <%= customer.package_name || '-' %>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="small">
+                                                <strong>PPPoE:</strong> <%= customer.pppoe_username || '-' %>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="small">
+                                                <strong>ODP:</strong> <%= customer.odp_name || '-' %>
+                                            </div>
+                                        </div>
+                                        <% if (customer.address) { %>
+                                        <div class="col-12">
+                                            <div class="small">
+                                                <strong>Address:</strong> <%= customer.address %>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <span class="badge bg-light text-dark me-1">
+                                            <i class="bi bi-calendar me-1"></i>Bergabung: <%= new Date(customer.join_date).toLocaleDateString('id-ID') %>
+                                        </span>
+                                        <% if (customer.latitude && customer.longitude) { %>
+                                        <span class="badge bg-info text-white">
+                                            <i class="bi bi-geo-alt me-1"></i>Lokasi
+                                        </span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="text-center py-4">
+                        <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No ada pelanggan yang ditemukan</p>
+                        <button class="btn btn-primary" onclick="showAddCustomerModal()">
+                            <i class="bi bi-person-plus me-2"></i>Add Customer
+                        </button>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <% if (pagination && pagination.totalPages > 1) { %>
+        <div class="d-flex justify-content-center mb-5">
+            <nav aria-label="Customer pagination">
+                <ul class="pagination pagination-sm">
+                    <% if (pagination.hasPrev) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= pagination.currentPage - 1 %>&search=<%= search || '' %>">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    <% } %>
+                    
+                    <% for (let i = Math.max(1, pagination.currentPage - 2); i <= Math.min(pagination.totalPages, pagination.currentPage + 2); i++) { %>
+                    <li class="page-item <%= i === pagination.currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>&search=<%= search || '' %>"><%= i %></a>
+                    </li>
+                    <% } %>
+                    
+                    <% if (pagination.hasNext) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= pagination.currentPage + 1 %>&search=<%= search || '' %>">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <% } %>
+                </ul>
+            </nav>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="tech-bottom-nav">
+        <a href="/technician/dashboard" class="tech-nav-item">
+            <i class="bi bi-house"></i>
+            <span>Home</span>
+        </a>
+        
+        <a href="/technician/monitoring" class="tech-nav-item">
+            <i class="bi bi-wifi"></i>
+            <span>Monitor</span>
+        </a>
+        
+        <a href="/technician/troubletickets" class="tech-nav-item home-button">
+            <i class="bi bi-ticket-detailed"></i>
+            <span>Tiket</span>
+        </a>
+        
+        <a href="/technician/customers" class="tech-nav-item active">
+            <i class="bi bi-people"></i>
+            <span>Customer</span>
+        </a>
+        
+        <a href="/technician/mapping" class="tech-nav-item">
+            <i class="bi bi-geo-alt"></i>
+            <span>Map</span>
+        </a>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Customer Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addCustomerForm">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Name Lengkap *</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Nomor Phone *</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" name="address" rows="2"></textarea>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="username">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Paket *</label>
+                                <select class="form-select" name="package_id" required>
+                                    <option value="">Select Paket</option>
+                                    <% if (packages) { %>
+                                        <% packages.forEach(pkg => { %>
+                                            <option value="<%= pkg.id %>"><%= pkg.name %> - <%= pkg.speed %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">ODP</label>
+                                <select class="form-select" name="odp_id">
+                                    <option value="">Select ODP</option>
+                                    <% if (odps) { %>
+                                        <% odps.forEach(odp => { %>
+                                            <option value="<%= odp.id %>"><%= odp.name %> (<%= odp.code %>)</option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">PPPoE Username</label>
+                                <input type="text" class="form-control" name="pppoe_username">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Latitude</label>
+                                <input type="number" class="form-control" name="latitude" step="any">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Longitude</label>
+                                <input type="number" class="form-control" name="longitude" step="any">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="create_pppoe_now" value="true">
+                                    <label class="form-check-label">
+                                        Buat PPPoE user di Mikrotik sekarang
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus me-2"></i>Add Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Detail Modal -->
+    <div class="modal fade" id="customerDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="customerDetailContent">
+                    <!-- Content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="editCustomerFromModal()">Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Technician Mobile JS -->
+    <script src="/js/technician-mobile.js"></script>
+    
+    <script>
+        let currentView = 'list';
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFilters();
+            initializeCustomerList();
+            calculateStats();
+        });
+        
+        function initializeFilters() {
+            const statusFilter = document.getElementById('status-filter');
+            const searchInput = document.getElementById('search-customer');
+            
+            statusFilter.addEventListener('change', filterCustomers);
+            searchInput.addEventListener('input', debounce(filterCustomers, 300));
+        }
+        
+        function initializeCustomerList() {
+            // Add click handlers to customer items
+            const customerItems = document.querySelectorAll('.customer-item');
+            customerItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const customerId = this.dataset.customerId;
+                    viewCustomerDetails(customerId);
+                });
+            });
+        }
+        
+        function calculateStats() {
+            const customerItems = document.querySelectorAll('.customer-item');
+            let activeCount = 0;
+            let suspendedCount = 0;
+            let newCount = 0;
+            
+            customerItems.forEach(item => {
+                const status = item.dataset.status;
+                if (status === 'active') activeCount++;
+                else if (status === 'suspended') suspendedCount++;
+                
+                // Check if customer is new (joined in last 30 days)
+                const joinDate = item.querySelector('.badge').textContent;
+                if (joinDate.includes('Bergabung:')) {
+                    const dateStr = joinDate.split('Bergabung: ')[1];
+                    const joinDateObj = new Date(dateStr);
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    
+                    if (joinDateObj > thirtyDaysAgo) {
+                        newCount++;
+                    }
+                }
+            });
+            
+            document.getElementById('active-customers').textContent = activeCount;
+            document.getElementById('suspended-customers').textContent = suspendedCount;
+            document.getElementById('new-customers').textContent = newCount;
+        }
+        
+        function filterCustomers() {
+            const statusFilter = document.getElementById('status-filter').value;
+            const searchTerm = document.getElementById('search-customer').value.toLowerCase();
+            
+            const customerItems = document.querySelectorAll('.customer-item');
+            
+            customerItems.forEach(item => {
+                const customerStatus = item.dataset.status;
+                const customerText = item.textContent.toLowerCase();
+                
+                let showItem = true;
+                
+                // Filter by status
+                if (statusFilter !== 'all' && customerStatus !== statusFilter) {
+                    showItem = false;
+                }
+                
+                // Filter by search term
+                if (searchTerm && !customerText.includes(searchTerm)) {
+                    showItem = false;
+                }
+                
+                item.style.display = showItem ? 'block' : 'none';
+            });
+        }
+        
+        function toggleView(view) {
+            currentView = view;
+            const customerList = document.getElementById('customer-list');
+            
+            // Update button states
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Toggle view classes
+            if (view === 'grid') {
+                customerList.classList.add('row');
+                customerList.classList.add('g-3');
+                customerList.querySelectorAll('.customer-item').forEach(item => {
+                    item.classList.add('col-12', 'col-md-6');
+                });
+            } else {
+                customerList.classList.remove('row', 'g-3');
+                customerList.querySelectorAll('.customer-item').forEach(item => {
+                    item.classList.remove('col-12', 'col-md-6');
+                });
+            }
+        }
+        
+        function showAddCustomerModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+            modal.show();
+        }
+        
+        function viewCustomerDetails(customerId) {
+            // Find customer data
+            const customerItem = document.querySelector(`[data-customer-id="${customerId}"]`);
+            if (!customerItem) return;
+            
+            const cardBody = customerItem.querySelector('.card-body');
+            const customerData = {
+                id: customerId,
+                name: cardBody.querySelector('.card-title').textContent.split(' ')[0],
+                phone: cardBody.querySelector('.card-text').textContent.replace('📞', '').trim(),
+                status: customerItem.dataset.status
+            };
+            
+            // Load customer details via API
+            fetch(`/technician/customers/${customerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayCustomerDetails(data.customer);
+                    } else {
+                        showNotification('Failed memuat detail pelanggan', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading customer details:', error);
+                    showNotification('Error memuat detail pelanggan', 'error');
+                });
+        }
+        
+        function displayCustomerDetails(customer) {
+            const modalContent = document.getElementById('customerDetailContent');
+            modalContent.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-6">
+                        <strong>Name:</strong><br>
+                        <span class="text-muted">${customer.name}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Status:</strong><br>
+                        <span class="badge bg-${customer.status === 'active' ? 'success' : customer.status === 'suspended' ? 'warning' : 'secondary'}">
+                            ${customer.status === 'active' ? 'Active' : customer.status === 'suspended' ? 'Suspend' : 'No Active'}
+                        </span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Phone:</strong><br>
+                        <span class="text-muted">${customer.phone}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Email:</strong><br>
+                        <span class="text-muted">${customer.email || '-'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Username:</strong><br>
+                        <span class="text-muted">${customer.username || '-'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Paket:</strong><br>
+                        <span class="text-muted">${customer.package_name || '-'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>PPPoE Username:</strong><br>
+                        <span class="text-muted">${customer.pppoe_username || '-'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>ODP:</strong><br>
+                        <span class="text-muted">${customer.odp_name || '-'}</span>
+                    </div>
+                    <div class="col-12">
+                        <strong>Address:</strong><br>
+                        <span class="text-muted">${customer.address || '-'}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Bergabung:</strong><br>
+                        <span class="text-muted">${new Date(customer.join_date).toLocaleDateString('id-ID')}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Lokasi:</strong><br>
+                        <span class="text-muted">
+                            ${customer.latitude && customer.longitude ? 
+                                `${customer.latitude}, ${customer.longitude}` : 'No ada'}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('customerDetailModal'));
+            modal.show();
+        }
+        
+        function editCustomer(customerId) {
+            // Redirect to edit page or show edit modal
+            showNotification('Fitur edit pelanggan akan segera tersedia', 'info');
+        }
+        
+        function editCustomerFromModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('customerDetailModal'));
+            modal.hide();
+            editCustomer();
+        }
+        
+        function viewCustomerInvoices(customerId) {
+            // Redirect to customer invoices
+            window.location.href = `/technician/customers/${customerId}/invoices`;
+        }
+        
+        function toggleCustomerStatus(customerId, newStatus) {
+            const action = newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan';
+            if (confirm(`Are you sure you want to ${action} pelanggan ini?`)) {
+                // Implement status toggle
+                showNotification(`Status pelanggan berhasil diubah menjadi ${newStatus}`, 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        }
+        
+        // Handle add customer form submission
+        document.getElementById('addCustomerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Add technician ID
+            data.created_by_technician_id = '<%= technician.id %>';
+            
+            fetch('/technician/customers/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showNotification('Customer berhasil ditambahkan', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
+                    modal.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('Failed menambah pelanggan: ' + result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding customer:', error);
+                showNotification('Error menambah pelanggan', 'error');
+            });
+        });
+    </script>
+</body>
+</html>

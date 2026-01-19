@@ -1,0 +1,1193 @@
+/* ========================================
+   CUSTOMER MOBILE RESPONSIVE CSS
+   Optimized for Customer Billing Portal
+   ======================================== */
+
+/* Import existing responsive styles */
+@import url('./responsive.css');
+
+/* ========================================
+   CUSTOMER SPECIFIC MOBILE STYLES
+   ======================================== */
+
+/* Mobile-first approach for customer pages */
+@media (max-width: 768px) {
+    
+    /* Container adjustments */
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    /* Header improvements */
+    .customer-header {
+        padding: 15px 0;
+        text-align: center;
+    }
+    
+    .customer-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+    
+    .customer-header p {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    /* Card improvements for mobile */
+    .card {
+        margin-bottom: 15px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .card-header {
+        padding: 15px;
+        font-size: 1rem;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    /* Table responsive improvements */
+    .table-responsive {
+        border-radius: 8px;
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px 6px;
+        vertical-align: middle;
+    }
+    
+    .table th {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Button group improvements */
+    .btn-group .btn {
+        font-size: 0.75rem;
+        padding: 6px 8px;
+        border-radius: 6px;
+    }
+    
+    .btn-group .btn i {
+        font-size: 0.8rem;
+    }
+    
+    /* Summary cards improvements */
+    .summary-cards .card {
+        text-align: center;
+        padding: 15px 10px;
+    }
+    
+    .summary-cards .fs-3 {
+        font-size: 1.5rem !important;
+    }
+    
+    .summary-cards .fs-2 {
+        font-size: 1.8rem !important;
+        margin-bottom: 8px;
+    }
+    
+    /* Badge improvements */
+    .badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+    
+    /* Form improvements */
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: 8px;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    
+    /* Button improvements */
+    .btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn-sm {
+        min-height: 36px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    /* Alert improvements */
+    .alert {
+        padding: 12px 15px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+    
+    /* Footer improvements */
+    footer {
+        margin-top: 30px;
+        padding: 20px 0;
+        font-size: 0.8rem;
+    }
+    
+    /* Invoice detail specific */
+    .invoice-header {
+        text-align: center;
+        padding: 20px 15px;
+    }
+    
+    .invoice-header h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+    
+    .invoice-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        font-size: 0.8rem !important;
+        padding: 8px 12px !important;
+    }
+    
+    /* Customer info table */
+    .table-borderless td {
+        padding: 6px 0;
+        font-size: 0.85rem;
+    }
+    
+    /* Payment options */
+    .payment-options .card {
+        margin-bottom: 15px;
+    }
+    
+    .payment-options .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    /* Stats grid improvements */
+    .stats-grid {
+        gap: 12px !important;
+    }
+    
+    .stat-card {
+        padding: 15px 10px !important;
+        min-height: 110px;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem !important;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem !important;
+    }
+}
+
+/* ========================================
+   SMALL MOBILE STYLES (≤480px)
+   ======================================== */
+@media (max-width: 480px) {
+    
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    /* Header */
+    .customer-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    /* Cards */
+    .card-header {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+    
+    .card-body {
+        padding: 12px;
+    }
+    
+    /* Tables */
+    .table {
+        font-size: 0.8rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 6px 4px;
+    }
+    
+    /* Buttons */
+    .btn {
+        min-height: 42px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .btn-group .btn {
+        font-size: 0.7rem;
+        padding: 5px 6px;
+    }
+    
+    /* Summary cards */
+    .summary-cards .fs-3 {
+        font-size: 1.3rem !important;
+    }
+    
+    .summary-cards .fs-2 {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Stats grid */
+    .stats-grid {
+        gap: 10px !important;
+    }
+    
+    .stat-card {
+        padding: 12px 8px !important;
+        min-height: 100px;
+    }
+    
+    .stat-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    .stat-value {
+        font-size: 1rem !important;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Invoice header */
+    .invoice-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .invoice-header h4 {
+        font-size: 1rem;
+    }
+    
+    /* Badges */
+    .badge {
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+}
+
+/* ========================================
+   LANDSCAPE MOBILE STYLES
+   ======================================== */
+@media (max-width: 768px) and (orientation: landscape) {
+    
+    .customer-header {
+        padding: 10px 0;
+    }
+    
+    .customer-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .card {
+        margin-bottom: 12px;
+    }
+    
+    .card-header {
+        padding: 12px 15px;
+    }
+    
+    .card-body {
+        padding: 12px 15px;
+    }
+    
+    .stats-grid {
+        gap: 10px !important;
+    }
+    
+    .stat-card {
+        min-height: 90px;
+        padding: 12px 8px !important;
+    }
+    
+    .stat-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+}
+
+/* ========================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ======================================== */
+@media (hover: none) and (pointer: coarse) {
+    
+    /* Larger touch targets */
+    .btn {
+        min-height: 48px;
+        padding: 12px 20px;
+    }
+    
+    .btn-sm {
+        min-height: 42px;
+        padding: 8px 16px;
+    }
+    
+    .form-control,
+    .form-select {
+        min-height: 48px;
+    }
+    
+    /* Better touch feedback */
+    .btn:active,
+    .card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .btn:hover,
+    .card:hover {
+        transform: none;
+    }
+}
+
+/* ========================================
+   CUSTOMER SPECIFIC COMPONENTS
+   ======================================== */
+
+/* Mobile-friendly invoice cards */
+.mobile-invoice-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #007bff;
+}
+
+.mobile-invoice-card.unpaid {
+    border-left-color: #ffc107;
+}
+
+.mobile-invoice-card.overdue {
+    border-left-color: #dc3545;
+}
+
+.mobile-invoice-card.paid {
+    border-left-color: #28a745;
+}
+
+/* Mobile-friendly payment buttons */
+.mobile-payment-btn {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Mobile-friendly status indicators */
+.mobile-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.mobile-status.paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mobile-status.unpaid {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.mobile-status.overdue {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Mobile-friendly info cards */
+.mobile-info-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-left: 3px solid #007bff;
+}
+
+.mobile-info-card .info-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.mobile-info-card .info-value {
+    font-size: 0.9rem;
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Mobile-friendly action buttons */
+.mobile-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.mobile-actions .btn {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Mobile-friendly loading states */
+.mobile-loading {
+    text-align: center;
+    padding: 30px 15px;
+}
+
+.mobile-loading .spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Mobile-friendly empty states */
+.mobile-empty {
+    text-align: center;
+    padding: 40px 15px;
+    color: #6c757d;
+}
+
+.mobile-empty i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.mobile-empty h5 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.mobile-empty p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Mobile-friendly navigation - Override pwa.css */
+.bottom-nav {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(180deg, rgba(11,20,55,0.96), rgba(15,28,79,0.96)) !important;
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+    height: 70px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr !important;
+    z-index: 1000 !important;
+    backdrop-filter: blur(10px);
+    padding: 8px 0 !important;
+}
+
+.nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    color: #93A1C6 !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+}
+
+.nav-item.active {
+    color: #fff !important;
+}
+
+.nav-item i {
+    font-size: 16px !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Special styling for Home button (center button) */
+.nav-item.home-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 50% !important;
+    width: 56px !important;
+    height: 56px !important;
+    margin: -8px auto 0 auto !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0.4) !important;
+    transform: translateY(-4px) !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* Pulsing animation for home button */
+@keyframes pulse-home {
+    0% {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4), 0 0 0 10px rgba(102, 126, 234, 0.1);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+}
+
+/* Glow animation for home button */
+@keyframes glow-home {
+    0% {
+        filter: brightness(1) drop-shadow(0 0 5px rgba(102, 126, 234, 0.3));
+    }
+    50% {
+        filter: brightness(1.1) drop-shadow(0 0 15px rgba(102, 126, 234, 0.6));
+    }
+    100% {
+        filter: brightness(1) drop-shadow(0 0 5px rgba(102, 126, 234, 0.3));
+    }
+}
+
+/* Floating animation */
+@keyframes float-home {
+    0%, 100% {
+        transform: translateY(-4px);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.nav-item.home-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.3s ease;
+    pointer-events: none;
+}
+
+/* Add particle effect */
+.nav-item.home-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: particle-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes particle-pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.3;
+    }
+}
+
+/* Ripple animation for button clicks */
+@keyframes ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.nav-item.home-button:hover::before {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Add continuous subtle floating animation */
+.nav-item.home-button {
+    animation: float-home 3s ease-in-out infinite;
+}
+
+/* Add glow effect on hover */
+.nav-item.home-button:hover {
+    animation: float-home 3s ease-in-out infinite, glow-home 1.5s ease-in-out infinite;
+}
+
+/* Active state with enhanced glow */
+.nav-item.home-button:active {
+    animation: none;
+    filter: brightness(1.2) drop-shadow(0 0 20px rgba(102, 126, 234, 0.8));
+}
+
+.nav-item.home-button i {
+    font-size: 24px !important;
+    color: #fff !important;
+    margin-bottom: 2px !important;
+}
+
+.nav-item.home-button span {
+    font-size: 10px !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.nav-item.home-button:active {
+    transform: translateY(-2px) scale(0.95) !important;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.6) !important;
+}
+
+.nav-item.home-button:hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5) !important;
+}
+
+/* Adjust other nav items for home button */
+.nav-item:not(.home-button) {
+    margin-top: 4px !important;
+}
+
+.nav-item:not(.home-button) i {
+    font-size: 18px !important;
+}
+
+.nav-item:not(.home-button) span {
+    font-size: 11px !important;
+}
+
+/* Responsive adjustments for home button */
+@media (max-width: 480px) {
+    .nav-item.home-button {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .nav-item.home-button i {
+        font-size: 20px !important;
+    }
+    
+    .nav-item.home-button span {
+        font-size: 9px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .nav-item.home-button {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .nav-item.home-button i {
+        font-size: 18px !important;
+    }
+    
+    .nav-item.home-button span {
+        font-size: 8px !important;
+    }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .nav-item.home-button {
+        width: 52px !important;
+        height: 52px !important;
+        margin: -6px auto 0 auto !important;
+    }
+    
+    .nav-item.home-button i {
+        font-size: 22px !important;
+    }
+}
+
+/* Hide mobile nav on desktop */
+@media (min-width: 768px) {
+    .bottom-nav {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   MOBILE JAVASCRIPT ENHANCEMENTS
+   ======================================== */
+
+/* Touch feedback */
+.btn.touching,
+.card.touching {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+.nav-item.nav-touching {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+}
+
+/* Mobile toast notifications */
+.mobile-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    max-width: 90%;
+    text-align: center;
+}
+
+.mobile-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.mobile-toast-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.mobile-toast-success {
+    background: #28a745;
+}
+
+.mobile-toast-error {
+    background: #dc3545;
+}
+
+.mobile-toast-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.mobile-toast-info {
+    background: #17a2b8;
+}
+
+/* Mobile device specific styles */
+.mobile-device .card {
+    transition: transform 0.2s ease;
+}
+
+.mobile-device .card:active {
+    transform: scale(0.98);
+}
+
+/* Keyboard open state */
+.keyboard-open .bottom-nav {
+    display: none;
+}
+
+.keyboard-open .container {
+    padding-bottom: 20px;
+}
+
+/* Mobile animations */
+.animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile table enhancements */
+.table.mobile-converted td {
+    display: block;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table.mobile-converted td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: #6c757d;
+    display: inline-block;
+    width: 120px;
+    margin-right: 10px;
+}
+
+.table.mobile-converted thead {
+    display: none;
+}
+
+.table.mobile-converted tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    background: white;
+}
+
+/* Mobile loading states */
+.mobile-loading .btn {
+    position: relative;
+    color: transparent;
+}
+
+.mobile-loading .btn:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ========================================
+   PAYMENT GATEWAY PAGES
+   ======================================== */
+
+/* Payment gateway specific styles */
+.payment-card {
+    transition: all 0.3s ease;
+    border: none !important;
+    border-radius: 15px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.payment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+/* Payment status icons */
+.success-icon,
+.pending-icon,
+.error-icon {
+    font-size: 4rem !important;
+    margin-bottom: 1rem !important;
+    transition: all 0.3s ease;
+}
+
+.success-icon {
+    color: #28a745 !important;
+}
+
+.pending-icon {
+    color: #ffc107 !important;
+}
+
+.error-icon {
+    color: #dc3545 !important;
+}
+
+/* Payment buttons */
+.payment-buttons .btn {
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.payment-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Mobile responsive for payment pages */
+@media (max-width: 768px) {
+    .payment-card {
+        margin: 10px;
+        border-radius: 12px !important;
+    }
+    
+    .payment-card .card-body {
+        padding: 2rem 1.5rem !important;
+    }
+    
+    .success-icon,
+    .pending-icon,
+    .error-icon {
+        font-size: 3rem !important;
+    }
+    
+    .payment-buttons .btn {
+        min-height: 44px;
+        font-size: 0.9rem;
+        padding: 12px 20px;
+    }
+    
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .payment-card .card-body {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .success-icon,
+    .pending-icon,
+    .error-icon {
+        font-size: 2.5rem !important;
+    }
+    
+    .payment-buttons .btn {
+        min-height: 42px;
+        font-size: 0.85rem;
+        padding: 10px 16px;
+    }
+    
+    .payment-buttons .d-grid {
+        gap: 0.75rem !important;
+    }
+}
+
+/* Payment status animations */
+@keyframes pulse-success {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes pulse-pending {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@keyframes shake-error {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+.success-icon {
+    animation: pulse-success 2s ease-in-out infinite;
+}
+
+.pending-icon {
+    animation: pulse-pending 2s ease-in-out infinite;
+}
+
+.error-icon {
+    animation: shake-error 0.5s ease-in-out;
+}
+
+/* Payment loading states */
+.payment-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Payment alerts */
+.payment-alert {
+    border-radius: 10px;
+    border: none;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.payment-alert.alert-info {
+    background: rgba(13, 202, 240, 0.1);
+    color: #0c5460;
+    border-left: 4px solid #0dcaf0;
+}
+
+.payment-alert.alert-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.payment-alert.alert-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+/* Contact info styling */
+.payment-contact {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.payment-contact i {
+    margin-right: 0.5rem;
+    color: #007bff;
+}
+
+/* Order ID styling */
+.payment-order-id {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+
+.payment-order-id strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+/* Focus indicators */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.mobile-nav-item:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+    
+    .btn-primary {
+        background: #000;
+        color: #fff;
+        border-color: #000;
+    }
+    
+    .mobile-status {
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .card,
+    .mobile-nav-item {
+        transition: none;
+    }
+    
+    .btn:active,
+    .card:active {
+        transform: none;
+    }
+}

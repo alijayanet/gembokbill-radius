@@ -1,0 +1,806 @@
+/* ========================================
+   TECHNICIAN MOBILE STYLES
+   ======================================== */
+
+/* Mobile-first responsive design for technician portal */
+:root {
+    --tech-primary: #10b981;
+    --tech-secondary: #059669;
+    --tech-accent: #34d399;
+    --tech-success: #22c55e;
+    --tech-warning: #f59e0b;
+    --tech-info: #3b82f6;
+    --tech-light: #f0fdf4;
+    --tech-dark: #064e3b;
+    --tech-card-radius: 16px;
+    --tech-btn-radius: 50px;
+    --tech-transition: 0.3s ease;
+    --tech-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+    --tech-shadow-hover: 0 8px 25px rgba(16, 185, 129, 0.15);
+}
+
+/* Mobile Header Styling */
+.tech-mobile-header {
+    background: linear-gradient(135deg, var(--tech-primary) 0%, var(--tech-secondary) 100%);
+    color: white;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-mobile-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.tech-mobile-header h4 {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.tech-mobile-header p {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.tech-mobile-header .tech-role {
+    background: rgba(255,255,255,0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+/* Stats Grid */
+.tech-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tech-stat-card {
+    background: white;
+    border-radius: var(--tech-card-radius);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--tech-shadow);
+    transition: all var(--tech-transition);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--tech-primary), var(--tech-accent));
+    transform: scaleX(0);
+    transition: transform var(--tech-transition);
+}
+
+.tech-stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.tech-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--tech-shadow-hover);
+}
+
+.tech-stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+    transition: all var(--tech-transition);
+    color: var(--tech-primary);
+}
+
+.tech-stat-card:hover .tech-stat-icon {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.tech-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    transition: all var(--tech-transition);
+    color: var(--tech-primary);
+}
+
+.tech-stat-card:hover .tech-stat-value {
+    transform: scale(1.05);
+}
+
+.tech-stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Technician Menu */
+.tech-menu {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tech-menu-card {
+    background: white;
+    border-radius: var(--tech-card-radius);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--tech-shadow);
+    transition: all var(--tech-transition);
+    cursor: pointer;
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+    display: block;
+}
+
+.tech-menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--tech-shadow-hover);
+    color: inherit;
+    text-decoration: none;
+}
+
+.tech-menu-card:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
+.tech-menu-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.tech-menu-card:hover::before {
+    left: 100%;
+}
+
+.tech-menu-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    transition: all var(--tech-transition);
+    color: var(--tech-primary);
+}
+
+.tech-menu-card:hover .tech-menu-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.tech-menu-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    transition: all var(--tech-transition);
+}
+
+.tech-menu-card:hover .tech-menu-title {
+    color: var(--tech-primary);
+}
+
+.tech-menu-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+    line-height: 1.4;
+    transition: all var(--tech-transition);
+}
+
+.tech-menu-card:hover .tech-menu-description {
+    color: #495057;
+}
+
+/* Quick Actions */
+.tech-quick-actions {
+    background: white;
+    border-radius: var(--tech-card-radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--tech-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-quick-actions::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--tech-success), var(--tech-warning));
+}
+
+.tech-quick-actions h5 {
+    color: var(--tech-primary);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.tech-quick-actions h5 i {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.tech-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.tech-action-btn {
+    background: linear-gradient(135deg, var(--tech-primary) 0%, var(--tech-secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all var(--tech-transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.tech-action-btn:hover::before {
+    left: 100%;
+}
+
+.tech-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.tech-action-btn:active {
+    transform: translateY(0);
+}
+
+.tech-action-btn i {
+    margin-right: 0.5rem;
+}
+
+/* Bottom Navigation */
+.tech-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, rgba(4, 78, 59, 0.96), rgba(5, 150, 105, 0.96));
+    border-top: 1px solid rgba(255,255,255,0.08);
+    height: 70px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    padding: 8px 0;
+}
+
+.tech-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #93A1C6;
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 8px;
+    margin: 0 4px;
+}
+
+.tech-nav-item.active {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+.tech-nav-item i {
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.tech-nav-item span {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.tech-nav-item:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.1);
+}
+
+/* Special styling for Home button (center button) */
+.tech-nav-item.home-button {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    margin: -8px auto 0 auto;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4), 0 0 0 0 rgba(16, 185, 129, 0.4);
+    transform: translateY(-4px);
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+    animation: float-home-tech 3s ease-in-out infinite;
+}
+
+/* Pulsing animation for home button */
+@keyframes pulse-home-tech {
+    0% {
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4), 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4), 0 0 0 10px rgba(16, 185, 129, 0.1);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4), 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+}
+
+/* Glow animation for home button */
+@keyframes glow-home-tech {
+    0% {
+        filter: brightness(1) drop-shadow(0 0 5px rgba(16, 185, 129, 0.3));
+    }
+    50% {
+        filter: brightness(1.1) drop-shadow(0 0 15px rgba(16, 185, 129, 0.6));
+    }
+    100% {
+        filter: brightness(1) drop-shadow(0 0 5px rgba(16, 185, 129, 0.3));
+    }
+}
+
+/* Floating animation */
+@keyframes float-home-tech {
+    0%, 100% {
+        transform: translateY(-4px);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Add particle effect */
+.tech-nav-item.home-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: particle-pulse-tech 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes particle-pulse-tech {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.3;
+    }
+}
+
+.tech-nav-item.home-button:hover {
+    animation: float-home-tech 3s ease-in-out infinite, glow-home-tech 1.5s ease-in-out infinite;
+}
+
+.tech-nav-item.home-button:active {
+    animation: none;
+    filter: brightness(1.2) drop-shadow(0 0 20px rgba(16, 185, 129, 0.8));
+}
+
+.tech-nav-item.home-button i {
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.tech-nav-item.home-button span {
+    font-size: 10px;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Adjust other nav items for home button */
+.tech-nav-item:not(.home-button) {
+    margin-top: 4px;
+}
+
+.tech-nav-item:not(.home-button) i {
+    font-size: 18px;
+}
+
+.tech-nav-item:not(.home-button) span {
+    font-size: 11px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .tech-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .tech-menu {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .tech-menu-card {
+        padding: 1.25rem;
+    }
+    
+    .tech-menu-icon {
+        font-size: 2rem;
+    }
+    
+    .tech-menu-title {
+        font-size: 1rem;
+    }
+    
+    .tech-action-buttons {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .tech-stat-card {
+        padding: 1.25rem;
+    }
+    
+    .tech-stat-icon {
+        font-size: 2rem;
+    }
+    
+    .tech-stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .tech-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .tech-menu {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .tech-menu-card {
+        padding: 1rem;
+    }
+    
+    .tech-stat-card {
+        padding: 1rem;
+    }
+    
+    .tech-quick-actions {
+        padding: 1rem;
+    }
+    
+    .tech-mobile-header {
+        padding: 0.75rem;
+    }
+    
+    .tech-mobile-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .tech-mobile-header p {
+        font-size: 0.8rem;
+    }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .tech-stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .tech-menu {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .tech-action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 768px) {
+    .tech-bottom-nav {
+        display: none;
+    }
+    
+    body {
+        padding-bottom: 0;
+    }
+}
+
+/* Loading states */
+.tech-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: loading-shimmer-tech 1.5s infinite;
+}
+
+@keyframes loading-shimmer-tech {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Touch feedback animations */
+@keyframes touch-feedback-tech {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.98);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.tech-touch-feedback {
+    animation: touch-feedback-tech 0.2s ease;
+}
+
+/* Success/Error states */
+.tech-success-state {
+    border-left: 4px solid var(--tech-success);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.tech-error-state {
+    border-left: 4px solid #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.tech-warning-state {
+    border-left: 4px solid var(--tech-warning);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* Accessibility improvements */
+.tech-btn:focus,
+.tech-menu-card:focus,
+.tech-nav-item:focus {
+    outline: 2px solid var(--tech-primary);
+    outline-offset: 2px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .tech-stat-card,
+    .tech-menu-card,
+    .tech-quick-actions {
+        background: #2d3748;
+        color: #e2e8f0;
+        border-color: rgba(255,255,255,0.1);
+    }
+    
+    .tech-stat-label,
+    .tech-menu-description {
+        color: #a0aec0;
+    }
+    
+    .tech-menu-card:hover .tech-menu-description {
+        color: #e2e8f0;
+    }
+}
+
+/* Technician specific status indicators */
+.tech-status-online {
+    color: var(--tech-success);
+    font-weight: 600;
+}
+
+.tech-status-offline {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.tech-status-maintenance {
+    color: var(--tech-warning);
+    font-weight: 600;
+}
+
+/* Task priority indicators */
+.tech-priority-high {
+    border-left: 4px solid #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.tech-priority-medium {
+    border-left: 4px solid var(--tech-warning);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.tech-priority-low {
+    border-left: 4px solid var(--tech-info);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+/* Technician role badges */
+.tech-role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tech-role-technician {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--tech-primary);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tech-role-field-officer {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--tech-info);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.tech-role-collector {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--tech-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Mobile table responsive */
+.tech-mobile-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tech-mobile-table table {
+    min-width: 600px;
+    width: 100%;
+}
+
+.tech-mobile-table th,
+.tech-mobile-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Mobile form styling */
+.tech-mobile-form {
+    background: white;
+    border-radius: var(--tech-card-radius);
+    padding: 1.5rem;
+    box-shadow: var(--tech-shadow);
+    margin-bottom: 1rem;
+}
+
+.tech-mobile-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.tech-mobile-form .form-label {
+    font-weight: 600;
+    color: var(--tech-primary);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.tech-mobile-form .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all var(--tech-transition);
+}
+
+.tech-mobile-form .form-control:focus {
+    outline: none;
+    border-color: var(--tech-primary);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Mobile notification styling */
+.tech-mobile-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 10000;
+    max-width: 300px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.tech-mobile-notification.show {
+    transform: translateX(0);
+}
+
+.tech-mobile-notification.success {
+    border-left: 4px solid var(--tech-success);
+}
+
+.tech-mobile-notification.error {
+    border-left: 4px solid #dc3545;
+}
+
+.tech-mobile-notification.warning {
+    border-left: 4px solid var(--tech-warning);
+}
+
+.tech-mobile-notification.info {
+    border-left: 4px solid var(--tech-info);
+}

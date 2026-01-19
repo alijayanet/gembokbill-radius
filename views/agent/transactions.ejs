@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Dashboard agent untuk sistem billing GEMBOK-BILL">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Agent">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest-agent.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <title>Riwayat Transaction - Agent Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/agent-pwa.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .transaction-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #28a745;
+            transition: all 0.3s ease;
+        }
+        .transaction-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .transaction-item.debit {
+            border-left-color: #dc3545;
+        }
+        .transaction-item.deposit {
+            border-left-color: #28a745;
+        }
+        .transaction-item.commission {
+            border-left-color: #ffc107;
+        }
+        .transaction-item.voucher {
+            border-left-color: #17a2b8;
+        }
+        
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .mobile-container {
+                max-width: 100%;
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 0.5rem 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            text-align: center;
+            padding: 0.5rem;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-item span {
+            font-size: 0.75rem;
+        }
+        .filter-card {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 2px solid #667eea;
+            margin-bottom: 1rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-filter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .pagination {
+            justify-content: center;
+        }
+        .page-link {
+            border-radius: 10px;
+            margin: 0 2px;
+            border: 2px solid #e9ecef;
+            color: #667eea;
+        }
+        .page-link:hover {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        .page-item.active .page-link {
+            background: #667eea;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Container -->
+    <div class="mobile-container">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/agent/dashboard">
+                <i class="fas fa-user-tie me-2"></i>
+                Agent Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/dashboard">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/vouchers">
+                            <i class="fas fa-ticket-alt me-1"></i>Voucher
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/payments">
+                            <i class="fas fa-credit-card me-1"></i>Payment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/balance">
+                            <i class="fas fa-wallet me-1"></i>Balance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/agent/transactions">
+                            <i class="fas fa-history me-1"></i>Transaction
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>
+                            Agent
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/agent/profile">
+                                <i class="fas fa-user me-2"></i>Profil
+                            </a></li>
+                            <li><a class="dropdown-item" href="/agent/change-password">
+                                <i class="fas fa-key me-2"></i>Ubah Password
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/agent/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <div class="row align-items-center">
+                <div class="col-md-3 mb-2">
+                    <label for="filterType" class="form-label">Tipe Transaction</label>
+                    <select class="form-control" id="filterType">
+                        <option value="">Semua Tipe</option>
+                        <option value="deposit">Deposit</option>
+                        <option value="withdrawal">Withdrawal</option>
+                        <option value="voucher_sale">Penjualan Voucher</option>
+                        <option value="monthly_payment">Payment Bulanan</option>
+                        <option value="commission">Komisi</option>
+                        <option value="balance_request">Request Balance</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterStatus" class="form-label">Status</label>
+                    <select class="form-control" id="filterStatus">
+                        <option value="">Semua Status</option>
+                        <option value="completed">Selesai</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                        <option value="cancelled">Dibatalkan</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterDate" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="filterDate">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary btn-filter" onclick="applyFilters()">
+                            <i class="fas fa-filter me-2"></i>
+                            Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Transactions List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Riwayat Transaction
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if ((transactions || []).length > 0) { %>
+                            <% (transactions || []).forEach(transaction => { %>
+                                <div class="transaction-item <%= transaction.amount > 0 ? 'deposit' : 'debit' %> <%= transaction.transaction_type === 'commission' ? 'commission' : '' %> <%= transaction.transaction_type === 'voucher_sale' ? 'voucher' : '' %>" data-transaction-id="<%= transaction.id %>">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3">
+                                                    <i class="fas fa-<%= transaction.transaction_type === 'deposit' ? 'plus-circle' : transaction.transaction_type === 'commission' ? 'coins' : transaction.transaction_type === 'voucher_sale' ? 'ticket-alt' : transaction.transaction_type === 'monthly_payment' ? 'credit-card' : 'minus-circle' %> fa-2x text-<%= transaction.amount > 0 ? 'success' : 'danger' %>"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1 transaction-description">
+                                                        <%= transaction.description %>
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        <span class="transaction-date"><%= new Date(transaction.created_at).toISOString() %></span>
+                                                    </small>
+                                                    <% if (transaction.reference_id) { %>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-hashtag me-1"></i>
+                                                            Ref: <span class="reference-id"><%= transaction.reference_id %></span>
+                                                        </small>
+                                                    <% } %>
+                                                    <% if (transaction.transaction_type === 'voucher_sale' && transaction.voucher_code) { %>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-ticket-alt me-1"></i>
+                                                            Voucher: <span class="voucher-code"><%= transaction.voucher_code %></span>
+                                                        </small>
+                                                        <% if (transaction.package_name) { %>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-box me-1"></i>
+                                                                Paket: <span class="package-name"><%= transaction.package_name %></span>
+                                                            </small>
+                                                        <% } %>
+                                                        <% if (transaction.customer_name) { %>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-user me-1"></i>
+                                                                Customer: <span class="customer-name"><%= transaction.customer_name %></span>
+                                                            </small>
+                                                        <% } %>
+                                                        <% if (transaction.customer_phone) { %>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-phone me-1"></i>
+                                                                No. HP: <span class="customer-phone"><%= transaction.customer_phone %></span>
+                                                            </small>
+                                                        <% } %>
+                                                        <span class="voucher-price" data-value="<%= transaction.voucher_price || 0 %>" style="display:none;"></span>
+                                                        <span class="voucher-commission" data-value="<%= transaction.voucher_commission || 0 %>" style="display:none;"></span>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-md-end">
+                                            <div class="mb-2">
+                                                <span class="fw-bold fs-5 <%= transaction.amount > 0 ? 'text-success' : 'text-danger' %> transaction-amount" data-value="<%= transaction.amount %>">
+                                                    <%= transaction.amount > 0 ? '+' : '' %>Rp <%= Math.abs(transaction.amount).toLocaleString() %>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-<%= transaction.transaction_type === 'deposit' ? 'success' : transaction.transaction_type === 'commission' ? 'warning' : transaction.transaction_type === 'voucher_sale' ? 'info' : transaction.transaction_type === 'monthly_payment' ? 'primary' : 'danger' %> transaction-type">
+                                                    <%= transaction.transaction_type === 'deposit' ? 'Deposit' : transaction.transaction_type === 'commission' ? 'Komisi' : transaction.transaction_type === 'voucher_sale' ? 'Voucher' : transaction.transaction_type === 'monthly_payment' ? 'Payment' : 'Debit' %>
+                                                </span>
+                                                <span class="badge bg-<%= transaction.status === 'completed' ? 'success' : transaction.status === 'pending' ? 'warning' : transaction.status === 'failed' ? 'danger' : 'secondary' %> transaction-status">
+                                                    <%= transaction.status === 'completed' ? 'Selesai' : transaction.status === 'pending' ? 'Pending' : transaction.status === 'failed' ? 'Failed' : 'Dibatalkan' %>
+                                                </span>
+                                            </div>
+                                            <!-- Print button for voucher sales and monthly payments -->
+                                            <% if (transaction.transaction_type === 'voucher_sale' || transaction.transaction_type === 'monthly_payment') { %>
+                                                <div class="mt-2">
+                                                    <button class="btn btn-sm btn-outline-primary print-transaction-btn" data-transaction-id="<%= transaction.id %>">
+                                                        <i class="fas fa-print me-1"></i>Print
+                                                    </button>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-receipt fa-3x mb-3"></i>
+                                <h5>No ada transaksi</h5>
+                                <p>Belum ada transaksi yang tercatat</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <% if (totalPages > 1) { %>
+                    <nav aria-label="Transaction pagination">
+                        <ul class="pagination">
+                            <% if (currentPage > 1) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            <% } %>
+                            
+                            <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            
+                            <% if (currentPage < totalPages) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                <% } %>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Aksi Cepat
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/agent/vouchers" class="btn btn-outline-primary">
+                                <i class="fas fa-ticket-alt me-2"></i>
+                                Jual Voucher
+                            </a>
+                            <a href="/agent/payments" class="btn btn-outline-success">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Terima Payment
+                            </a>
+                            <a href="/agent/balance" class="btn btn-outline-warning">
+                                <i class="fas fa-wallet me-2"></i>
+                                Kelola Balance
+                            </a>
+                            <a href="/agent/voucher-history" class="btn btn-outline-info">
+                                <i class="fas fa-ticket-alt me-2"></i>
+                                Riwayat Voucher
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Ringkasan Transaction
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="border-end">
+                                    <h6 class="text-success mb-1">Total Login</h6>
+                                    <h5 class="mb-0">Rp <%= (transactions || []).filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0).toLocaleString() %></h5>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <h6 class="text-danger mb-1">Total Logout</h6>
+                                <h5 class="mb-0">Rp <%= Math.abs((transactions || []).filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0)).toLocaleString() %></h5>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h6 class="text-info mb-1">Komisi</h6>
+                                <h5 class="mb-0">Rp <%= (transactions || []).filter(t => t.transaction_type === 'commission').reduce((sum, t) => sum + t.amount, 0).toLocaleString() %></h5>
+                            </div>
+                            <div class="col-6">
+                                <h6 class="text-warning mb-1">Voucher</h6>
+                                <h5 class="mb-0"><%= (transactions || []).filter(t => t.transaction_type === 'voucher_sale').length %></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-download me-2"></i>
+                            Export Data
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-success" onclick="exportToCSV()">
+                                <i class="fas fa-file-csv me-2"></i>
+                                Export CSV
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Export PDF
+                            </button>
+                            <button class="btn btn-outline-info" onclick="printTransactions()">
+                                <i class="fas fa-print me-2"></i>
+                                Print
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Apply filters
+        function applyFilters() {
+            const type = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            const date = document.getElementById('filterDate').value;
+            
+            let url = '/agent/transactions?';
+            const params = new URLSearchParams();
+            
+            if (type) params.append('type', type);
+            if (status) params.append('status', status);
+            if (date) params.append('date', date);
+            
+            url += params.toString();
+            window.location.href = url;
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            // Get transactions data from the DOM instead of EJS variable
+            const transactionElements = document.querySelectorAll('.transaction-item');
+            const transactions = [];
+            
+            transactionElements.forEach(element => {
+                const transaction = {
+                    created_at: element.querySelector('.transaction-date').textContent,
+                    transaction_type: element.querySelector('.transaction-type').textContent,
+                    description: element.querySelector('h6').textContent.trim(),
+                    amount: parseFloat(element.querySelector('.transaction-amount').dataset.value),
+                    status: element.querySelector('.transaction-status').textContent.trim(),
+                    reference_id: element.querySelector('.reference-id') ? element.querySelector('.reference-id').textContent : ''
+                };
+                transactions.push(transaction);
+            });
+            
+            const csvContent = generateCSV(transactions);
+            downloadCSV(csvContent, 'transactions.csv');
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            alert('Fitur export PDF akan segera tersedia!');
+        }
+
+        // Print transactions
+        function printTransactions() {
+            window.print();
+        }
+
+        // Print individual transaction receipt
+        function printTransactionReceipt(transactionId) {
+            // Find the transaction element in the DOM
+            const transactionElement = document.querySelector(`[data-transaction-id="${transactionId}"]`);
+            if (!transactionElement) {
+                alert('Transaction data not found');
+                return;
+            }
+            
+            // Extract transaction data from the DOM
+            const transaction = {
+                id: transactionId,
+                description: transactionElement.querySelector('.transaction-description')?.textContent || 'N/A',
+                amount: transactionElement.querySelector('.transaction-amount')?.dataset.value || '0',
+                transaction_type: transactionElement.querySelector('.transaction-type')?.textContent || 'N/A',
+                status: transactionElement.querySelector('.transaction-status')?.textContent || 'N/A',
+                created_at: transactionElement.querySelector('.transaction-date')?.textContent || new Date().toISOString(),
+                reference_id: transactionElement.querySelector('.reference-id')?.textContent || 'N/A'
+            };
+            
+            // Extract voucher data if this is a voucher sale transaction
+            const voucherData = {
+                voucher_code: transactionElement.querySelector('.voucher-code')?.textContent || null,
+                package_name: transactionElement.querySelector('.package-name')?.textContent || null,
+                customer_name: transactionElement.querySelector('.customer-name')?.textContent || null,
+                customer_phone: transactionElement.querySelector('.customer-phone')?.textContent || null,
+                voucher_price: transactionElement.querySelector('.voucher-price')?.dataset.value || null,
+                voucher_commission: transactionElement.querySelector('.voucher-commission')?.dataset.value || null
+            };
+            
+            const printWindow = window.open('', '_blank');
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Transaction Receipt</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+                        
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Roboto', sans-serif;
+                            background: white;
+                            padding: 0;
+                            margin: 0;
+                            width: 58mm;
+                            font-size: 8px;
+                        }
+                        
+                        .receipt-container {
+                            width: 58mm;
+                            padding: 2mm;
+                            background: white;
+                        }
+                        
+                        .receipt-header {
+                            text-align: center;
+                            border-bottom: 1px dashed #333;
+                            padding-bottom: 2mm;
+                            margin-bottom: 2mm;
+                        }
+                        
+                        .company-name {
+                            font-size: 12px;
+                            font-weight: 700;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .receipt-title {
+                            font-size: 10px;
+                            font-weight: 500;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .receipt-body {
+                            margin: 2mm 0;
+                        }
+                        
+                        .info-section {
+                            margin: 2mm 0;
+                            padding: 1.5mm;
+                            border: 1px solid #ddd;
+                        }
+                        
+                        .info-label {
+                            font-size: 7px;
+                            font-weight: 500;
+                            text-transform: uppercase;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .info-value {
+                            font-size: 9px;
+                            font-weight: 700;
+                            word-break: break-all;
+                            margin: 1mm 0;
+                        }
+                        
+                        .amount-info {
+                            background: #f0f0f0;
+                            padding: 1.5mm;
+                            margin: 2mm 0;
+                        }
+                        
+                        .amount-label {
+                            font-size: 8px;
+                            font-weight: 500;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .amount-value {
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: #27ae60;
+                        }
+                        
+                        .transaction-type {
+                            background: #e3f2fd;
+                            padding: 1.5mm;
+                            margin: 2mm 0;
+                            text-align: center;
+                        }
+                        
+                        .type-label {
+                            font-size: 7px;
+                            font-weight: 500;
+                        }
+                        
+                        .type-value {
+                            font-size: 9px;
+                            font-weight: 700;
+                            text-transform: capitalize;
+                        }
+                        
+                        .transaction-info {
+                            font-size: 7px;
+                            margin: 2mm 0;
+                            padding: 1mm;
+                            background: #f8f8f8;
+                        }
+                        
+                        .transaction-date, .transaction-id {
+                            margin: 0.5mm 0;
+                        }
+                        
+                        .voucher-details {
+                            margin: 2mm 0;
+                            padding: 1.5mm;
+                            background: #e8f4f8;
+                            border: 1px dashed #17a2b8;
+                        }
+                        
+                        .voucher-label {
+                            font-size: 7px;
+                            font-weight: 500;
+                            color: #17a2b8;
+                            margin-bottom: 0.5mm;
+                        }
+                        
+                        .voucher-value {
+                            font-size: 9px;
+                            font-weight: 700;
+                            word-break: break-all;
+                        }
+                        
+                        .divider {
+                            border-top: 1px dashed #333;
+                            margin: 2mm 0;
+                        }
+                        
+                        .contact-info {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 2mm;
+                            padding-top: 1mm;
+                            border-top: 1px dashed #333;
+                        }
+                        
+                        .footer-note {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 1mm;
+                        }
+                        
+                        @media print {
+                            body {
+                                width: 58mm;
+                                padding: 0;
+                                margin: 0;
+                            }
+                            
+                            .receipt-container {
+                                width: 58mm;
+                                padding: 2mm;
+                                box-shadow: none;
+                            }
+                            
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-container">
+                        <div class="receipt-header">
+                            <div class="company-name">TRANSACTION RECEIPT</div>
+                            <div class="receipt-title">Bukti Transaction</div>
+                        </div>
+                        
+                        <div class="receipt-body">
+                            <div class="info-section">
+                                <div class="info-label">Deskripsi</div>
+                                <div class="info-value">${transaction.description}</div>
+                            </div>
+                            
+                            ${voucherData.voucher_code ? '' : `
+                            <div class="amount-info">
+                                <div class="amount-label">Amount</div>
+                                <div class="amount-value">Rp ${Math.abs(parseFloat(transaction.amount)).toLocaleString('id-ID')}</div>
+                            </div>
+                            `}
+                            
+                            <div class="transaction-type">
+                                <div class="type-label">Tipe Transaction</div>
+                                <div class="type-value">${transaction.transaction_type}</div>
+                            </div>
+                            
+                            ${voucherData.voucher_code ? `
+                            <div class="voucher-details">
+                                <div class="voucher-label">Voucher Code</div>
+                                <div class="voucher-value">${voucherData.voucher_code}</div>
+                                ${voucherData.package_name ? `
+                                <div class="voucher-label">Paket</div>
+                                <div class="voucher-value">${voucherData.package_name}</div>
+                                ` : ''}
+                                ${voucherData.customer_name ? `
+                                <div class="voucher-label">Customer</div>
+                                <div class="voucher-value">${voucherData.customer_name}</div>
+                                ` : ''}
+                                ${voucherData.customer_phone ? `
+                                <div class="voucher-label">No. HP</div>
+                                <div class="voucher-value">${voucherData.customer_phone}</div>
+                                ` : ''}
+                                ${voucherData.voucher_price ? `
+                                <div class="voucher-label">Price</div>
+                                <div class="voucher-value">Rp ${parseFloat(voucherData.voucher_price).toLocaleString('id-ID')}</div>
+                                ` : ''}
+                            </div>
+                            ` : ''}
+                            
+                            <div class="transaction-info">
+                                <div class="transaction-date">Date: ${new Date(transaction.created_at).toLocaleDateString('id-ID')} ${new Date(transaction.created_at).toLocaleTimeString('id-ID')}</div>
+                                <div class="transaction-id">ID Transaction: ${transaction.id}</div>
+                                ${transaction.reference_id && transaction.reference_id !== 'N/A' ? `<div class="transaction-id">Ref: ${transaction.reference_id}</div>` : ''}
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="contact-info">
+                                Support: support@company.com
+                            </div>
+                            
+                            <div class="footer-note">
+                                Terima kasih atas transaksi Anda!
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Generate CSV content
+        function generateCSV(transactions) {
+            const headers = ['Date', 'Tipe', 'Deskripsi', 'Amount', 'Status', 'Referensi'];
+            const rows = (transactions || []).map(t => [
+                new Date(t.created_at).toLocaleDateString('id-ID'),
+                t.transaction_type,
+                t.description,
+                t.amount,
+                t.status,
+                t.reference_id || ''
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Download CSV
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            // Only refresh if no filters are applied
+            if (!document.getElementById('filterType').value && 
+                !document.getElementById('filterStatus').value && 
+                !document.getElementById('filterDate').value) {
+                location.reload();
+            }
+        }, 30000);
+        
+        // Add event listeners for print buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.print-transaction-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const transactionId = this.getAttribute('data-transaction-id');
+                    printTransactionReceipt(transactionId);
+                });
+            });
+        });
+    </script>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav d-md-none">
+        <div class="row">
+            <div class="col-3">
+                <a href="/agent/dashboard" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/vouchers" class="nav-item">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Voucher</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/payments" class="nav-item">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Bayar</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/transactions" class="nav-item active">
+                    <i class="fas fa-history"></i>
+                    <span>Riwayat</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    </div> <!-- End Mobile Container -->
+    <script src="/js/agent-pwa.js"></script>
+</body>
+</html>
+

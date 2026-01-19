@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Dashboard tukang tagih untuk sistem billing GEMBOK-BILL">
+    <meta name="theme-color" content="#28a745">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Collector">
+    <meta name="msapplication-TileColor" content="#28a745">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest-collector.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <title>Edit Profil - <%= appSettings.companyHeader %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/collector-pwa.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 70px; /* Space for bottom navigation */
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        
+        .form-subtitle {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0.5rem 0 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .invalid-feedback {
+            display: block;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn {
+            background: #6c757d;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .back-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading.show {
+            display: inline-block;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 1.5rem;
+                margin: 0 0.5rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .navbar {
+                padding: 0.75rem 0;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .logout-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .back-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .container {
+                padding: 0 0.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .form-card {
+                padding: 1rem;
+            }
+            
+            .form-title {
+                font-size: 1.3rem;
+            }
+            
+            .form-subtitle {
+                font-size: 0.8rem;
+            }
+            
+            .form-label {
+                font-size: 0.9rem;
+            }
+            
+            .form-control {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="navbar-brand">
+                    <i class="bi bi-person-check me-2"></i>Tukang Tagih
+                </div>
+                <div>
+                    <span class="me-3">Selamat datang, <%= collector.name %></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-pencil me-2"></i>Edit Profil</h2>
+                </div>
+
+                <!-- Alert Messages -->
+                <div id="alertContainer"></div>
+
+                <!-- Form Card -->
+                <div class="form-card">
+                    <div class="form-header">
+                        <h3 class="form-title">Informasi Profil</h3>
+                        <p class="form-subtitle">Perbarui informasi profil Anda</p>
+                    </div>
+                    
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="name" class="form-label">
+                                <i class="bi bi-person me-1"></i>Name Lengkap *
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="<%= collector.name %>" required>
+                            <div class="invalid-feedback" id="nameError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone" class="form-label">
+                                <i class="bi bi-telephone me-1"></i>Nomor Phone
+                            </label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="<%= collector.phone || '' %>" 
+                                   placeholder="Contoh: 081234567890">
+                            <div class="invalid-feedback" id="phoneError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="<%= collector.email || '' %>" 
+                                   placeholder="Contoh: nama@email.com">
+                            <div class="invalid-feedback" id="emailError"></div>
+                        </div>
+                        
+                        <!-- Password Section -->
+                        <div class="form-group">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">
+                                    <i class="bi bi-lock me-1"></i>Password
+                                </label>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="togglePasswordSection()">
+                                    <i class="bi bi-pencil me-1"></i>Ubah Password
+                                </button>
+                            </div>
+                            <div id="passwordSection" style="display: none;">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning">
+                                            <i class="bi bi-shield-exclamation me-1"></i>Ubah Password
+                                        </h6>
+                                        <div class="form-group mb-3">
+                                            <label for="currentPassword" class="form-label">Password Lama</label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" 
+                                                       placeholder="Enter password lama">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('currentPassword')">
+                                                    <i class="bi bi-eye" id="currentPasswordIcon"></i>
+                                                </button>
+                                            </div>
+                                            <div class="invalid-feedback" id="currentPasswordError"></div>
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            <label for="newPassword" class="form-label">Password Baru</label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="newPassword" name="newPassword" 
+                                                       placeholder="Enter password baru">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('newPassword')">
+                                                    <i class="bi bi-eye" id="newPasswordIcon"></i>
+                                                </button>
+                                            </div>
+                                            <div class="invalid-feedback" id="newPasswordError"></div>
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            <label for="confirmPassword" class="form-label">Confirm Password Baru</label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                                                       placeholder="Confirm password baru">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirmPassword')">
+                                                    <i class="bi bi-eye" id="confirmPasswordIcon"></i>
+                                                </button>
+                                            </div>
+                                            <div class="invalid-feedback" id="confirmPasswordError"></div>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="updatePassword()">
+                                                <i class="bi bi-check me-1"></i>Update Password
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelPasswordChange()">
+                                                <i class="bi bi-x me-1"></i>Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="loading" id="loading">
+                                    <i class="bi bi-hourglass-split me-1"></i>Menyimpan...
+                                </span>
+                                <span id="submitText">
+                                    <i class="bi bi-check me-1"></i>Save Perubahan
+                                </span>
+                            </button>
+                            <a href="/collector/profile" class="btn btn-secondary">
+                                <i class="bi bi-x me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <%- include('../partials/collector-bottom-nav', { currentPage: 'profile' }) %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/collector/logout';
+            }
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="bi ${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+        
+        function clearErrors() {
+            document.querySelectorAll('.form-control').forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.invalid-feedback').forEach(error => {
+                error.textContent = '';
+            });
+        }
+        
+        function showError(field, message) {
+            const input = document.getElementById(field);
+            const errorDiv = document.getElementById(field + 'Error');
+            
+            input.classList.add('is-invalid');
+            errorDiv.textContent = message;
+        }
+        
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            clearErrors();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const submitText = document.getElementById('submitText');
+            
+            // Show loading
+            submitBtn.disabled = true;
+            loading.classList.add('show');
+            submitText.style.display = 'none';
+            
+            try {
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                
+                const response = await fetch('/collector/api/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = '/collector/profile';
+                    }, 2000);
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Terjadi kesalahan saat menyimpan profil', 'danger');
+            } finally {
+                // Hide loading
+                submitBtn.disabled = false;
+                loading.classList.remove('show');
+                submitText.style.display = 'inline';
+            }
+        });
+        
+        // Phone number formatting
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.startsWith('0')) {
+                value = value.substring(1);
+            }
+            if (value.length > 0) {
+                value = '0' + value;
+            }
+            e.target.value = value;
+        });
+        
+        // Password management functions
+        function togglePasswordSection() {
+            const passwordSection = document.getElementById('passwordSection');
+            if (passwordSection.style.display === 'none') {
+                passwordSection.style.display = 'block';
+            } else {
+                passwordSection.style.display = 'none';
+                clearPasswordFields();
+            }
+        }
+        
+        function clearPasswordFields() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            clearPasswordErrors();
+        }
+        
+        function clearPasswordErrors() {
+            document.querySelectorAll('#passwordSection .invalid-feedback').forEach(error => {
+                error.textContent = '';
+            });
+            document.querySelectorAll('#passwordSection .form-control').forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+        }
+        
+        function togglePasswordVisibility(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + 'Icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+        
+        function cancelPasswordChange() {
+            document.getElementById('passwordSection').style.display = 'none';
+            clearPasswordFields();
+        }
+        
+        async function updatePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Clear previous errors
+            clearPasswordErrors();
+            
+            // Validation
+            if (!currentPassword) {
+                showPasswordError('currentPassword', 'Password lama harus diisi');
+                return;
+            }
+            
+            if (!newPassword) {
+                showPasswordError('newPassword', 'Password baru harus diisi');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showPasswordError('newPassword', 'Password baru minimal 6 karakter');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showPasswordError('confirmPassword', 'Confirm password tidak sama');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/collector/api/profile/update-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Password berhasil diperbarui!', 'success');
+                    cancelPasswordChange();
+                } else {
+                    showAlert(result.message || 'Failed memperbarui password', 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Error updating password:', error);
+                showAlert('Terjadi kesalahan saat memperbarui password', 'danger');
+            }
+        }
+        
+        function showPasswordError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + 'Error');
+            
+            input.classList.add('is-invalid');
+            errorDiv.textContent = message;
+        }
+    </script>
+    <script src="/js/collector-pwa.js"></script>
+</body>
+</html>
