@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Payment - <%= appSettings.companyHeader %></title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0B1437">
+    <link rel="apple-touch-icon" href="/img/icons/icon-192.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin-mobile-billing.css">
+    <!-- Admin Mobile Optimizations -->
+    <link href="/css/admin-mobile.css" rel="stylesheet">
+    <style>
+        .payment-form {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40,167,69,0.4);
+        }
+        
+        .customer-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #007bff;
+        }
+        
+        .invoice-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .invoice-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+        }
+        
+        .invoice-checkbox {
+            margin-right: 0.75rem;
+        }
+        
+        .commission-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .commission-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="/admin/billing/mobile/collector" class="text-white me-3">
+                    <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
+                </a>
+                <div>
+                    <h4 class="mb-1">Input Payment</h4>
+                    <p class="mb-0 opacity-75">Catat pembayaran pelanggan</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <i class="bi bi-credit-card" style="font-size: 1.5rem; opacity: 0.8;"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-3">
+        <!-- Payment Form -->
+        <div class="payment-form">
+            <form id="paymentForm">
+                <!-- Collector Selection -->
+                <div class="mb-3">
+                    <label for="collectorId" class="form-label">
+                        <i class="bi bi-person-check me-2"></i>Tukang Tagih
+                    </label>
+                    <select class="form-select" id="collectorId" name="collector_id" required>
+                        <option value="">Select Tukang Tagih</option>
+                        <% if (collectors && collectors.length > 0) { %>
+                            <% collectors.forEach(function(collector) { %>
+                                <option value="<%= collector.id %>" 
+                                        data-commission="<%= collector.commission_rate || 5 %>">
+                                    <%= collector.name %> - <%= collector.phone %>
+                                </option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+
+                <!-- Customer Selection -->
+                <div class="mb-3">
+                    <label for="customerId" class="form-label">
+                        <i class="bi bi-person me-2"></i>Customer
+                    </label>
+                    <select class="form-select" id="customerId" name="customer_id" required>
+                        <option value="">Select Customer</option>
+                        <% if (customers && customers.length > 0) { %>
+                            <% customers.forEach(function(customer) { %>
+                                <option value="<%= customer.id %>">
+                                    <%= customer.name %> - <%= customer.phone %>
+                                </option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+
+                <!-- Customer Info Card -->
+                <div id="customerInfo" class="customer-card" style="display: none;">
+                    <h6 class="mb-2">Informasi Customer</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Name:</small>
+                            <div id="customerName">-</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Phone:</small>
+                            <div id="customerPhone">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoices List -->
+                <div id="invoicesList" style="display: none;">
+                    <label class="form-label">
+                        <i class="bi bi-receipt me-2"></i>Bill yang Dibayar
+                    </label>
+                    <div id="invoicesContainer">
+                        <!-- Invoices will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Payment Amount -->
+                <div class="mb-3">
+                    <label for="paymentAmount" class="form-label">
+                        <i class="bi bi-currency-dollar me-2"></i>Amount Payment
+                    </label>
+                    <input type="number" class="form-control" id="paymentAmount" name="payment_amount" 
+                           placeholder="Enter jumlah pembayaran" required>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="mb-3">
+                    <label for="paymentMethod" class="form-label">
+                        <i class="bi bi-credit-card me-2"></i>Metode Payment
+                    </label>
+                    <select class="form-select" id="paymentMethod" name="payment_method" required>
+                        <option value="cash">Tunai</option>
+                        <option value="transfer">Transfer Bank</option>
+                        <option value="other">Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label for="notes" class="form-label">
+                        <i class="bi bi-chat-text me-2"></i>Catatan
+                    </label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" 
+                              placeholder="Catatan tambahan (opsional)"></textarea>
+                </div>
+
+                <!-- Commission Info -->
+                <div id="commissionInfo" class="commission-info" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Komisi Tukang Tagih:</span>
+                        <span class="commission-value" id="commissionAmount">Rp 0</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-submit">
+                    <i class="bi bi-check-circle me-2"></i>Save Payment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav d-md-none">
+        <a class="nav-item" href="/admin/billing/mobile/customers">
+            <i class="bi bi-people"></i>
+            <span>Customer</span>
+        </a>
+        <a class="nav-item" href="/admin/billing/mobile/invoices">
+            <i class="bi bi-receipt"></i>
+            <span>Bill</span>
+        </a>
+        <a class="nav-item home-button" href="/admin/billing/mobile">
+            <i class="bi bi-house"></i>
+            <span>Home</span>
+        </a>
+        <a class="nav-item" href="/admin/billing/mobile/payments">
+            <i class="bi bi-credit-card"></i>
+            <span>Bayar</span>
+        </a>
+        <a class="nav-item active" href="/admin/billing/mobile/collector">
+            <i class="bi bi-person-check"></i>
+            <span>Tagih</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin-mobile-billing.js"></script>
+    <script>
+        // Customer data
+        const customers = <%- JSON.stringify(customers || []) %>;
+        const collectors = <%- JSON.stringify(collectors || []) %>;
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFormHandlers();
+        });
+
+        function setupFormHandlers() {
+            // Customer selection handler
+            document.getElementById('customerId').addEventListener('change', function() {
+                const customerId = this.value;
+                if (customerId) {
+                    const customer = customers.find(c => c.id == customerId);
+                    if (customer) {
+                        showCustomerInfo(customer);
+                        loadCustomerInvoices(customerId);
+                    }
+                } else {
+                    hideCustomerInfo();
+                }
+            });
+
+            // Payment amount handler
+            document.getElementById('paymentAmount').addEventListener('input', function() {
+                calculateCommission();
+            });
+
+            // Form submission
+            document.getElementById('paymentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitPayment();
+            });
+        }
+
+        function showCustomerInfo(customer) {
+            document.getElementById('customerName').textContent = customer.name;
+            document.getElementById('customerPhone').textContent = customer.phone;
+            document.getElementById('customerInfo').style.display = 'block';
+        }
+
+        function hideCustomerInfo() {
+            document.getElementById('customerInfo').style.display = 'none';
+            document.getElementById('invoicesList').style.display = 'none';
+        }
+
+        async function loadCustomerInvoices(customerId) {
+            try {
+                const response = await fetch(`/admin/billing/api/customer-invoices/${customerId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayInvoices(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+            }
+        }
+
+        function displayInvoices(invoices) {
+            const container = document.getElementById('invoicesContainer');
+            container.innerHTML = '';
+
+            if (invoices.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3">No ada tagihan</div>';
+                return;
+            }
+
+            invoices.forEach(invoice => {
+                const invoiceItem = document.createElement('div');
+                invoiceItem.className = 'invoice-item';
+                invoiceItem.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input invoice-checkbox" type="checkbox" 
+                               value="${invoice.id}" id="invoice_${invoice.id}">
+                        <label class="form-check-label" for="invoice_${invoice.id}">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>${invoice.invoice_number || 'INV-' + invoice.id}</strong>
+                                    <br>
+                                    <small class="text-muted">${invoice.package_name || 'Paket tidak tersedia'}</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong>Rp ${parseFloat(invoice.amount || 0).toLocaleString('id-ID')}</strong>
+                                    <br>
+                                    <span class="badge bg-${invoice.status === 'paid' ? 'success' : 'warning'}">
+                                        ${invoice.status === 'paid' ? 'Lunas' : 'Belum Bayar'}
+                                    </span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                `;
+                container.appendChild(invoiceItem);
+            });
+
+            document.getElementById('invoicesList').style.display = 'block';
+        }
+
+        function calculateCommission() {
+            const collectorSelect = document.getElementById('collectorId');
+            const paymentAmount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+            
+            if (collectorSelect.value) {
+                const commissionRate = parseFloat(collectorSelect.selectedOptions[0].dataset.commission) || 5;
+                const commission = (paymentAmount * commissionRate) / 100;
+                
+                document.getElementById('commissionAmount').textContent = 
+                    'Rp ' + commission.toLocaleString('id-ID');
+                document.getElementById('commissionInfo').style.display = 'block';
+            } else {
+                document.getElementById('commissionInfo').style.display = 'none';
+            }
+        }
+
+        async function submitPayment() {
+            const form = document.getElementById('paymentForm');
+            const formData = new FormData(form);
+            
+            // Get selected invoices
+            const selectedInvoices = Array.from(document.querySelectorAll('.invoice-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            const paymentData = {
+                collector_id: formData.get('collector_id'),
+                customer_id: formData.get('customer_id'),
+                payment_amount: parseFloat(formData.get('payment_amount')),
+                payment_method: formData.get('payment_method'),
+                notes: formData.get('notes'),
+                invoice_ids: selectedInvoices
+            };
+
+            try {
+                const response = await fetch('/admin/billing/api/collector-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Payment berhasil disimpan!');
+                    window.location.href = '/admin/billing/mobile/collector';
+                } else {
+                    alert('Error: ' + (result.message || 'Failed to save pembayaran'));
+                }
+            } catch (error) {
+                console.error('Error submitting payment:', error);
+                alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
+            }
+        }
+    </script>
+</body>
+</html>
