@@ -313,7 +313,7 @@ router.get('/profiles', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [profiles] = await db.query(
+        const profiles = await db.query(
             'SELECT * FROM radius_profiles WHERE is_active = 1 ORDER BY priority'
         );
 
