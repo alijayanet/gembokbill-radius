@@ -154,8 +154,6 @@ sql {
     # Authentication queries
     authorize_check_query = "SELECT id, username, attribute, value, op FROM radcheck WHERE username = '%{SQL-User-Name}' ORDER BY id"
     authorize_reply_query = "SELECT id, username, attribute, value, op FROM radreply WHERE username = '%{SQL-User-Name}' ORDER BY id"
-    authorize_group_check_query = "SELECT id, groupname, attribute, value, op FROM radgroupcheck WHERE groupname = '%{SQL-Group}' ORDER BY id"
-    authorize_group_reply_query = "SELECT id, groupname, attribute, value, op FROM radgroupreply WHERE groupname = '%{SQL-Group}' ORDER BY id"
     
     # Accounting queries
     accounting_onoff_query = "UPDATE radacct SET acctstoptime = '%S', acctsessiontime = unix_timestamp('%S') - unix_timestamp(acctstarttime), acctterminatecause = '%{Acct-Terminate-Cause}', acctstopdelay = %{%{Acct-Delay-Time}:-0} WHERE acctsessionid = '%{Acct-Session-Id}' AND username = '%{SQL-User-Name}' AND nasipaddress = '%{NAS-IP-Address}'"
