@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Dashboard agent untuk sistem billing GEMBOK-BILL">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Agent">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest-agent.json">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+    <title>Riwayat Voucher - Agent Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/agent-pwa.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .voucher-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #17a2b8;
+            transition: all 0.3s ease;
+        }
+        .voucher-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .voucher-item.used {
+            border-left-color: #28a745;
+        }
+        .voucher-item.expired {
+            border-left-color: #dc3545;
+        }
+        .voucher-item.cancelled {
+            border-left-color: #6c757d;
+        }
+        .voucher-code {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #17a2b8;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: 2px solid #e9ecef;
+        }
+        .filter-card {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 2px solid #667eea;
+            margin-bottom: 1rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-filter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .pagination {
+            justify-content: center;
+        }
+        .page-link {
+            border-radius: 10px;
+            margin: 0 2px;
+            border: 2px solid #e9ecef;
+            color: #667eea;
+        }
+        .page-link:hover {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        .page-item.active .page-link {
+            background: #667eea;
+            border-color: #667eea;
+        }
+    
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .mobile-container {
+                max-width: 100%;
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 0.5rem 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            text-align: center;
+            padding: 0.5rem;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-item span {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Container -->
+    <div class="mobile-container">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/agent/dashboard">
+                <i class="fas fa-user-tie me-2"></i>
+                Agent Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/dashboard">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/vouchers">
+                            <i class="fas fa-ticket-alt me-1"></i>Voucher
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/payments">
+                            <i class="fas fa-credit-card me-1"></i>Payment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/balance">
+                            <i class="fas fa-wallet me-1"></i>Balance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/transactions">
+                            <i class="fas fa-history me-1"></i>Transaction
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>
+                            Agent
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/agent/profile">
+                                <i class="fas fa-user me-2"></i>Profil
+                            </a></li>
+                            <li><a class="dropdown-item" href="/agent/change-password">
+                                <i class="fas fa-key me-2"></i>Ubah Password
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/agent/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <div class="row align-items-center">
+                <div class="col-md-3 mb-2">
+                    <label for="filterStatus" class="form-label">Status Voucher</label>
+                    <select class="form-control" id="filterStatus">
+                        <option value="">Semua Status</option>
+                        <option value="active">Active</option>
+                        <option value="used">Digunakan</option>
+                        <option value="expired">Kedaluwarsa</option>
+                        <option value="cancelled">Dibatalkan</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterPackage" class="form-label">Paket</label>
+                    <select class="form-control" id="filterPackage">
+                        <option value="">Semua Paket</option>
+                        <option value="3k">3rb - 1 Hari</option>
+                        <option value="5k">5rb - 2 Hari</option>
+                        <option value="10k">10rb - 5 Hari</option>
+                        <option value="15k">15rb - 7 Hari</option>
+                        <option value="25k">25rb - 15 Hari</option>
+                        <option value="50k">50rb - 30 Hari</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterDate" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="filterDate">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary btn-filter" onclick="applyFilters()">
+                            <i class="fas fa-filter me-2"></i>
+                            Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Vouchers List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ticket-alt me-2"></i>
+                            Riwayat Penjualan Voucher
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (sales.length > 0) { %>
+                            <% sales.forEach(sale => { %>
+                                <div class="voucher-item <%= sale.status %>">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3">
+                                                    <i class="fas fa-ticket-alt fa-2x text-<%= sale.status === 'active' ? 'info' : sale.status === 'used' ? 'success' : sale.status === 'expired' ? 'danger' : 'secondary' %>"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <%= sale.package_name %>
+                                                    </h6>
+                                                    <div class="voucher-code">
+                                                        <%= sale.voucher_code %>
+                                                    </div>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        Dijual: <%= new Date(sale.sold_at).toLocaleString('id-ID') %>
+                                                    </small>
+                                                    <% if (sale.customer_name) { %>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            Customer: <%= sale.customer_name %>
+                                                        </small>
+                                                    <% } %>
+                                                    <% if (sale.customer_phone) { %>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-phone me-1"></i>
+                                                            HP: <%= sale.customer_phone %>
+                                                        </small>
+                                                    <% } %>
+                                                    <% if (sale.used_at) { %>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-check-circle me-1"></i>
+                                                            Digunakan: <%= new Date(sale.used_at).toLocaleString('id-ID') %>
+                                                        </small>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-md-end">
+                                            <div class="mb-2">
+                                                <span class="fw-bold fs-5 text-primary">
+                                                    Rp <%= sale.price.toLocaleString() %>
+                                                </span>
+                                            </div>
+                                            <div class="mb-2">
+                                                <small class="text-success">
+                                                    Komisi: Rp <%= sale.commission.toLocaleString() %>
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-<%= sale.status === 'active' ? 'info' : sale.status === 'used' ? 'success' : sale.status === 'expired' ? 'danger' : 'secondary' %>">
+                                                    <%= sale.status === 'active' ? 'Active' : sale.status === 'used' ? 'Digunakan' : sale.status === 'expired' ? 'Kedaluwarsa' : 'Dibatalkan' %>
+                                                </span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-outline-primary print-voucher-btn" data-voucher-code="<%= sale.voucher_code %>" data-package-name="<%= sale.package_name %>" data-price="<%= sale.price %>" data-sold-at="<%= sale.sold_at %>" data-customer-name="<%= sale.customer_name || '' %>" data-customer-phone="<%= sale.customer_phone || '' %>">
+                                                    <i class="fas fa-print me-1"></i>Print
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+                                <h5>No ada voucher</h5>
+                                <p>Belum ada voucher yang dijual</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <% if (totalPages > 1) { %>
+                    <nav aria-label="Voucher pagination">
+                        <ul class="pagination">
+                            <% if (currentPage > 1) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            <% } %>
+                            
+                            <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            
+                            <% if (currentPage < totalPages) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                <% } %>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Aksi Cepat
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/agent/vouchers" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Jual Voucher Baru
+                            </a>
+                            <a href="/agent/payments" class="btn btn-outline-success">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Terima Payment
+                            </a>
+                            <a href="/agent/balance" class="btn btn-outline-warning">
+                                <i class="fas fa-wallet me-2"></i>
+                                Kelola Balance
+                            </a>
+                            <a href="/agent/transactions" class="btn btn-outline-info">
+                                <i class="fas fa-history me-2"></i>
+                                Semua Transaction
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voucher Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Ringkasan Voucher
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="border-end">
+                                    <h6 class="text-info mb-1">Total Voucher</h6>
+                                    <h5 class="mb-0"><%= sales.length %></h5>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <h6 class="text-success mb-1">Digunakan</h6>
+                                <h5 class="mb-0"><%= sales.filter(s => s.status === 'used').length %></h5>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h6 class="text-warning mb-1">Active</h6>
+                                <h5 class="mb-0"><%= sales.filter(s => s.status === 'active').length %></h5>
+                            </div>
+                            <div class="col-6">
+                                <h6 class="text-danger mb-1">Kedaluwarsa</h6>
+                                <h5 class="mb-0"><%= sales.filter(s => s.status === 'expired').length %></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            Ringkasan Pendapatan
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-12 mb-3">
+                                <h6 class="text-primary mb-1">Total Penjualan</h6>
+                                <h5 class="mb-0">Rp <%= sales.reduce((sum, s) => sum + s.price, 0).toLocaleString() %></h5>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <h6 class="text-success mb-1">Total Komisi</h6>
+                                <h5 class="mb-0">Rp <%= sales.reduce((sum, s) => sum + s.commission, 0).toLocaleString() %></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-download me-2"></i>
+                            Export Data
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-success" onclick="exportToCSV()">
+                                <i class="fas fa-file-csv me-2"></i>
+                                Export CSV
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Export PDF
+                            </button>
+                            <button class="btn btn-outline-info" onclick="printVouchers()">
+                                <i class="fas fa-print me-2"></i>
+                                Print
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Apply filters
+        function applyFilters() {
+            const status = document.getElementById('filterStatus').value;
+            const package = document.getElementById('filterPackage').value;
+            const date = document.getElementById('filterDate').value;
+            
+            let url = '/agent/voucher-history?';
+            const params = new URLSearchParams();
+            
+            if (status) params.append('status', status);
+            if (package) params.append('package', package);
+            if (date) params.append('date', date);
+            
+            url += params.toString();
+            window.location.href = url;
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            // Get sales data from the DOM instead of EJS variable
+            const salesElements = document.querySelectorAll('.sale-row');
+            const sales = [];
+            
+            salesElements.forEach(element => {
+                const sale = {
+                    sold_at: element.querySelector('.sale-date').textContent,
+                    voucher_code: element.querySelector('.voucher-code').textContent,
+                    package_name: element.querySelector('.package-name').textContent,
+                    price: element.querySelector('.sale-price').dataset.value,
+                    commission: element.querySelector('.sale-commission').dataset.value,
+                    status: element.querySelector('.sale-status').textContent.trim(),
+                    customer_name: element.querySelector('.customer-name') ? element.querySelector('.customer-name').textContent : '',
+                    customer_phone: element.querySelector('.customer-phone') ? element.querySelector('.customer-phone').textContent : ''
+                };
+                sales.push(sale);
+            });
+            
+            const csvContent = generateCSV(sales);
+            downloadCSV(csvContent, 'voucher-sales.csv');
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            alert('Fitur export PDF akan segera tersedia!');
+        }
+
+        // Print vouchers
+        function printVouchers() {
+            // Get sales data from the DOM instead of EJS variable
+            const salesElements = document.querySelectorAll('.sale-row');
+            const sales = [];
+            
+            salesElements.forEach(element => {
+                const sale = {
+                    id: element.dataset.id,
+                    voucher_code: element.querySelector('.voucher-code').textContent,
+                    package_name: element.querySelector('.package-name').textContent,
+                    price: element.querySelector('.sale-price').textContent,
+                    sold_at: element.querySelector('.sale-date').textContent
+                };
+                sales.push(sale);
+            });
+            
+            const printWindow = window.open('', '_blank');
+            
+            let vouchersHTML = '';
+            sales.forEach((sale, index) => {
+                vouchersHTML += `
+                    <div class="voucher-container">
+                        <div class="voucher-header">
+                            <div class="company-name"><%= appSettings.company_header || 'VOUCHER HOTSPOT' %></div>
+                            <div class="voucher-title">Internet Access Voucher</div>
+                        </div>
+                        
+                        <div class="voucher-body">
+                            <div class="credential-section">
+                                <div class="credential-label">Username</div>
+                                <div class="credential-value">${sale.voucher_code}</div>
+                                
+                                <div class="credential-label">Password</div>
+                                <div class="credential-value password">${sale.voucher_code}</div>
+                            </div>
+                            
+                            <div class="package-info">
+                                <div class="package-name">${sale.package_name}</div>
+                                <div class="package-price">${sale.price}</div>
+                            </div>
+                            
+                            <div class="sale-info">
+                                <div class="sale-date">Date: ${sale.sold_at}</div>
+                                <div class="sale-id">ID: ${sale.id}</div>
+                            </div>
+                            
+                            <div class="validity">
+                                Valid until used • Single device
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="instructions">
+                                <strong>How to connect:</strong>
+                                <ol>
+                                    <li>Connect to WiFi network</li>
+                                    <li>Open browser/login page</li>
+                                    <li>Enter username & password</li>
+                                    <li>Click Login to browse</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="contact-info">
+                                Support: <%= appSettings.contact_phone || appSettings['admins.0'] || 'support@company.com' %>
+                            </div>
+                            
+                            <div class="footer-note">
+                                Thank you for choosing our service!
+                            </div>
+                        </div>
+                    </div>
+                    ${index < sales.length - 1 ? '<div class="page-break"></div>' : ''}
+                `;
+            });
+            
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Voucher History</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+                        
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Roboto', sans-serif;
+                            background: white;
+                            padding: 0;
+                            margin: 0;
+                            width: 58mm;
+                            font-size: 8px;
+                        }
+                        
+                        .voucher-container {
+                            width: 58mm;
+                            padding: 2mm;
+                            background: white;
+                        }
+                        
+                        .voucher-header {
+                            text-align: center;
+                            border-bottom: 1px dashed #333;
+                            padding-bottom: 2mm;
+                            margin-bottom: 2mm;
+                        }
+                        
+                        .company-name {
+                            font-size: 12px;
+                            font-weight: 700;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .voucher-title {
+                            font-size: 9px;
+                            font-weight: 400;
+                        }
+                        
+                        .voucher-body {
+                            text-align: center;
+                            margin: 2mm 0;
+                        }
+                        
+                        .credential-section {
+                            margin: 2mm 0;
+                            padding: 1.5mm;
+                            border: 1px solid #ddd;
+                        }
+                        
+                        .credential-label {
+                            font-size: 7px;
+                            font-weight: 500;
+                            text-transform: uppercase;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .credential-value {
+                            font-size: 11px;
+                            font-weight: 700;
+                            letter-spacing: 1px;
+                            word-break: break-all;
+                            margin: 1mm 0;
+                        }
+                        
+                        .credential-value.password {
+                            color: #e74c3c;
+                        }
+                        
+                        .package-info {
+                            background: #f0f0f0;
+                            padding: 1.5mm;
+                            margin: 2mm 0;
+                        }
+                        
+                        .package-name {
+                            font-size: 9px;
+                            font-weight: 500;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .package-price {
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: #27ae60;
+                        }
+                        
+                        .sale-info {
+                            font-size: 7px;
+                            margin: 2mm 0;
+                            padding: 1mm;
+                            background: #f8f8f8;
+                        }
+                        
+                        .sale-date, .sale-id {
+                            margin: 0.5mm 0;
+                        }
+                        
+                        .instructions {
+                            font-size: 7px;
+                            line-height: 1.3;
+                            margin: 2mm 0;
+                            text-align: left;
+                        }
+                        
+                        .instructions ol {
+                            padding-left: 3mm;
+                            margin: 1mm 0;
+                        }
+                        
+                        .instructions li {
+                            margin-bottom: 0.5mm;
+                        }
+                        
+                        .contact-info {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 2mm;
+                            padding-top: 1mm;
+                            border-top: 1px dashed #333;
+                        }
+                        
+                        .validity {
+                            font-size: 7px;
+                            text-align: center;
+                            margin: 1mm 0;
+                            font-weight: 500;
+                        }
+                        
+                        .divider {
+                            border-top: 1px dashed #333;
+                            margin: 2mm 0;
+                        }
+                        
+                        .footer-note {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 1mm;
+                        }
+                        
+                        .page-break {
+                            page-break-after: always;
+                        }
+                        
+                        @media print {
+                            body {
+                                width: 58mm;
+                                padding: 0;
+                                margin: 0;
+                            }
+                            
+                            .voucher-container {
+                                width: 58mm;
+                                padding: 2mm;
+                                box-shadow: none;
+                            }
+                            
+                            .page-break {
+                                page-break-after: always;
+                            }
+                            
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${vouchersHTML}
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Add event listeners for print buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.print-voucher-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const voucherCode = this.getAttribute('data-voucher-code');
+                    const packageName = this.getAttribute('data-package-name');
+                    const price = this.getAttribute('data-price');
+                    const soldAt = this.getAttribute('data-sold-at');
+                    const customerName = this.getAttribute('data-customer-name');
+                    const customerPhone = this.getAttribute('data-customer-phone');
+                    
+                    printVoucherReceipt(voucherCode, packageName, price, soldAt, customerName, customerPhone);
+                });
+            });
+        });
+
+        // Print individual voucher receipt
+        function printVoucherReceipt(voucherCode, packageName, price, soldAt, customerName, customerPhone) {
+            const printWindow = window.open('', '_blank');
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Voucher Receipt</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+                        
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        
+                        body {
+                            font-family: 'Roboto', sans-serif;
+                            background: white;
+                            padding: 0;
+                            margin: 0;
+                            width: 58mm;
+                            font-size: 8px;
+                        }
+                        
+                        .voucher-container {
+                            width: 58mm;
+                            padding: 2mm;
+                            background: white;
+                        }
+                        
+                        .voucher-header {
+                            text-align: center;
+                            border-bottom: 1px dashed #333;
+                            padding-bottom: 2mm;
+                            margin-bottom: 2mm;
+                        }
+                        
+                        .company-name {
+                            font-size: 12px;
+                            font-weight: 700;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .voucher-title {
+                            font-size: 9px;
+                            font-weight: 400;
+                        }
+                        
+                        .voucher-body {
+                            text-align: center;
+                            margin: 2mm 0;
+                        }
+                        
+                        .credential-section {
+                            margin: 2mm 0;
+                            padding: 1.5mm;
+                            border: 1px solid #ddd;
+                        }
+                        
+                        .credential-label {
+                            font-size: 7px;
+                            font-weight: 500;
+                            text-transform: uppercase;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .credential-value {
+                            font-size: 11px;
+                            font-weight: 700;
+                            letter-spacing: 1px;
+                            word-break: break-all;
+                            margin: 1mm 0;
+                        }
+                        
+                        .credential-value.password {
+                            color: #e74c3c;
+                        }
+                        
+                        .package-info {
+                            background: #f0f0f0;
+                            padding: 1.5mm;
+                            margin: 2mm 0;
+                        }
+                        
+                        .package-name {
+                            font-size: 9px;
+                            font-weight: 500;
+                            margin-bottom: 1mm;
+                        }
+                        
+                        .package-price {
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: #27ae60;
+                        }
+                        
+                        .sale-info {
+                            font-size: 7px;
+                            margin: 2mm 0;
+                            padding: 1mm;
+                            background: #f8f8f8;
+                        }
+                        
+                        .sale-date, .sale-id {
+                            margin: 0.5mm 0;
+                        }
+                        
+                        .instructions {
+                            font-size: 7px;
+                            line-height: 1.3;
+                            margin: 2mm 0;
+                            text-align: left;
+                        }
+                        
+                        .instructions ol {
+                            padding-left: 3mm;
+                            margin: 1mm 0;
+                        }
+                        
+                        .instructions li {
+                            margin-bottom: 0.5mm;
+                        }
+                        
+                        .contact-info {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 2mm;
+                            padding-top: 1mm;
+                            border-top: 1px dashed #333;
+                        }
+                        
+                        .validity {
+                            font-size: 7px;
+                            text-align: center;
+                            margin: 1mm 0;
+                            font-weight: 500;
+                        }
+                        
+                        .divider {
+                            border-top: 1px dashed #333;
+                            margin: 2mm 0;
+                        }
+                        
+                        .footer-note {
+                            font-size: 6px;
+                            text-align: center;
+                            margin-top: 1mm;
+                        }
+                        
+                        @media print {
+                            body {
+                                width: 58mm;
+                                padding: 0;
+                                margin: 0;
+                            }
+                            
+                            .voucher-container {
+                                width: 58mm;
+                                padding: 2mm;
+                                box-shadow: none;
+                            }
+                            
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="voucher-container">
+                        <div class="voucher-header">
+                            <div class="company-name"><%= appSettings.company_header || 'VOUCHER HOTSPOT' %></div>
+                            <div class="voucher-title">Internet Access Voucher</div>
+                        </div>
+                        
+                        <div class="voucher-body">
+                            <div class="credential-section">
+                                <div class="credential-label">Username</div>
+                                <div class="credential-value">${voucherCode}</div>
+                                
+                                <div class="credential-label">Password</div>
+                                <div class="credential-value password">${voucherCode}</div>
+                            </div>
+                            
+                            <div class="package-info">
+                                <div class="package-name">${packageName}</div>
+                                <div class="package-price">Rp ${parseInt(price).toLocaleString('id-ID')}</div>
+                            </div>
+                            
+                            <div class="sale-info">
+                                <div class="sale-date">Date: ${new Date(soldAt).toLocaleDateString('id-ID')} ${new Date(soldAt).toLocaleTimeString('id-ID')}</div>
+                            </div>
+                            
+                            <div class="validity">
+                                Valid until used • Single device
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="instructions">
+                                <strong>How to connect:</strong>
+                                <ol>
+                                    <li>Connect to WiFi network</li>
+                                    <li>Open browser/login page</li>
+                                    <li>Enter username & password</li>
+                                    <li>Click Login to browse</li>
+                                </ol>
+                            </div>
+                            
+                            ${customerName ? `
+                            <div class="contact-info">
+                                Customer: ${customerName}${customerPhone ? ` (${customerPhone})` : ''}
+                            </div>
+                            ` : ''}
+                            
+                            <div class="contact-info">
+                                Support: <%= appSettings.contact_phone || appSettings['admins.0'] || 'support@company.com' %>
+                            </div>
+                            
+                            <div class="footer-note">
+                                Thank you for choosing our service!
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Generate CSV content
+        function generateCSV(sales) {
+            const headers = ['Date', 'Kode Voucher', 'Paket', 'Price', 'Komisi', 'Status', 'Customer', 'HP'];
+            const rows = sales.map(s => [
+                new Date(s.sold_at).toLocaleDateString('id-ID'),
+                s.voucher_code,
+                s.package_name,
+                s.price,
+                s.commission,
+                s.status,
+                s.customer_name || '',
+                s.customer_phone || ''
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Download CSV
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Copy voucher code to clipboard
+        function copyVoucherCode(code) {
+            navigator.clipboard.writeText(code).then(function() {
+                alert('Kode voucher berhasil disalin!');
+            });
+        }
+
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            // Only refresh if no filters are applied
+            if (!document.getElementById('filterStatus').value && 
+                !document.getElementById('filterPackage').value && 
+                !document.getElementById('filterDate').value) {
+                location.reload();
+            }
+        }, 30000);
+    </script>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav d-md-none">
+        <div class="row">
+            <div class="col-3">
+                <a href="/agent/dashboard" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/vouchers" class="nav-item">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Voucher</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/payments" class="nav-item">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Bayar</span>
+                </a>
+            </div>
+            <div class="col-3">
+                <a href="/agent/transactions" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>Riwayat</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    </div> <!-- End Mobile Container -->
+    <script src="/js/agent-pwa.js"></script>
+</body>
+</html>
+
