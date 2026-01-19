@@ -1,0 +1,388 @@
+2025-07-12 10:37:31 error: uncaughtException: options.port should be >= 0 and < 65536. Received type string ('30011000').
+RangeError [ERR_SOCKET_BAD_PORT]: options.port should be >= 0 and < 65536. Received type string ('30011000').
+    at Server.listen (node:net:2088:5)
+    at Function.listen (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\application.js:635:24)
+    at Server.<anonymous> (C:\Users\DELL\Documents\wa-admin1\app-whatsapp-only.js:234:47)
+    at Server.emit (node:events:524:28)
+    at emitErrorNT (node:net:1973:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+2025-07-12 11:47:27 error: uncaughtException: await is only valid in async functions and the top level bodies of modules
+C:\Users\DELL\Documents\wa-admin1\config\whatsapp.js:5282
+                await sendCustomerMenu(remoteJid);
+                ^^^^^
+
+SyntaxError: await is only valid in async functions and the top level bodies of modules
+    at wrapSafe (node:internal/modules/cjs/loader:1512:18)
+    at Module._compile (node:internal/modules/cjs/loader:1534:20)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (C:\Users\DELL\Documents\wa-admin1\app-whatsapp-only.js:6:18)
+2025-07-13 23:39:39 error: uncaughtException: Cannot find module 'multer'
+Require stack:
+- C:\Users\DELL\Documents\wa-admin1\routes\adminSetting.js
+- C:\Users\DELL\Documents\wa-admin1\app-whatsapp-only.js
+Error: Cannot find module 'multer'
+Require stack:
+- C:\Users\DELL\Documents\wa-admin1\routes\adminSetting.js
+- C:\Users\DELL\Documents\wa-admin1\app-whatsapp-only.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1244:15)
+    at Function._load (node:internal/modules/cjs/loader:1070:27)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (C:\Users\DELL\Documents\wa-admin1\routes\adminSetting.js:5:16)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+2025-07-14 05:06:35 error: uncaughtException: Connection Closed
+Error: Connection Closed
+    at sendRawMessage (C:\Users\DELL\Documents\wa-admin1\node_modules\@whiskeysockets\baileys\lib\Socket\socket.js:60:19)
+    at sendNode (C:\Users\DELL\Documents\wa-admin1\node_modules\@whiskeysockets\baileys\lib\Socket\socket.js:79:16)
+    at Object.logout (C:\Users\DELL\Documents\wa-admin1\node_modules\@whiskeysockets\baileys\lib\Socket\socket.js:347:19)
+    at deleteWhatsAppSession (C:\Users\DELL\Documents\wa-admin1\config\whatsapp.js:3739:22)
+    at C:\Users\DELL\Documents\wa-admin1\routes\adminSetting.js:197:15
+    at Layer.handle [as handle_request] (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\layer.js:95:5)
+    at C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\index.js:284:15
+2025-07-14 07:57:06 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (C:\Users\DELL\Documents\wa-admin1\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+2025-07-15 19:13:33 error: uncaughtException: Connection Closed
+Error: Connection Closed
+    at sendRawMessage (C:\Users\DELL\Documents\wa-admin1\node_modules\@whiskeysockets\baileys\lib\Socket\socket.js:60:19)
+    at sendNode (C:\Users\DELL\Documents\wa-admin1\node_modules\@whiskeysockets\baileys\lib\Socket\socket.js:79:16)
+    at Object.logout (C:\Users\DELL\Documents\wa-admin1\node_modules\@whiskeysockets\baileys\lib\Socket\socket.js:347:19)
+    at deleteWhatsAppSession (C:\Users\DELL\Documents\wa-admin1\config\whatsapp.js:3663:22)
+    at C:\Users\DELL\Documents\wa-admin1\routes\adminSetting.js:226:15
+    at Layer.handle [as handle_request] (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\layer.js:95:5)
+    at C:\Users\DELL\Documents\wa-admin1\node_modules\express\lib\router\index.js:284:15
+2025-07-16 20:03:17 error: uncaughtException: Cannot access 'settings' before initialization
+ReferenceError: Cannot access 'settings' before initialization
+    at C:\Users\DELL\Documents\wa-admin1\routes\customerPortal.js:264:23
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-07-18 12:39:08 error: uncaughtException: Timed out after 10 seconds
+RosException: Timed out after 10 seconds
+    at Connector.onTimeout (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:188:30)
+    at Object.onceWrapper (node:events:638:28)
+    at Socket.emit (node:events:524:28)
+    at Socket._onTimeout (node:net:609:8)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+2025-07-18 12:39:08 error: uncaughtException: Timed out after 10 seconds
+RosException: Timed out after 10 seconds
+    at Connector.onTimeout (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:188:30)
+    at Object.onceWrapper (node:events:638:28)
+    at Socket.emit (node:events:524:28)
+    at Socket._onTimeout (node:net:609:8)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+2025-07-18 12:39:08 error: uncaughtException: Timed out after 10 seconds
+RosException: Timed out after 10 seconds
+    at Connector.onTimeout (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:188:30)
+    at Object.onceWrapper (node:events:638:28)
+    at Socket.emit (node:events:524:28)
+    at Socket._onTimeout (node:net:609:8)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+2025-07-18 12:39:09 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processTimers (node:internal/timers:526:9)
+2025-07-18 12:39:09 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processTimers (node:internal/timers:526:9)
+2025-07-18 12:39:09 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processTimers (node:internal/timers:526:9)
+2025-07-18 15:40:11 error: uncaughtException: logger.error is not a function
+TypeError: logger.error is not a function
+    at testTroubleReport (E:\gembok-main\test-trouble-report.js:64:12)
+    at Object.<anonymous> (E:\gembok-main\test-trouble-report.js:70:1)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)
+    at node:internal/main/run_main_module:36:49
+2025-07-18 15:48:47 error: uncaughtException: logger.error is not a function
+TypeError: logger.error is not a function
+    at E:\gembok-main\routes\testTroubleReport.js:36:12
+    at Layer.handle [as handle_request] (E:\gembok-main\node_modules\express\lib\router\layer.js:95:5)
+    at next (E:\gembok-main\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (E:\gembok-main\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (E:\gembok-main\node_modules\express\lib\router\layer.js:95:5)
+    at E:\gembok-main\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (E:\gembok-main\node_modules\express\lib\router\index.js:346:12)
+    at next (E:\gembok-main\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (E:\gembok-main\node_modules\express\lib\router\index.js:175:3)
+    at router (E:\gembok-main\node_modules\express\lib\router\index.js:47:12)
+2025-07-18 15:56:04 error: uncaughtException: logger.error is not a function
+TypeError: logger.error is not a function
+    at E:\gembok-main\routes\testTroubleReport.js:92:12
+    at Layer.handle [as handle_request] (E:\gembok-main\node_modules\express\lib\router\layer.js:95:5)
+    at next (E:\gembok-main\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (E:\gembok-main\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (E:\gembok-main\node_modules\express\lib\router\layer.js:95:5)
+    at E:\gembok-main\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (E:\gembok-main\node_modules\express\lib\router\index.js:346:12)
+    at next (E:\gembok-main\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (E:\gembok-main\node_modules\express\lib\router\index.js:175:3)
+    at router (E:\gembok-main\node_modules\express\lib\router\index.js:47:12)
+2025-07-19 12:19:54 error: uncaughtException: fixWhatsAppSock(...).then is not a function
+TypeError: fixWhatsAppSock(...).then is not a function
+    at Object.<anonymous> (E:\gembok-main\fix-whatsapp-sock.js:59:4)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)
+    at node:internal/main/run_main_module:36:49
+2025-07-20 14:02:44 error: uncaughtException: E:\gembok-main\settings.json: Expected ',' or '}' after property value in JSON at position 1638 (line 43 column 32)
+SyntaxError: E:\gembok-main\settings.json: Expected ',' or '}' after property value in JSON at position 1638 (line 43 column 32)
+    at parse (<anonymous>)
+    at Object..json (node:internal/modules/cjs/loader:1711:39)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (E:\gembok-main\config\genieacs.js:6:18)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+2025-07-24 14:41:35 error: uncaughtException: Timed out after 10 seconds
+RosException: Timed out after 10 seconds
+    at Connector.onTimeout (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:188:30)
+    at Object.onceWrapper (node:events:638:28)
+    at Socket.emit (node:events:524:28)
+    at Socket._onTimeout (node:net:609:8)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+2025-07-24 14:41:36 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (E:\gembok-main\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processTimers (node:internal/timers:526:9)
+2025-08-04 10:28:33 error: uncaughtException: Unexpected strict mode reserved word
+E:\gembok-bill\config\whatsapp-notifications.js:163
+            const package = await billingManager.getPackageById(invoice.package_id);
+                  ^^^^^^^
+
+SyntaxError: Unexpected strict mode reserved word
+    at wrapSafe (node:internal/modules/cjs/loader:1512:18)
+    at Module._compile (node:internal/modules/cjs/loader:1534:20)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (E:\gembok-bill\config\whatsapp.js:43:31)
+2025-08-05 20:14:11 error: uncaughtException: Cannot read properties of undefined (reading 'info')
+TypeError: Cannot read properties of undefined (reading 'info')
+    at Database.<anonymous> (E:\gembok-bill\config\billing.js:24:24)
+2025-08-05 20:14:29 error: uncaughtException: Cannot read properties of undefined (reading 'info')
+TypeError: Cannot read properties of undefined (reading 'info')
+    at Database.<anonymous> (E:\gembok-bill\config\billing.js:24:24)
+2025-08-05 20:15:31 error: uncaughtException: Cannot read properties of undefined (reading 'info')
+TypeError: Cannot read properties of undefined (reading 'info')
+    at Database.<anonymous> (E:\gembok-bill\config\billing.js:24:24)
+2025-08-05 20:22:42 error: uncaughtException: logger is not defined
+ReferenceError: logger is not defined
+    at E:\gembok-bill\routes\adminSetting.js:392:9
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:95:5)
+    at next (E:\gembok-bill\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (E:\gembok-bill\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:95:5)
+    at E:\gembok-bill\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (E:\gembok-bill\node_modules\express\lib\router\index.js:346:12)
+    at next (E:\gembok-bill\node_modules\express\lib\router\index.js:280:10)
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:91:12)
+    at trim_prefix (E:\gembok-bill\node_modules\express\lib\router\index.js:328:13)
+2025-08-06 07:16:06 error: uncaughtException: Identifier 'invoice' has already been declared
+E:\gembok-bill\config\paymentGateway.js:168
+        const invoice = await this.xenditClient.Invoice.createInvoice(invoiceData);
+              ^
+
+SyntaxError: Identifier 'invoice' has already been declared
+    at wrapSafe (node:internal/modules/cjs/loader:1512:18)
+    at Module._compile (node:internal/modules/cjs/loader:1534:20)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (E:\gembok-bill\config\billing.js:4:31)
+2025-08-06 07:21:38 error: uncaughtException: Identifier 'invoice' has already been declared
+E:\gembok-bill\config\paymentGateway.js:168
+        const invoice = await this.xenditClient.Invoice.createInvoice(invoiceData);
+              ^
+
+SyntaxError: Identifier 'invoice' has already been declared
+    at wrapSafe (node:internal/modules/cjs/loader:1512:18)
+    at Module._compile (node:internal/modules/cjs/loader:1534:20)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (E:\gembok-bill\config\billing.js:4:31)
+2025-08-06 07:24:26 error: uncaughtException: this.Xendit is not a constructor
+TypeError: this.Xendit is not a constructor
+    at new XenditGateway (E:\gembok-bill\config\paymentGateway.js:149:29)
+    at new PaymentGatewayManager (E:\gembok-bill\config\paymentGateway.js:9:21)
+    at new BillingManager (E:\gembok-bill\config\billing.js:9:31)
+    at Object.<anonymous> (E:\gembok-bill\config\billing.js:975:24)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+2025-08-06 07:24:44 error: uncaughtException: this.Xendit is not a constructor
+TypeError: this.Xendit is not a constructor
+    at new XenditGateway (E:\gembok-bill\config\paymentGateway.js:149:29)
+    at new PaymentGatewayManager (E:\gembok-bill\config\paymentGateway.js:9:21)
+    at new BillingManager (E:\gembok-bill\config\billing.js:9:31)
+    at Object.<anonymous> (E:\gembok-bill\config\billing.js:975:24)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+2025-08-06 15:51:28 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (E:\gembok-bill\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+2025-08-07 07:45:00 error: uncaughtException: Timed out after 10 seconds
+RosException: Timed out after 10 seconds
+    at Connector.onTimeout (E:\gembok-bill\node_modules\node-routeros\dist\connector\Connector.js:188:30)
+    at Object.onceWrapper (node:events:638:28)
+    at Socket.emit (node:events:524:28)
+    at Socket._onTimeout (node:net:609:8)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+2025-08-07 07:45:01 error: uncaughtException: (no error message)
+RosException
+    at Connector.onError (E:\gembok-bill\node_modules\node-routeros\dist\connector\Connector.js:176:15)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at listOnTimeout (node:internal/timers:555:9)
+    at process.processTimers (node:internal/timers:529:7)
+2025-08-07 08:54:50 error: uncaughtException: username is not defined
+ReferenceError: username is not defined
+    at Statement.<anonymous> (E:\gembok-bill\config\billing.js:458:110)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-08-07 08:55:59 error: uncaughtException: username is not defined
+ReferenceError: username is not defined
+    at Statement.<anonymous> (E:\gembok-bill\config\billing.js:458:110)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-08-07 08:56:44 error: uncaughtException: username is not defined
+ReferenceError: username is not defined
+    at Statement.<anonymous> (E:\gembok-bill\config\billing.js:458:110)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-08-07 10:39:10 error: uncaughtException: logger is not defined
+ReferenceError: logger is not defined
+    at E:\gembok-bill\routes\adminSetting.js:391:9
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:95:5)
+    at next (E:\gembok-bill\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (E:\gembok-bill\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:95:5)
+    at E:\gembok-bill\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (E:\gembok-bill\node_modules\express\lib\router\index.js:346:12)
+    at next (E:\gembok-bill\node_modules\express\lib\router\index.js:280:10)
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:91:12)
+    at trim_prefix (E:\gembok-bill\node_modules\express\lib\router\index.js:328:13)
+2025-08-07 10:48:34 error: uncaughtException: logger is not defined
+ReferenceError: logger is not defined
+    at E:\gembok-bill\routes\adminSetting.js:459:9
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:95:5)
+    at next (E:\gembok-bill\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (E:\gembok-bill\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:95:5)
+    at E:\gembok-bill\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (E:\gembok-bill\node_modules\express\lib\router\index.js:346:12)
+    at next (E:\gembok-bill\node_modules\express\lib\router\index.js:280:10)
+    at Layer.handle [as handle_request] (E:\gembok-bill\node_modules\express\lib\router\layer.js:91:12)
+    at trim_prefix (E:\gembok-bill\node_modules\express\lib\router\index.js:328:13)
+2025-08-08 08:20:29 error: uncaughtException: Unexpected strict mode reserved word
+E:\gembok-bill\config\billing-commands.js:92
+            const package = packages.find(p => p.name.toLowerCase().includes(packageName.toLowerCase()));
+                  ^^^^^^^
+
+SyntaxError: Unexpected strict mode reserved word
+    at wrapSafe (node:internal/modules/cjs/loader:1512:18)
+    at Module._compile (node:internal/modules/cjs/loader:1534:20)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (E:\gembok-bill\config\whatsapp.js:37:25)
+2025-08-10 10:56:44 error: uncaughtException: \\?\C:\Users\DELL\Documents\gembok-bill2\node_modules\sqlite3\build\Release\node_sqlite3.node is not a valid Win32 application.
+\\?\C:\Users\DELL\Documents\gembok-bill2\node_modules\sqlite3\build\Release\node_sqlite3.node
+Error: \\?\C:\Users\DELL\Documents\gembok-bill2\node_modules\sqlite3\build\Release\node_sqlite3.node is not a valid Win32 application.
+\\?\C:\Users\DELL\Documents\gembok-bill2\node_modules\sqlite3\build\Release\node_sqlite3.node
+    at Object..node (node:internal/modules/cjs/loader:1725:18)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at bindings (C:\Users\DELL\Documents\gembok-bill2\node_modules\bindings\bindings.js:112:48)
+    at Object.<anonymous> (C:\Users\DELL\Documents\gembok-bill2\node_modules\sqlite3\lib\sqlite3-binding.js:1:37)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
