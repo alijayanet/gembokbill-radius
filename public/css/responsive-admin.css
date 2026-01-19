@@ -1,0 +1,126 @@
+/* Responsive sidebar & hamburger for admin panel */
+
+/* Global sidebar scrolling fix */
+.sidebar {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Hide sidebar by default on mobile */
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    left: -220px;
+    top: 0;
+    width: 220px;
+    height: 100vh;
+    background: #222e3c;
+    z-index: 1050;
+    transition: left 0.3s;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .sidebar.show {
+    left: 0;
+  }
+  .main-content {
+    padding: 24px 8px;
+  }
+  .hamburger {
+    display: inline-block;
+    cursor: pointer;
+    padding: 12px 18px;
+    font-size: 1.7rem;
+    color: #222e3c;
+    background: transparent;
+    border: none;
+    outline: none;
+    margin-bottom: 18px;
+  }
+}
+
+/* Show sidebar as column on desktop */
+@media (min-width: 992px) {
+  .hamburger {
+    display: none;
+  }
+  
+  .sidebar {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* Overlay for mobile sidebar */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.2);
+  z-index: 1049;
+}
+.sidebar-overlay.show {
+  display: block;
+}
+
+/* Mobile specific improvements */
+@media (max-width: 767.98px) {
+  .sidebar {
+    width: 280px !important;
+    left: -280px !important;
+  }
+  
+  .sidebar.show {
+    left: 0 !important;
+  }
+  
+  /* Ensure sidebar content is scrollable */
+  .sidebar > * {
+    flex-shrink: 0 !important;
+  }
+  
+  /* Fix for version info panel */
+  .sidebar .version-info-panel {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: inherit !important;
+  }
+  
+  /* Improve touch scrolling */
+  .sidebar {
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255,255,255,0.3) transparent !important;
+  }
+  
+  /* Custom scrollbar for webkit browsers */
+  .sidebar::-webkit-scrollbar {
+    width: 6px !important;
+  }
+  
+  .sidebar::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  
+  .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3) !important;
+    border-radius: 3px !important;
+  }
+  
+  .sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.5) !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 575.98px) {
+  .sidebar {
+    width: 260px !important;
+    left: -260px !important;
+  }
+}

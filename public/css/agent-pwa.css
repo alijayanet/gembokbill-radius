@@ -1,0 +1,478 @@
+/* PWA Styles for Agent */
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --accent-color: #007bff;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  --success-color: #28a745;
+}
+
+/* PWA App Shell */
+.pwa-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  flex-direction: column;
+}
+
+.pwa-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.pwa-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.pwa-bottom-nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 1000;
+}
+
+/* PWA Cards */
+.pwa-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pwa-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pwa-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  margin-right: 1rem;
+}
+
+.pwa-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+/* PWA Buttons */
+.pwa-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-height: 44px; /* Touch-friendly */
+}
+
+.pwa-btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+}
+
+.pwa-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  color: white;
+}
+
+.pwa-btn-secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--dark-color);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.pwa-btn-secondary:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  color: var(--dark-color);
+}
+
+.pwa-btn-success {
+  background: var(--success-color);
+  color: white;
+}
+
+.pwa-btn-success:hover {
+  background: #1e7e34;
+  transform: translateY(-2px);
+  color: white;
+}
+
+.pwa-btn-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+.pwa-btn-danger:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  color: white;
+}
+
+/* PWA Forms */
+.pwa-form-group {
+  margin-bottom: 1rem;
+}
+
+.pwa-form-label {
+  display: block;
+  font-weight: 500;
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.pwa-form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-height: 44px; /* Touch-friendly */
+}
+
+.pwa-form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white;
+}
+
+/* PWA Stats */
+.pwa-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pwa-stat-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.pwa-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.pwa-stat-label {
+  font-size: 0.8rem;
+  color: var(--dark-color);
+  margin: 0.25rem 0 0;
+}
+
+/* PWA Navigation */
+.pwa-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.pwa-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: var(--dark-color);
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 8px;
+  min-width: 60px;
+}
+
+.pwa-nav-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--primary-color);
+}
+
+.pwa-nav-item.active {
+  color: var(--primary-color);
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.pwa-nav-icon {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.pwa-nav-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* PWA Loading */
+.pwa-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.pwa-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(102, 126, 234, 0.1);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: pwa-spin 1s linear infinite;
+}
+
+@keyframes pwa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* PWA Offline Indicator */
+.pwa-offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--warning-color);
+  color: var(--dark-color);
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 9999;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+
+.pwa-offline-indicator.show {
+  transform: translateY(0);
+}
+
+/* PWA Install Prompt */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 80px;
+  left: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.pwa-install-prompt.show {
+  transform: translateY(0);
+}
+
+.pwa-install-content {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pwa-install-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  margin-right: 1rem;
+}
+
+.pwa-install-text {
+  flex: 1;
+}
+
+.pwa-install-title {
+  font-weight: 600;
+  color: var(--dark-color);
+  margin: 0 0 0.25rem;
+}
+
+.pwa-install-description {
+  font-size: 0.9rem;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+.pwa-install-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* PWA Voucher Cards */
+.pwa-voucher-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-left: 4px solid var(--success-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pwa-voucher-code {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--success-color);
+  margin-bottom: 0.25rem;
+}
+
+.pwa-voucher-details {
+  font-size: 0.9rem;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+/* PWA Transaction Cards */
+.pwa-transaction-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--primary-color);
+}
+
+.pwa-transaction-amount {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 0.25rem;
+}
+
+.pwa-transaction-details {
+  font-size: 0.9rem;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+/* PWA Responsive */
+@media (max-width: 768px) {
+  .pwa-content {
+    padding: 0.5rem;
+  }
+  
+  .pwa-card {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .pwa-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .pwa-nav-label {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pwa-header {
+    padding: 0.75rem;
+  }
+  
+  .pwa-content {
+    padding: 0.25rem;
+  }
+  
+  .pwa-card {
+    padding: 0.75rem;
+  }
+  
+  .pwa-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pwa-nav-icon {
+    font-size: 1.1rem;
+  }
+  
+  .pwa-nav-label {
+    font-size: 0.6rem;
+  }
+}
+
+/* PWA Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #007bff;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #ffffff;
+  }
+  
+  .pwa-container {
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  }
+  
+  .pwa-header,
+  .pwa-bottom-nav {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .pwa-card {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .pwa-form-control {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  
+  .pwa-form-control:focus {
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
