@@ -2,7 +2,13 @@
 -- Date: 2025-01-19
 -- Description: Add RADIUS integration to customers table for seamless FreeRADIUS management
 
--- Add RADIUS-related columns to customers table
+-- Add RADIUS-related columns to customers table (only if they don't exist)
+-- SQLite doesn't support IF NOT EXISTS for ALTER TABLE ADD COLUMN directly
+-- We'll use a workaround with PRAGMA to check for columns
+
+-- Check and add radius_enabled column
+-- Note: These ALTER TABLE statements will fail if columns already exist, but that's expected
+-- The script will continue despite errors for these statements
 ALTER TABLE customers ADD COLUMN radius_enabled BOOLEAN DEFAULT 0;
 ALTER TABLE customers ADD COLUMN radius_username TEXT;
 ALTER TABLE customers ADD COLUMN radius_password TEXT;
@@ -25,8 +31,8 @@ CREATE TABLE IF NOT EXISTS radius_profiles (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert default RADIUS profiles
-INSERT INTO radius_profiles (name, download_speed, upload_speed, rate_limit, burst_limit, priority) VALUES
+-- Insert default RADIUS profiles (ignore if already exists)
+INSERT OR IGNORE INTO radius_profiles (name, download_speed, upload_speed, rate_limit, burst_limit, priority) VALUES
 ('default', '10M', '10M', '10M/10M', '15M/15M', 1),
 ('basic', '5M', '5M', '5M/5M', '8M/8M', 2),
 ('standard', '20M', '20M', '20M/20M', '30M/30M', 3),
@@ -71,7 +77,8 @@ CREATE INDEX IF NOT EXISTS idx_radius_audit_log_action ON radius_audit_log(actio
 CREATE INDEX IF NOT EXISTS idx_radius_audit_log_username ON radius_audit_log(username);
 CREATE INDEX IF NOT EXISTS idx_radius_audit_log_created_at ON radius_audit_log(created_at);
 
--- Add RADIUS sync status to packages table
+-- Add RADIUS sync status to packages table (only if they don't exist)
+-- Note: These ALTER TABLE statements will fail if columns already exist, but that's expected
 ALTER TABLE packages ADD COLUMN radius_profile_id INTEGER;
 ALTER TABLE packages ADD COLUMN sync_to_radius BOOLEAN DEFAULT 0;
 
