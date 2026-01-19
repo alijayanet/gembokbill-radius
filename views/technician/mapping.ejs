@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Mapping - Portal Technician</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Boxicons -->
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        
+        /* Ensure Bootstrap grid works properly */
+        .main-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 75vh;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+        
+        /* Cable Line Styling */
+        .cable-line {
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+        }
+        
+        .cable-line.connected {
+            stroke: #28a745;
+            stroke-width: 3;
+            opacity: 0.9;
+        }
+        
+        .cable-line.disconnected {
+            stroke: #dc3545;
+            stroke-width: 2;
+            opacity: 0.7;
+        }
+        
+        .cable-line.connected:hover {
+            stroke: #1e7e34;
+            stroke-width: 4;
+        }
+        
+        .cable-line.disconnected:hover {
+            stroke: #bd2130;
+        }
+        
+        /* Enhanced Cable Animation - Putus-putus dengan animasi berjalan */
+        .cable-line-animated {
+            stroke: #FF5722;
+            stroke-width: 4;
+            stroke-dasharray: 20, 15;
+            stroke-dashoffset: 0;
+            animation: cableFlow 2s linear infinite;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+            transition: all 0.3s ease;
+        }
+        
+        .cable-line-animated:hover {
+            stroke-width: 5;
+            stroke: #E64A19;
+            animation-duration: 1s; /* Faster animation on hover */
+        }
+        
+        /* Enhanced Cable line untuk visibility yang lebih baik */
+        .cable-line-connected {
+            stroke: #28a745;
+            stroke-width: 4;
+            stroke-dasharray: 15, 10;
+            stroke-dashoffset: 0;
+            animation: cableFlow 3s linear infinite;
+            filter: drop-shadow(0 3px 6px rgba(40, 167, 69, 0.5));
+        }
+        
+        .cable-line-connected:hover {
+            stroke-width: 4;
+            stroke: #1e7e34;
+            animation-duration: 1.5s;
+        }
+        
+        /* Enhanced Cable line disconnected untuk visibility yang lebih baik */
+        .cable-line-disconnected {
+            stroke: #dc3545;
+            stroke-width: 3;
+            stroke-dasharray: 10, 5;
+            stroke-dashoffset: 0;
+            animation: cableFlow 4s linear infinite;
+            filter: drop-shadow(0 3px 6px rgba(220, 53, 69, 0.5));
+        }
+        
+        .cable-line-disconnected:hover {
+            stroke-width: 3;
+            stroke: #bd2130;
+            animation-duration: 2s;
+        }
+        
+        /* Enhanced Backbone line untuk visibility yang lebih baik */
+        .backbone-line-active {
+            stroke: #007bff;
+            stroke-width: 5;
+            stroke-dasharray: 25, 15;
+            stroke-dashoffset: 0;
+            animation: backboneFlow 2.5s linear infinite;
+            filter: drop-shadow(0 4px 8px rgba(0, 123, 255, 0.5));
+        }
+        
+        .backbone-line-active:hover {
+            stroke-width: 5;
+            stroke: #0056b3;
+            animation-duration: 1.2s;
+        }
+        
+        .backbone-line-inactive {
+            stroke: #6c757d;
+            stroke-width: 3;
+            stroke-dasharray: 12, 8;
+            stroke-dashoffset: 0;
+            animation: backboneFlow 5s linear infinite;
+            filter: drop-shadow(0 3px 6px rgba(108, 117, 125, 0.5));
+        }
+        
+        /* Data Flow Animation - Putus-putus berjalan */
+        @keyframes cableFlow {
+            0% { 
+                stroke-dashoffset: 0;
+            }
+            100% { 
+                stroke-dashoffset: -35; /* Total dari dasharray (20+15) */
+            }
+        }
+        
+        @keyframes backboneFlow {
+            0% { 
+                stroke-dashoffset: 0;
+            }
+            100% { 
+                stroke-dashoffset: -40; /* Total dari dasharray (25+15) */
+            }
+        }
+        
+        @keyframes dataFlow {
+            0% { 
+                stroke-dashoffset: 0;
+                opacity: 1;
+            }
+            50% { 
+                stroke-dashoffset: -25;
+                opacity: 0.8;
+            }
+            100% { 
+                stroke-dashoffset: -50;
+                opacity: 1;
+            }
+        }
+        
+        /* Pulsing Data Points */
+        .data-flow-point {
+            fill: #FF5722;
+            stroke: white;
+            stroke-width: 2;
+            animation: pulseData 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseData {
+            0% { 
+                r: 3;
+                opacity: 1;
+            }
+            50% { 
+                r: 5;
+                opacity: 0.7;
+            }
+            100% { 
+                r: 3;
+                opacity: 1;
+            }
+        }
+        
+        /* Data Flow Marker Styling */
+        .data-flow-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+        
+        .data-flow-container {
+            position: relative;
+            width: 12px;
+            height: 12px;
+        }
+        
+        .data-flow-dot {
+            width: 8px;
+            height: 8px;
+            background: #FF5722;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulseData 2s ease-in-out infinite;
+            box-shadow: 0 0 10px rgba(255, 87, 34, 0.6);
+        }
+        
+        .data-flow-trail {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 87, 34, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulseTrail 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseTrail {
+            0% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.3;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+            }
+        }
+        
+        .cable-flow .data-flow-dot {
+            background: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
+        }
+        
+        .cable-flow .data-flow-trail {
+            border-color: rgba(40, 167, 69, 0.3);
+        }
+        
+        .backbone-flow .data-flow-dot {
+            background: #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+        }
+        
+        .backbone-flow .data-flow-trail {
+            border-color: rgba(0, 123, 255, 0.3);
+        }
+        
+        /* Note: Removed custom icon CSS as we're now using L.circleMarker for proper zoom/pan behavior */
+        
+        .header-nav {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 1001;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        
+        .header-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .back-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            color: white;
+        }
+        
+        /* Note: Using L.circleMarker instead of custom icons for proper zoom/pan behavior */
+        /* This follows the same approach as the working technicianMapping.ejs file */
+        
+        .custom-cable-icon {
+            background: #f39c12;
+            border: 2px solid #fff;
+            border-radius: 3px;
+            width: 8px;
+            height: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        
+        .custom-backbone-icon {
+            background: #8e44ad;
+            border: 3px solid #fff;
+            border-radius: 3px;
+            width: 12px;
+            height: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .panels-container {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .control-panel h5 {
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .stats-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stats-panel h5 {
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        /* Panels layout */
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.05);
+        }
+        
+        .stat-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .stat-icon.odp { background: #e74c3c; }
+        .stat-icon.customer { background: #27ae60; }
+        .stat-icon.cable { background: #f39c12; }
+        .stat-icon.backbone { background: #8e44ad; }
+            
+            /* Custom Marker Styles */
+            .custom-odp-icon {
+                background: transparent !important;
+                border: none !important;
+                opacity: 1 !important;
+            }
+            
+            .custom-onu-icon {
+                background: transparent !important;
+                border: none !important;
+                opacity: 1 !important;
+            }
+            
+            /* ODP Icon Pulse Animation */
+            .odp-icon-pulse {
+                animation: odpPulse 3s infinite;
+            }
+            
+            @keyframes odpPulse {
+                0% { 
+                    transform: scale(1);
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+                }
+                50% { 
+                    transform: scale(1.1);
+                    box-shadow: 0 4px 12px rgba(255,215,0,0.5);
+                }
+                100% { 
+                    transform: scale(1);
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+                }
+            }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1002;
+            display: none;
+        }
+        
+        .mobile-layer-toggle {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1002;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .control-panel, .stats-panel {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                max-width: 90vw;
+                max-height: 80vh;
+                overflow-y: auto;
+                display: none;
+                z-index: 1001;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                padding: 20px;
+            }
+            
+            /* Add overlay background when panel is shown */
+            .control-panel.show, .stats-panel.show {
+                display: block;
+            }
+            
+            .control-panel.show::before, .stats-panel.show::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: -1;
+            }
+            
+            /* Add close button for panels */
+            .control-panel.show::after, .stats-panel.show::after {
+                content: '✕';
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                font-size: 20px;
+                color: #666;
+                cursor: pointer;
+                z-index: 1002;
+            }
+            
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                top: 20px; /* Position at top of screen */
+                right: 20px;
+                z-index: 1002; /* Higher than other elements */
+            }
+            
+            .mobile-layer-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                top: 20px; /* Position at top of screen */
+                right: 80px;
+                z-index: 1002; /* Higher than other elements */
+            }
+            
+            /* Ensure toggle doesn't overlap with header */
+            .header-nav {
+                padding-right: 140px; /* Make space for both toggle buttons */
+            }
+            
+            /* Ensure toggle button is visible and accessible */
+            .mobile-toggle:hover, .mobile-layer-toggle:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            }
+            
+            .mobile-toggle:active, .mobile-layer-toggle:active {
+                transform: scale(0.95);
+            }
+            
+            /* Add transition for smooth animation */
+            .mobile-toggle, .mobile-layer-toggle {
+                transition: all 0.3s ease;
+            }
+            
+            /* Ensure toggle button is always visible */
+            .mobile-toggle {
+                position: fixed !important;
+                top: 20px !important;
+                right: 20px !important;
+            }
+            
+            .mobile-layer-toggle {
+                position: fixed !important;
+                top: 20px !important;
+                right: 80px !important;
+            }
+            
+            /* Ensure toggle button doesn't interfere with map controls */
+            .leaflet-control-container {
+                margin-top: 60px; /* Make space for toggle button */
+            }
+            
+            /* Ensure toggle button is accessible on all screen sizes */
+            @media (max-width: 480px) {
+                .mobile-toggle {
+                    top: 15px;
+                    right: 15px;
+                    width: 45px;
+                    height: 45px;
+                    font-size: 18px;
+                }
+                
+                .mobile-layer-toggle {
+                    top: 15px;
+                    right: 70px;
+                    width: 45px;
+                    height: 45px;
+                    font-size: 18px;
+                }
+            }
+            
+            /* Ensure mobile navbar has higher z-index */
+            .mobile-bottom-nav {
+                z-index: 1000 !important;
+            }
+            
+            /* Hide layer control by default on mobile */
+            .leaflet-control-layers {
+                display: none;
+            }
+            
+            .leaflet-control-layers.show {
+                display: block !important;
+            }
+            
+            /* Add bottom padding to prevent overlap */
+            .main-content {
+                padding-bottom: 120px !important;
+            }
+            
+            /* Ensure map container doesn't overlap with mobile elements */
+            .map-container {
+                margin-bottom: 120px;
+            }
+            
+            /* Ensure panels container doesn't overlap with mobile elements */
+            .panels-container {
+                margin-bottom: 120px;
+            }
+            
+            .header-nav h1 {
+                font-size: 1.2rem;
+            }
+            
+            .back-button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <%- include('../partials/technician-responsive-sidebar', { page: 'mapping', technician: technician }) %>
+            <main class="col-md-10 ms-sm-auto main-content" style="min-height: 100vh;">
+    <div class="header-nav">
+        <h1><i class="bx bx-map-marked-alt"></i> Network Mapping - Technician</h1>
+    </div>
+    <div class="map-container">
+        <div id="loading" class="loading">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="mt-2">Loading network data...</div>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+    <div class="panels-container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="control-panel">
+                    <h5><i class="bx bx-layer-group me-2"></i>Layer Controls</h5>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="odpLayer" checked>
+                        <label class="form-check-label" for="odpLayer">
+                                        <span class="stat-icon odp me-2" style="font-size: 12px;">⚡</span>ODPs
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="customerLayer" checked>
+                        <label class="form-check-label" for="customerLayer">
+                                        <span class="stat-icon customer me-2" style="font-size: 12px;">📶</span>ONUs
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="cableLayer">
+                        <label class="form-check-label" for="cableLayer">
+                            <span class="stat-icon cable me-2">K</span>Cable Routes
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="backboneLayer">
+                        <label class="form-check-label" for="backboneLayer">
+                            <span class="stat-icon backbone me-2">B</span>Backbone
+                        </label>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="mb-2">Base Map</h6>
+                    <select class="form-select form-select-sm" id="baseMapSelect">
+                        <option value="satellite">Satellite</option>
+                        <option value="light">Light Theme</option>
+                        <option value="dark">Dark Theme</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="stats-panel">
+                    <h5><i class="bx bx-bar-chart me-2"></i>Network Statistics</h5>
+                    
+                    <div class="stat-item">
+                                    <span class="stat-icon odp" style="font-size: 12px;">⚡</span>
+                        <div>
+                            <div class="fw-bold">ODPs</div>
+                            <small class="text-muted" id="odpCount">0</small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                                    <span class="stat-icon customer" style="font-size: 12px;">📶</span>
+                        <div>
+                                        <div class="fw-bold">ONUs</div>
+                            <small class="text-muted" id="customerCount">0</small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-icon cable">K</span>
+                        <div>
+                            <div class="fw-bold">Cable Routes</div>
+                            <small class="text-muted" id="cableCount">0</small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-icon backbone">B</span>
+                        <div>
+                            <div class="fw-bold">Backbone</div>
+                            <small class="text-muted" id="backboneCount">0</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include('partials/mobile-navbar', { currentPage: 'mapping' }) %>
+                <button class="mobile-toggle" id="mobileToggle">
+                    <i class="bx bx-menu"></i>
+                </button>
+                <button class="mobile-layer-toggle" id="mobileLayerToggle">
+                    <i class="bx bx-layer"></i>
+                </button>
+                <!-- Leaflet JS, Bootstrap JS, and scripts... -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let map;
+        let networkData = {};
+        let customerLayer, odpLayer, cableLayer, backboneLayer;
+
+        // Initialize map
+        function initMap() {
+            console.log('🗺️ Initializing technician mapping...');
+            
+            try {
+                // Create map centered on Jakarta
+                map = L.map('map').setView([-6.2088, 106.8456], 13);
+                console.log('✅ Map instance created successfully');
+            } catch (error) {
+                console.error('❌ Error creating map:', error);
+                return;
+            }
+            
+            // Add tile layers
+            const lightTheme = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap © CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19
+            });
+            
+            const darkTheme = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap © CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19
+            });
+            
+            const satelliteTheme = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri © DigitalGlobe © GeoEye © i-cubed © USDA FSA © USGS © AeroGRID © IGN © IGP'
+            });
+            
+            // Add default satellite theme
+            satelliteTheme.addTo(map);
+            
+            // Create base layers object (Satellite is default)
+            const baseLayers = {
+                "Satellite": satelliteTheme,
+                "Light Theme": lightTheme,
+                "Dark Theme": darkTheme
+            };
+                
+            // Initialize layers
+            customerLayer = L.layerGroup().addTo(map);
+            odpLayer = L.layerGroup().addTo(map);
+            cableLayer = L.layerGroup().addTo(map);
+            backboneLayer = L.layerGroup().addTo(map);
+            
+            // Create overlay layers object
+            const overlayLayers = {
+                "ODPs": odpLayer,
+                "Customers": customerLayer,
+                "Cable Routes": cableLayer,
+                "Backbone": backboneLayer
+            };
+            
+                        // Add layer control (collapsed by default)
+            const layerControl = L.control.layers(baseLayers, overlayLayers, {
+                position: 'topright',
+                            collapsed: true
+            }).addTo(map);
+            
+            console.log('✅ Map initialized successfully with satellite view as default');
+            
+            // Load network data
+            loadNetworkData();
+        }
+        
+        // Note: Using L.circleMarker instead of L.divIcon for proper zoom/pan behavior
+        // This follows the same approach as the working technicianMapping.ejs file
+
+
+        
+        function createCableIcon() {
+            return L.divIcon({
+                className: 'custom-cable-icon',
+                html: '',
+                iconSize: [8, 8],
+                iconAnchor: [4, 4]
+            });
+        }
+        
+        function createBackboneIcon() {
+            return L.divIcon({
+                className: 'custom-backbone-icon',
+                html: '',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            });
+        }
+        
+        // Load network data from API
+        async function loadNetworkData() {
+            try {
+                console.log('📡 Loading network data...');
+                showLoading();
+                
+                const response = await fetch('/technician/api/mapping-data');
+                console.log('📡 API Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📡 API Response data:', data);
+                
+                if (data.success) {
+                    networkData = data.data;
+                    console.log('📡 Network data loaded:', networkData);
+                    
+                    // Debug: Log detailed data structure
+                    console.log('🔍 Detailed network data structure:');
+                    console.log('- ODPs:', networkData.odps);
+                    console.log('- Customers:', networkData.customers);
+                    console.log('- Cables:', networkData.cables);
+                    console.log('- Backbone:', networkData.backbone);
+                    
+                    renderNetworkData();
+                    updateStatistics();
+                    hideLoading();
+                } else {
+                    console.error('Failed to load network data:', data.message);
+                    showError('Failed to load network data: ' + data.message);
+                    hideLoading();
+                }
+            } catch (error) {
+                console.error('Error loading network data:', error);
+                showError('Error loading network data: ' + error.message);
+                hideLoading();
+            }
+        }
+        
+        // Render network data on map
+        function renderNetworkData() {
+            console.log('🎨 Rendering network data...');
+            
+            // Clear existing layers
+            customerLayer.clearLayers();
+            odpLayer.clearLayers();
+            cableLayer.clearLayers();
+            backboneLayer.clearLayers();
+            
+            // Render ODPs (following admin map approach - simple and clean)
+            if (networkData.odps && networkData.odps.length > 0) {
+                console.log(`📡 Rendering ${networkData.odps.length} ODPs...`);
+                
+                networkData.odps.forEach((odp, index) => {
+                    console.log(`ODP ${index + 1}:`, {
+                        name: odp.name,
+                        latitude: odp.latitude,
+                        longitude: odp.longitude,
+                        code: odp.code,
+                        status: odp.status
+                    });
+                    
+                    if (odp.latitude && odp.longitude) {
+                        console.log(`🎯 Creating ODP marker for "${odp.name}" at [${odp.latitude}, ${odp.longitude}]`);
+                                        // Create ODP marker dengan icon tower yang lebih kecil dan elegan
+                                        const odpIcon = L.divIcon({
+                                            className: 'custom-odp-icon',
+                                            html: `
+                                                <div style="
+                                                    background: linear-gradient(135deg, #FFD700 0%, #F4A261 100%);
+                                        border: 3px solid #FFFFFF;
+                                        border-radius: 50%;
+                                        width: 18px;
+                                        height: 18px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+                                        position: relative;
+                                        animation: odpPulse 3s infinite;
+                                    ">
+                                        <div style="
+                                            color: white;
+                                            font-size: 10px;
+                                            font-weight: bold;
+                                            pointer-events: none;
+                                            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                                        ">⚡</div>
+                                        
+                                    </div>
+                                    <div style="
+                                        position: absolute;
+                                        bottom: -8px;
+                                        left: 50%;
+                                        transform: translateX(-50%);
+                                        width: 0;
+                                        height: 0;
+                                        border-left: 6px solid transparent;
+                                        border-right: 6px solid transparent;
+                                        border-top: 6px solid #FFD700;
+                                        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                                    "></div>
+                                `,
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 20],
+                                popupAnchor: [0, -20]
+                            });
+                            
+                            const marker = L.marker([odp.latitude, odp.longitude], {
+                                icon: odpIcon
+                        }).bindPopup(`
+                            <div class="odp-popup">
+                                <h6><i class="fas fa-broadcast-tower"></i> ${odp.name || 'ODP'}</h6>
+                                <p><strong>Code:</strong> ${odp.code || 'N/A'}</p>
+                                <p><strong>Capacity:</strong> ${odp.capacity || 'N/A'} ports</p>
+                                <p><strong>Used Ports:</strong> ${odp.used_ports || 0}</p>
+                                <p><strong>Status:</strong> <span class="status-${odp.status}">${odp.status || 'N/A'}</span></p>
+                                <p><strong>Address:</strong> ${odp.address || 'N/A'}</p>
+                                <p><strong>Coordinates:</strong> ${odp.latitude}, ${odp.longitude}</p>
+                            </div>
+                        `);
+                        
+                        odpLayer.addLayer(marker);
+                        console.log(`✅ ODP "${odp.name}" rendered at [${odp.latitude}, ${odp.longitude}]`);
+                    } else {
+                        console.log(`❌ ODP "${odp.name}" has invalid coordinates: [${odp.latitude}, ${odp.longitude}]`);
+                    }
+                });
+                
+                console.log(`✅ ${networkData.odps.length} ODPs rendered successfully`);
+            } else {
+                console.log('❌ No ODPs data found');
+            }
+            
+            // Render Customers (following admin map approach - simple and clean)
+            if (networkData.customers && networkData.customers.length > 0) {
+                console.log(`👥 Rendering ${networkData.customers.length} customers...`);
+                
+                networkData.customers.forEach((customer, index) => {
+                    console.log(`Customer ${index + 1}:`, {
+                        name: customer.name,
+                        latitude: customer.latitude,
+                        longitude: customer.longitude,
+                        status: customer.status,
+                        pppoe_username: customer.pppoe_username
+                    });
+                    
+                    if (customer.latitude && customer.longitude) {
+                        console.log(`🎯 Creating Customer marker for "${customer.name}" at [${customer.latitude}, ${customer.longitude}]`);
+                            // Create ONU marker dengan icon yang berbeda per status
+                            let onuColor, onuIconHtml, onuStatus;
+                            
+                            if (customer.status === 'suspended') {
+                                onuColor = '#FF9800'; // warning (orange)
+                                onuStatus = 'Suspend';
+                                onuIconHtml = '<div style="color: white; font-size: 14px; font-weight: bold; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">⚠️</div>';
+                            } else if (customer.status === 'inactive') {
+                                onuColor = '#F44336'; // danger (red)
+                                onuStatus = 'Inactive';
+                                onuIconHtml = '<div style="color: white; font-size: 14px; font-weight: bold; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">❌</div>';
+                            } else {
+                                onuColor = '#4CAF50'; // active (green)
+                                onuStatus = 'Active';
+                                onuIconHtml = '<div style="color: white; font-size: 14px; font-weight: bold; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">📶</div>';
+                            }
+                            
+                            const onuIconEl = L.divIcon({
+                                className: 'custom-onu-icon',
+                                html: `
+                                    <div style="
+                                        background: linear-gradient(135deg, ${onuColor} 0%, ${onuColor}dd 100%);
+                                        border: 4px solid #FFFFFF;
+                                        border-radius: 8px;
+                                        width: 32px;
+                                        height: 32px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                                        position: relative;
+                                        animation: pulse-onu 2s infinite;
+                                    ">
+                                        ${onuIconHtml}
+                                    </div>
+                                    <div style="
+                                        position: absolute;
+                                        bottom: -10px;
+                                        left: 50%;
+                                        transform: translateX(-50%);
+                                        width: 0;
+                                        height: 0;
+                                        border-left: 8px solid transparent;
+                                        border-right: 8px solid transparent;
+                                        border-top: 8px solid ${onuColor};
+                                        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+                                    "></div>
+                                    <style>
+                                        @keyframes pulse-onu {
+                                            0% { transform: scale(1); }
+                                            50% { transform: scale(1.05); }
+                                            100% { transform: scale(1); }
+                                        }
+                                    </style>
+                                `,
+                                iconSize: [40, 40],
+                                iconAnchor: [20, 40],
+                                popupAnchor: [0, -40]
+                            });
+                            
+                            const marker = L.marker([customer.latitude, customer.longitude], {
+                                icon: onuIconEl
+                        }).bindPopup(`
+                            <div class="customer-popup" style="max-width: 350px;">
+                                <h6><i class="fas fa-user"></i> ${customer.name || 'Customer'}</h6>
+                                <p><strong>Phone:</strong> ${customer.phone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${customer.email || 'N/A'}</p>
+                                <p><strong>PPPoE:</strong> ${customer.pppoe_username || 'N/A'}</p>
+                                <p><strong>Package:</strong> ${customer.package_name || customer.package_id || 'N/A'}</p>
+                                <p><strong>ODP:</strong> ${customer.odp_name || 'N/A'}</p>
+                                <p><strong>Status Layanan:</strong> <span class="badge bg-${customer.status === 'active' ? 'success' : customer.status === 'suspended' ? 'warning' : 'danger'}">${customer.status === 'active' ? 'Active' : customer.status === 'suspended' ? 'Suspend' : customer.status || 'N/A'}</span></p>
+                                ${customer.paymentStatus ? `<p><strong>Status Payment:</strong> <span class="badge bg-${customer.paymentStatus === 'paid' ? 'success' : customer.paymentStatus === 'pending' ? 'warning' : 'danger'}">${customer.paymentStatus === 'paid' ? 'Lunas' : customer.paymentStatus === 'pending' ? 'Pending' : customer.paymentStatus === 'unpaid' ? 'Belum Bayar' : customer.paymentStatus}</span></p>` : ''}
+                                ${customer.lastPaymentDate ? `<p><strong>Payment Terakhir:</strong> ${new Date(customer.lastPaymentDate).toLocaleDateString('id-ID')}</p>` : ''}
+                                ${customer.nextBillingDate ? `<p><strong>Bill Berikutnya:</strong> ${new Date(customer.nextBillingDate).toLocaleDateString('id-ID')}</p>` : ''}
+                                <p><strong>Address:</strong> ${customer.address || 'N/A'}</p>
+                                <p><strong>Coordinates:</strong> ${customer.latitude}, ${customer.longitude}</p>
+                            </div>
+                        `);
+                        
+                        customerLayer.addLayer(marker);
+                        console.log(`✅ Customer "${customer.name}" rendered at [${customer.latitude}, ${customer.longitude}]`);
+                    } else {
+                        console.log(`❌ Customer "${customer.name}" has invalid coordinates: [${customer.latitude}, ${customer.longitude}]`);
+                    }
+                });
+                
+                console.log(`✅ ${networkData.customers.length} customers rendered successfully`);
+            } else {
+                console.log('❌ No customers data found');
+            }
+            
+            // Render Cable Routes
+            if (networkData.cables && networkData.cables.length > 0) {
+                console.log(`🔌 Rendering ${networkData.cables.length} cables...`);
+                
+                networkData.cables.forEach((cable, index) => {
+                    console.log(`Cable ${index + 1}:`, {
+                        name: cable.name,
+                        start_lat: cable.start_lat,
+                        start_lng: cable.start_lng,
+                        end_lat: cable.end_lat,
+                        end_lng: cable.end_lng,
+                        from_odp: cable.from_odp,
+                        to_customer: cable.to_customer
+                    });
+                    
+                    if (cable.start_lat && cable.start_lng && cable.end_lat && cable.end_lng) {
+                        // Determine cable status based on connected customer status
+                        let cableStatus = 'connected';
+                        let cableClass = 'cable-line connected';
+                        
+                        // Check if cable is connected to any inactive customer
+                        if (networkData.customers) {
+                            const connectedCustomer = networkData.customers.find(customer => 
+                                customer.name === cable.to_customer
+                            );
+                            if (connectedCustomer && connectedCustomer.status && connectedCustomer.status.toLowerCase() === 'inactive') {
+                                cableStatus = 'disconnected';
+                                cableClass = 'cable-line disconnected';
+                            }
+                        }
+                        
+                        console.log(`📍 Cable ${cable.name}: From [${cable.start_lat}, ${cable.start_lng}] → To [${cable.end_lat}, ${cable.end_lng}]`);
+                        
+                        const polyline = L.polyline([
+                            [cable.start_lat, cable.start_lng],
+                            [cable.end_lat, cable.end_lng]
+                        ], {
+                            color: cableStatus === 'connected' ? '#28a745' : '#dc3545',
+                            weight: cableStatus === 'connected' ? 4 : 3,
+                            opacity: cableStatus === 'connected' ? 0.9 : 0.7,
+                            className: cableStatus === 'connected' ? 'cable-line-connected' : 'cable-line-disconnected'
+                        }).bindPopup(`
+                            <div class="cable-popup">
+                                <h6><i class="bx bx-cable me-1"></i>${cable.name || 'Cable Route'}</h6>
+                                <p class="mb-1"><strong>Dari ODP:</strong> ${cable.from_odp || 'N/A'}</p>
+                                <p class="mb-1"><strong>Ke Customer:</strong> ${cable.to_customer || 'N/A'}</p>
+                                <p class="mb-1"><strong>Length:</strong> ${cable.length || 'N/A'} m</p>
+                                <p class="mb-1"><strong>Type:</strong> ${cable.type || 'N/A'}</p>
+                                <p class="mb-1"><strong>Start:</strong> ${cable.start_lat}, ${cable.start_lng}</p>
+                                <p class="mb-0"><strong>End:</strong> ${cable.end_lat}, ${cable.end_lng}</p>
+                            </div>
+                        `);
+                        
+                        cableLayer.addLayer(polyline);
+                        console.log(`✅ Cable "${cable.name}" rendered from ODP to Customer`);
+                    } else {
+                        console.log(`❌ Cable "${cable.name}" has invalid coordinates`);
+                    }
+                });
+                
+                console.log(`✅ ${networkData.cables.length} cables rendered`);
+            }
+            
+            // Render Backbone
+            if (networkData.backbone && networkData.backbone.length > 0) {
+                console.log(`🌐 Rendering ${networkData.backbone.length} backbone routes...`);
+                
+                networkData.backbone.forEach((backbone, index) => {
+                    console.log(`Backbone ${index + 1}:`, {
+                        name: backbone.name,
+                        start_lat: backbone.start_lat,
+                        start_lng: backbone.start_lng,
+                        end_lat: backbone.end_lat,
+                        end_lng: backbone.end_lng,
+                        from_odp: backbone.from_odp,
+                        to_odp: backbone.to_odp
+                    });
+                    
+                    if (backbone.start_lat && backbone.start_lng && backbone.end_lat && backbone.end_lng) {
+                        // Determine backbone status
+                        let backboneStatus = 'active';
+                        let backboneClass = 'cable-line connected';
+                        
+                        if (backbone.status && backbone.status.toLowerCase() === 'inactive') {
+                            backboneStatus = 'inactive';
+                            backboneClass = 'cable-line disconnected';
+                        }
+                        
+                        console.log(`📍 Backbone ${backbone.name}: From [${backbone.start_lat}, ${backbone.start_lng}] → To [${backbone.end_lat}, ${backbone.end_lng}]`);
+                        
+                        const polyline = L.polyline([
+                            [backbone.start_lat, backbone.start_lng],
+                            [backbone.end_lat, backbone.end_lng]
+                        ], {
+                            color: backboneStatus === 'active' ? '#007bff' : '#6c757d',
+                            weight: backboneStatus === 'active' ? 5 : 3,
+                            opacity: backboneStatus === 'active' ? 0.9 : 0.7,
+                            className: backboneStatus === 'active' ? 'backbone-line-active' : 'backbone-line-inactive'
+                        }).bindPopup(`
+                            <div class="backbone-popup">
+                                <h6><i class="bx bx-network-chart me-1"></i>${backbone.name || 'Backbone Connection'}</h6>
+                                <p class="mb-1"><strong>Dari ODP:</strong> ${backbone.from_odp || 'N/A'}</p>
+                                <p class="mb-1"><strong>Ke ODP:</strong> ${backbone.to_odp || 'N/A'}</p>
+                                <p class="mb-1"><strong>Length:</strong> ${backbone.length || 'N/A'} m</p>
+                                <p class="mb-1"><strong>Type:</strong> ${backbone.type || 'N/A'}</p>
+                                <p class="mb-1"><strong>Capacity:</strong> ${backbone.capacity || 'N/A'}</p>
+                                <p class="mb-1"><strong>Start:</strong> ${backbone.start_lat}, ${backbone.start_lng}</p>
+                                <p class="mb-0"><strong>End:</strong> ${backbone.end_lat}, ${backbone.end_lng}</p>
+                            </div>
+                        `);
+                        
+                        backboneLayer.addLayer(polyline);
+                        console.log(`✅ Backbone "${backbone.name}" rendered from ODP to ODP`);
+                    } else {
+                        console.log(`❌ Backbone "${backbone.name}" has invalid coordinates`);
+                    }
+                });
+                
+                console.log(`✅ ${networkData.backbone.length} backbone routes rendered`);
+            }
+            
+            console.log('✅ Network data rendered successfully');
+            
+            // Fit map to data bounds
+            fitToBounds();
+            
+            // Add data flow animations after rendering
+            setTimeout(() => {
+                addDataFlowAnimations();
+            }, 1000);
+        }
+        
+        // Fit map to data bounds (following admin map approach)
+        function fitToBounds() {
+            if (!map) return;
+            
+            const bounds = L.latLngBounds();
+            let hasData = false;
+            
+            // Add all ODP coordinates to bounds
+            if (networkData.odps) {
+                networkData.odps.forEach(odp => {
+                    if (odp.latitude && odp.longitude) {
+                        bounds.extend([odp.latitude, odp.longitude]);
+                        hasData = true;
+                    }
+                });
+            }
+            
+            // Add all Customer coordinates to bounds
+            if (networkData.customers) {
+                networkData.customers.forEach(customer => {
+                    if (customer.latitude && customer.longitude) {
+                        bounds.extend([customer.latitude, customer.longitude]);
+                        hasData = true;
+                    }
+                });
+            }
+            
+            if (hasData) {
+                // Fit map to bounds with padding
+                map.fitBounds(bounds, { padding: [20, 20] });
+                console.log(`✅ Map fitted to bounds containing data`);
+            } else {
+                // Fallback to Jakarta if no data
+                console.log('📍 No data found, using default Jakarta location');
+                map.setView([-6.2088, 106.8456], 13);
+            }
+        }
+        
+        // Add data flow animations
+        function addDataFlowAnimations() {
+            console.log('🎬 Adding data flow animations...');
+            
+            // Animasi untuk cable routes (Customer → ODP)
+            if (cableLayer) {
+                cableLayer.eachLayer(function(layer) {
+                    if (layer instanceof L.Polyline) {
+                        createDataFlowAnimation(layer, 'cable');
+                    }
+                });
+            }
+            
+            // Animasi untuk backbone cables (ODP → ODP)
+            if (backboneLayer) {
+                backboneLayer.eachLayer(function(layer) {
+                    if (layer instanceof L.Polyline) {
+                        createDataFlowAnimation(layer, 'backbone');
+                    }
+                });
+            }
+            
+            console.log('✅ Data flow animations added');
+        }
+        
+        // Create animated data flow for cables
+        function createDataFlowAnimation(polyline, type) {
+            const latlngs = polyline.getLatLngs();
+            if (!latlngs || latlngs.length < 2) {
+                return;
+            }
+            
+            const startLatLng = latlngs[0];
+            const endLatLng = latlngs[latlngs.length - 1];
+            
+            // Create multiple animated markers along the cable
+            const numMarkers = Math.min(3, Math.floor(latlngs.length / 2));
+            const animatedMarkers = [];
+            
+            for (let i = 0; i < numMarkers; i++) {
+                const index = Math.floor((i + 1) * latlngs.length / (numMarkers + 1));
+                const point = latlngs[index];
+                
+                if (point) {
+                    // Create animated marker
+                    const animatedMarker = L.marker(point, {
+                        icon: L.divIcon({
+                            className: `data-flow-marker ${type}-flow`,
+                            html: `
+                                <div class="data-flow-container">
+                                    <div class="data-flow-dot"></div>
+                                    <div class="data-flow-trail"></div>
+                                </div>
+                            `,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        })
+                    });
+                    
+                    // Add to appropriate layer
+                    if (type === 'cable') {
+                        cableLayer.addLayer(animatedMarker);
+                    } else {
+                        backboneLayer.addLayer(animatedMarker);
+                    }
+                    
+                    // Store marker for animation
+                    animatedMarkers.push(animatedMarker);
+                    
+                    // Add animation delay for staggered effect
+                    setTimeout(() => {
+                        const element = animatedMarker.getElement();
+                        if (element) {
+                            element.style.animationDelay = `${i * 0.5}s`;
+                        }
+                    }, i * 100);
+                }
+            }
+            
+            // Animate each marker along the polyline
+            animatedMarkers.forEach((animatedMarker, index) => {
+                let progress = 0;
+                const animationSpeed = type === 'backbone' ? 0.003 : 0.005; // Backbone slower
+                const delay = index * 200; // Stagger start times
+                
+                setTimeout(() => {
+                    function animate() {
+                        progress += animationSpeed;
+                        
+                        if (progress <= 1) {
+                            // Calculate position along the line
+                            const currentLat = startLatLng.lat + (endLatLng.lat - startLatLng.lat) * progress;
+                            const currentLng = startLatLng.lng + (endLatLng.lng - startLatLng.lng) * progress;
+                            
+                            animatedMarker.setLatLng([currentLat, currentLng]);
+                            
+                            // Continue animation
+                            requestAnimationFrame(animate);
+                        } else {
+                            // Reset animation
+                            progress = 0;
+                            animatedMarker.setLatLng(startLatLng);
+                            setTimeout(() => {
+                                requestAnimationFrame(animate);
+                            }, 1000); // Pause before restart
+                        }
+                    }
+                    
+                    // Start animation
+                    requestAnimationFrame(animate);
+                }, delay);
+            });
+        }
+        
+        // Update statistics
+        function updateStatistics() {
+            document.getElementById('odpCount').textContent = networkData.odps ? networkData.odps.length : 0;
+            document.getElementById('customerCount').textContent = networkData.customers ? networkData.customers.length : 0;
+            document.getElementById('cableCount').textContent = networkData.cables ? networkData.cables.length : 0;
+            document.getElementById('backboneCount').textContent = networkData.backbone ? networkData.backbone.length : 0;
+        }
+        
+        // Hide loading indicator
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+            // Layer control event handlers with null checks
+            const odpLayerCheckbox = document.getElementById('odpLayer');
+            if (odpLayerCheckbox) {
+                odpLayerCheckbox.addEventListener('change', function() {
+                    if (this.checked && odpLayer) {
+                map.addLayer(odpLayer);
+                    } else if (odpLayer) {
+                map.removeLayer(odpLayer);
+            }
+        });
+            }
+            
+            const customerLayerCheckbox = document.getElementById('customerLayer');
+            if (customerLayerCheckbox) {
+                customerLayerCheckbox.addEventListener('change', function() {
+                    if (this.checked && customerLayer) {
+                map.addLayer(customerLayer);
+                    } else if (customerLayer) {
+                map.removeLayer(customerLayer);
+            }
+        });
+            }
+            
+            const cableLayerCheckbox = document.getElementById('cableLayer');
+            if (cableLayerCheckbox) {
+                cableLayerCheckbox.addEventListener('change', function() {
+                    if (this.checked && cableLayer) {
+                map.addLayer(cableLayer);
+                    } else if (cableLayer) {
+                map.removeLayer(cableLayer);
+            }
+        });
+            }
+            
+            const backboneLayerCheckbox = document.getElementById('backboneLayer');
+            if (backboneLayerCheckbox) {
+                backboneLayerCheckbox.addEventListener('change', function() {
+                    if (this.checked && backboneLayer) {
+                map.addLayer(backboneLayer);
+                    } else if (backboneLayer) {
+                map.removeLayer(backboneLayer);
+            }
+        });
+            }
+            
+            // Base map selection with null check
+            const baseMapSelect = document.getElementById('baseMapSelect');
+            if (baseMapSelect) {
+                baseMapSelect.addEventListener('change', function() {
+            // Remove all base layers
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.TileLayer) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Add selected base layer
+            switch(this.value) {
+                case 'light':
+                    lightTheme.addTo(map);
+                    break;
+                case 'dark':
+                    darkTheme.addTo(map);
+                    break;
+                case 'satellite':
+                default:
+                    satelliteTheme.addTo(map);
+                    break;
+            }
+        });
+            }
+            
+            // Mobile toggle event handler will be set in DOMContentLoaded
+        
+        // Loading and error functions
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger position-fixed';
+            errorDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+            errorDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            `;
+            document.body.appendChild(errorDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM Content Loaded - Initializing map...');
+            initMap();
+            
+            // Mobile toggle event handler
+            const mobileToggle = document.getElementById('mobileToggle');
+            if (mobileToggle) {
+                console.log('📱 Mobile toggle button found, adding event listener...');
+                mobileToggle.addEventListener('click', function() {
+                    console.log('🔄 Mobile toggle clicked');
+                    const controlPanel = document.querySelector('.control-panel');
+                    const statsPanel = document.querySelector('.stats-panel');
+                    
+                    if (controlPanel && statsPanel) {
+                        console.log('📋 Panels found, toggling display...');
+                        if (controlPanel.classList.contains('show')) {
+                            controlPanel.classList.remove('show');
+                            statsPanel.classList.add('show');
+                            console.log('✅ Control panel hidden, stats panel shown');
+                        } else {
+                            controlPanel.classList.add('show');
+                            statsPanel.classList.remove('show');
+                            console.log('✅ Control panel shown, stats panel hidden');
+                        }
+                        
+                        // Add click outside to close
+                        setTimeout(() => {
+                            document.addEventListener('click', function(e) {
+                                if (!controlPanel.contains(e.target) && !statsPanel.contains(e.target) && !mobileToggle.contains(e.target)) {
+                                    controlPanel.classList.remove('show');
+                                    statsPanel.classList.remove('show');
+                                    console.log('✅ Panel closed by clicking outside');
+                                }
+                            });
+                        }, 100);
+                    } else {
+                        console.log('❌ Panels not found');
+                    }
+                });
+            } else {
+                console.log('❌ Mobile toggle button not found');
+            }
+            
+            // Mobile layer toggle event handler
+            const mobileLayerToggle = document.getElementById('mobileLayerToggle');
+            if (mobileLayerToggle) {
+                console.log('🗺️ Mobile layer toggle button found, adding event listener...');
+                mobileLayerToggle.addEventListener('click', function() {
+                    console.log('🔄 Mobile layer toggle clicked');
+                    // Toggle layer control visibility
+                    const layerControl = document.querySelector('.leaflet-control-layers');
+                    if (layerControl) {
+                        if (layerControl.classList.contains('show')) {
+                            layerControl.classList.remove('show');
+                            console.log('✅ Layer control hidden');
+                        } else {
+                            layerControl.classList.add('show');
+                            console.log('✅ Layer control shown');
+                        }
+                    } else {
+                        console.log('❌ Layer control not found');
+                    }
+                });
+            } else {
+                console.log('❌ Mobile layer toggle button not found');
+            }
+        });
+    </script>
+    </main>
+</div>
+</div>
+</body>
+</html>

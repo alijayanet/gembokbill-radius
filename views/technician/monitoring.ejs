@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Monitoring - Portal Technician</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Boxicons -->
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* Navigation Styles */
+        .navbar-tech {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .navbar-dark {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logout-btn:hover {
+            background: linear-gradient(45deg, #2980b9, #1f618d);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        /* Welcome Section */
+        .user-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .user-info h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .user-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .stats-card {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .stats-icon.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stats-icon.success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .stats-icon.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stats-icon.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        
+        .device-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-online {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-offline {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            color: white;
+        }
+        
+        .device-info-popup {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+            }
+            
+            
+            .stats-card .card-body {
+                padding: 15px;
+            }
+            
+            .stats-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-tech">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/technician/dashboard">
+                <i class="bx bx-wrench me-2"></i>Portal Technician
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <i class="bx bx-user-circle me-1"></i>
+                    <%= technician.name %>
+                </span>
+                <a href="/technician/logout" class="logout-btn">
+                    <i class="bx bx-log-out me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Include Technician Responsive Sidebar -->
+            <%- include('../partials/technician-responsive-sidebar', { page: 'monitoring', technician: technician }) %>
+            
+            <main class="col-md-10 ms-sm-auto main-content">
+                <!-- Welcome Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="user-info">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-1">
+                                        <i class="bx bx-tv me-2"></i>Device Monitoring
+                                    </h4>
+                                    <p class="mb-0 opacity-75">
+                                        <i class="bx bx-user-circle me-1"></i>Technician: <%= technician.name %> | 
+                                        <i class="bx bx-briefcase me-1"></i>Role: <%= technician.role || 'Technician' %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-3">
+                            <h5>Loading device data...</h5>
+                            <p class="text-muted">Please wait while we fetch the latest information</p>
+                        </div>
+                    </div>
+                </div>
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon primary me-3">
+                            <i class="bx bx-devices"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Total Devices</h6>
+                            <h4 class="mb-0" id="totalDevices">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon success me-3">
+                            <i class="bx bx-wifi"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Online</h6>
+                            <h4 class="mb-0" id="onlineDevices">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon warning me-3">
+                            <i class="bx bx-wifi-off"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Offline</h6>
+                            <h4 class="mb-0" id="offlineDevices">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stats-icon info me-3">
+                            <i class="bx bx-time"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Last Update</h6>
+                            <h6 class="mb-0" id="lastUpdate">-</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row align-items-center">
+                <div class="col-md-3 mb-2">
+                    <label for="statusFilter" class="form-label">Filter Status:</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="searchInput" class="form-label">Search:</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search device...">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button class="btn refresh-btn" onclick="loadDeviceData()">
+                            <i class="bx bx-refresh"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh">
+                            <label class="form-check-label" for="autoRefresh">
+                                Auto Refresh (30s)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Device Table -->
+        <div class="device-table">
+            <h5 class="table-header">
+                <i class="bx bx-list-ul me-2"></i>Device List
+            </h5>
+            <div class="table-responsive">
+                <table id="deviceTable" class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Device ID</th>
+                            <th>Serial Number</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Last Inform</th>
+                            <th>PPPoE Username</th>
+                            <th>RX Power</th>
+                            <th>SSID</th>
+                            <th>User Connected</th>
+                            <th>Tag</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <%- include('partials/mobile-navbar', { currentPage: 'dashboard' }) %>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        let deviceTable;
+        let autoRefreshInterval;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initDataTable();
+            loadDeviceData();
+            setupEventListeners();
+        });
+        
+        // Initialize DataTable
+        function initDataTable() {
+            deviceTable = $('#deviceTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[4, 'desc']], // Sort by Last Inform
+                columnDefs: [
+                    { orderable: false, targets: 7 } // Actions column
+                ],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
+                    }
+                }
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Status filter
+            $('#statusFilter').on('change', function() {
+                const status = $(this).val();
+                if (status === '') {
+                    deviceTable.search('').draw();
+                } else {
+                    deviceTable.column(3).search(status, true, false).draw();
+                }
+            });
+            
+            // Search input
+            $('#searchInput').on('keyup', function() {
+                deviceTable.search(this.value).draw();
+            });
+            
+            // Auto refresh toggle
+            $('#autoRefresh').on('change', function() {
+                if (this.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+            });
+        }
+        
+        // Load device data
+        async function loadDeviceData() {
+            try {
+                showLoading();
+                
+                const response = await fetch('/technician/api/monitoring-data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStatistics(data.statistics);
+                    updateDeviceTable(data.devices);
+                    updateLastUpdateTime();
+                } else {
+                    console.error('Failed to load device data:', data.message);
+                    showError('Failed to load device data');
+                }
+            } catch (error) {
+                console.error('Error loading device data:', error);
+                showError('Error loading device data');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Update statistics
+        function updateStatistics(stats) {
+            document.getElementById('totalDevices').textContent = stats.total || 0;
+            document.getElementById('onlineDevices').textContent = stats.online || 0;
+            document.getElementById('offlineDevices').textContent = stats.offline || 0;
+        }
+        
+        // Update device table
+        function updateDeviceTable(devices) {
+            const tbody = document.getElementById('deviceTableBody');
+            tbody.innerHTML = '';
+            
+            devices.forEach((device, index) => {
+                const row = createDeviceRow(device, index);
+                tbody.appendChild(row);
+            });
+            
+            // Refresh DataTable
+            deviceTable.clear().rows.add($('#deviceTableBody tr')).draw();
+        }
+        
+        // Create device row
+        function createDeviceRow(device, index) {
+            const row = document.createElement('tr');
+            
+            // Determine status and class
+            const isOnline = device.isOnline || device.status === 'Online';
+            const statusBadge = isOnline ? 
+                '<span class="status-badge status-online">Online</span>' : 
+                '<span class="status-badge status-offline">Offline</span>';
+            
+            // Format last inform
+            const lastInform = device.lastInformFormatted || (device.lastInform ? 
+                new Date(device.lastInform).toLocaleString('id-ID') : 
+                'Never');
+            
+            // Format RX Power
+            const rxPower = device.rxPower && device.rxPower !== 'N/A' ? 
+                `${device.rxPower} dBm` : 
+                'N/A';
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td><strong>${device._id || device.id || 'N/A'}</strong></td>
+                <td>${device.serialNumber || 'N/A'}</td>
+                <td>${device.model || 'N/A'}</td>
+                <td>${statusBadge}</td>
+                <td>${lastInform}</td>
+                <td>${device.pppoeUsername || device.username || 'N/A'}</td>
+                <td>${rxPower}</td>
+                <td>${device.ssid || 'N/A'}</td>
+                <td>${device.userConnected || 'N/A'}</td>
+                <td>${device.tag || 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showDeviceDetails('${device._id || device.id}')">
+                        <i class="bx bx-info-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="pingDevice('${device._id || device.id}')">
+                        <i class="bx bx-wifi"></i>
+                    </button>
+                </td>
+            `;
+            
+            return row;
+        }
+        
+        // Show device details
+        function showDeviceDetails(deviceId) {
+            // Find device data
+            const device = window.currentDevices?.find(d => d._id === deviceId);
+            if (!device) return;
+            
+            const detailsHtml = `
+                <div class="device-info-popup">
+                    <h6><i class="bx bx-info-circle me-2"></i>Device Details</h6>
+                    <hr>
+                    <p><strong>Device ID:</strong> ${device._id || 'N/A'}</p>
+                    <p><strong>Serial Number:</strong> ${device.serialNumber || 'N/A'}</p>
+                    <p><strong>Model:</strong> ${device.model || 'N/A'}</p>
+                    <p><strong>Status:</strong> ${device.isOnline ? 'Online' : 'Offline'}</p>
+                    <p><strong>Last Inform:</strong> ${device.lastInform ? new Date(device.lastInform).toLocaleString('id-ID') : 'Never'}</p>
+                    <p><strong>Username:</strong> ${device.username || 'N/A'}</p>
+                    <p><strong>RX Power:</strong> ${device.rxPower || 'N/A'} dBm</p>
+                    <p><strong>SSID:</strong> ${device.ssid || 'N/A'}</p>
+                </div>
+            `;
+            
+            // Show in modal or popup
+            showModal('Device Details', detailsHtml);
+        }
+        
+        // Ping device
+        function pingDevice(deviceId) {
+            showToast('info', 'Pinging Device', `Sending ping to device ${deviceId}...`);
+            
+            // Simulate ping (replace with actual API call)
+            setTimeout(() => {
+                showToast('success', 'Ping Success', `Device ${deviceId} responded successfully`);
+            }, 2000);
+        }
+        
+        // Show modal
+        function showModal(title, content) {
+            const modalHtml = `
+                <div class="modal fade" id="infoModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                ${content}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal
+            const existingModal = document.getElementById('infoModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add new modal
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+            modal.show();
+        }
+        
+        // Show toast notification
+        function showToast(type, title, message) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}:</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Add toast to container
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            // Show toast
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            
+            // Remove toast after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        // Show error
+        function showError(message) {
+            showToast('danger', 'Error', message);
+        }
+        
+        // Update last update time
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('id-ID');
+        }
+        
+        // Start auto refresh
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing interval
+            autoRefreshInterval = setInterval(loadDeviceData, 30000); // 30 seconds
+            showToast('info', 'Auto Refresh', 'Auto refresh enabled (30s interval)');
+        }
+        
+        // Stop auto refresh
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                showToast('info', 'Auto Refresh', 'Auto refresh disabled');
+            }
+        }
+    </script>
+</body>
+</html>
