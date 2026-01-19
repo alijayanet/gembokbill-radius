@@ -99,56 +99,19 @@ cd gembokbill-radius
 npm install
 ```
 
-### 3. Configure RADIUS Server
+### 3. Install and Configure RADIUS Server
 
-#### Install FreeRADIUS (Ubuntu/Debian)
 ```bash
-sudo apt-get update
-sudo apt-get install freeradius freeradius-mysql freeradius-utils
+sudo bash install-freeradius.sh
 ```
 
-#### Configure FreeRADIUS Database
-```bash
-# Create RADIUS database
-mysql -u root -p -e "CREATE DATABASE radius;"
+Script ini akan otomatis:
+- Install FreeRADIUS dan dependencies
+- Configure database MySQL
+- Setup FreeRADIUS configuration
+- Start dan enable FreeRADIUS service
 
-# Import FreeRADIUS schema
-mysql -u root -p radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
-```
-
-#### Configure FreeRADIUS Settings
-Edit `/etc/freeradius/3.0/mods-config/sql/main/mysql/authorize`:
-```sql
-authorize_check_query = "\
-    SELECT id, username, attribute, value, op \
-    FROM ${authcheck_table} \
-    WHERE username = '%{SQL-User-Name}' \
-    ORDER BY id"
-```
-
-Edit `/etc/freeradius/3.0/mods-config/sql/main/mysql/accounting`:
-```sql
-accounting_update_query = "\
-    UPDATE ${accounting_table} \
-    SET \
-        acctinputoctets = '%{%{Acct-Input-Octets}:-0}' + COALESCE(acctinputoctets, 0), \
-        acctoutputoctets = '%{%{Acct-Output-Octets}:-0}' + COALESCE(acctoutputoctets, 0), \
-        acctsessiontime = '%{Acct-Session-Time:-0}', \
-        acctterminatecause = '%{Acct-Terminate-Cause}', \
-        acctstopdelay = '%{%{Acct-Delay-Time:-0}}', \
-        acctstoptime = FROM_UNIXTIME('%{Acct-Stop-Time:-%s}'), \
-        acctupdatecause = 'Queue' \
-    WHERE acctuniqueid = '%{Acct-Unique-Session-Id}' \
-    AND username = '%{SQL-User-Name}' \
-    AND acctstarttime <= FROM_UNIXTIME('%{Acct-Session-Time:-%s}')"
-```
-
-#### Start FreeRADIUS
-```bash
-sudo systemctl restart freeradius
-sudo systemctl enable freeradius
-sudo systemctl status freeradius
-```
+Untuk detail konfigurasi manual, lihat `FREERADIUS_SETUP.md`
 
 ### 4. Configure Application Settings
 
