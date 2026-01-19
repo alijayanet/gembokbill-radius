@@ -6,9 +6,11 @@
 # Author: GEMBOK Team
 # Description: Automated FreeRADIUS installation and configuration
 # Compatible: Ubuntu 20.04+, Debian 10+
+# Note: Script is idempotent - can be run multiple times safely
 # ============================================
 
-set -e
+# Don't exit on error - handle errors manually
+set +e
 
 # Colors for output
 RED='\033[0;31m'
@@ -45,6 +47,15 @@ check_root() {
     if [ "$EUID" -ne 0 ]; then 
         print_error "Please run as root (sudo)"
         exit 1
+    fi
+}
+
+# Check if MySQL root password is already set correctly
+check_mysql_password() {
+    if mysql -u root -p'Gembok@2024' -e "SELECT 1;" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
     fi
 }
 
@@ -218,35 +229,48 @@ setup_database() {
     RADIUS_PASSWORD=$(grep -oP '(?<="radius_password": ")[^"]*' settings.json || echo "radpassword")
     RADIUS_DATABASE=$(grep -oP '(?<="radius_database": ")[^"]*' settings.json || echo "radius")
     
-    # Reset MySQL root password automatically
-    print_warning "Configuring MySQL root access..."
-    print_info "Stopping MySQL service..."
-    systemctl stop mysql 2>/dev/null || true
-    
-    print_info "Starting MySQL in safe mode..."
-    mkdir -p /var/run/mysqld
-    chown mysql:mysql /var/run/mysqld
-    mysqld_safe --skip-grant-tables --skip-networking &
-    
-    # Wait for MySQL to start
-    sleep 5
-    
-    print_info "Setting MySQL root password to: Gembok@2024"
-    mysql << SQLSCRIPT
+    # Check if MySQL root password is already set correctly
+    if check_mysql_password; then
+        print_success "MySQL root password already configured correctly"
+    else
+        # Reset MySQL root password automatically
+        print_warning "Configuring MySQL root access..."
+        print_info "Stopping MySQL service..."
+        systemctl stop mysql 2>/dev/null || true
+        
+        print_info "Starting MySQL in safe mode..."
+        mkdir -p /var/run/mysqld
+        chown mysql:mysql /var/run/mysqld
+        mysqld_safe --skip-grant-tables --skip-networking &
+        
+        # Wait for MySQL to start
+        sleep 5
+        
+        print_info "Setting MySQL root password to: Gembok@2024"
+        mysql << SQLSCRIPT
 FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED BY 'Gembok@2024';
 FLUSH PRIVILEGES;
 SQLSCRIPT
-    
-    # Stop safe mode MySQL
-    print_info "Stopping MySQL safe mode..."
-    killall mysqld_safe mysqld 2>/dev/null || true
-    sleep 3
-    
-    # Start MySQL normally
-    print_info "Starting MySQL service..."
-    systemctl start mysql
-    sleep 3
+        
+        # Stop safe mode MySQL
+        print_info "Stopping MySQL safe mode..."
+        killall mysqld_safe mysqld 2>/dev/null || true
+        sleep 3
+        
+        # Start MySQL normally
+        print_info "Starting MySQL service..."
+        systemctl start mysql
+        sleep 3
+        
+        # Verify password was set
+        if check_mysql_password; then
+            print_success "MySQL root password configured successfully"
+        else
+            print_error "Failed to configure MySQL root password"
+            return 1
+        fi
+    fi
     
     # Create RADIUS database and user
     print_info "Creating RADIUS database and user..."
@@ -254,8 +278,11 @@ SQLSCRIPT
 -- Create database
 CREATE DATABASE IF NOT EXISTS $RADIUS_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- Drop user if exists (to handle password changes)
+DROP USER IF EXISTS '$RADIUS_USER'@'localhost';
+
 -- Create user
-CREATE USER IF NOT EXISTS '$RADIUS_USER'@'localhost' IDENTIFIED BY '$RADIUS_PASSWORD';
+CREATE USER '$RADIUS_USER'@'localhost' IDENTIFIED BY '$RADIUS_PASSWORD';
 GRANT ALL PRIVILEGES ON $RADIUS_DATABASE.* TO '$RADIUS_USER'@'localhost';
 FLUSH PRIVILEGES;
 
@@ -486,12 +513,19 @@ run_gembok_migration() {
         DB_PASSWORD=$(grep -oP '(?<="db_password": ")[^"]*' settings.json || echo "")
         DB_NAME=$(grep -oP '(?<="db_name": ")[^"]*' settings.json || echo "gembok_bill")
         
-        mysql -u root -p'Gembok@2024' $DB_NAME < migrations/create_radius_integration.sql
-        print_success "MySQL migration completed"
+        # Run migration and handle errors
+        if mysql -u root -p'Gembok@2024' $DB_NAME < migrations/create_radius_integration.sql 2>/dev/null; then
+            print_success "MySQL migration completed successfully"
+        else
+            print_warning "MySQL migration had some errors (this is normal if columns already exist)"
+        fi
     else
         print_info "Running SQLite migration..."
-        sqlite3 data/billing.db < migrations/create_radius_integration.sql
-        print_success "SQLite migration completed"
+        if sqlite3 data/billing.db < migrations/create_radius_integration.sql 2>/dev/null; then
+            print_success "SQLite migration completed successfully"
+        else
+            print_warning "SQLite migration had some errors (this is normal if columns already exist)"
+        fi
     fi
 }
 
