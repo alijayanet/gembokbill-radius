@@ -228,10 +228,12 @@ router.post('/sync-customer/:customerId', async (req, res) => {
 
         const customerId = req.params.customerId;
 
-        const [customers] = await db.query(
+        const customerResult = await db.query(
             'SELECT * FROM customers WHERE id = ?',
             [customerId]
         );
+
+        const customers = Array.isArray(customerResult) ? customerResult : [];
 
         if (customers.length === 0) {
             return res.status(404).json({ success: false, message: 'Customer not found' });
@@ -247,20 +249,37 @@ router.post('/sync-customer/:customerId', async (req, res) => {
         const radiusPassword = customer.radius_password;
 
         if (!radiusUsername || !radiusPassword) {
-            return res.status(400).json({ success: false, message: 'RADIUS username or password not set' });
+            return res.status(400).json({ success: false, message: 'RADIUS username or password not set for this customer' });
         }
 
-        let attributes = {};
+        const attributes = {};
+        if (customer.radius_profile_id) {
+            const profileResult = await db.query(
+                'SELECT * FROM radius_profiles WHERE id = ? AND is_active = 1',
+                [customer.radius_profile_id]
+            );
+
+            const profiles = Array.isArray(profileResult) ? profileResult : [];
+            if (profiles.length > 0) {
+                const profile = profiles[0];
+                attributes['Mikrotik-Rate-Limit'] = profile.rate_limit || `${profile.download_speed}/${profile.upload_speed}`;
+                if (profile.burst_limit) {
+                    attributes['Mikrotik-Burst-Limit'] = profile.burst_limit;
+                }
+            }
+        }
+
+        let attributesFromCustomer = {};
 
         if (customer.radius_attributes) {
             try {
-                attributes = JSON.parse(customer.radius_attributes);
+                attributesFromCustomer = JSON.parse(customer.radius_attributes);
             } catch (e) {
                 logger.error(`Error parsing radius_attributes: ${e.message}`);
             }
         }
 
-        const result = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
+        const result = await radius.addRadiusUser(radiusUsername, radiusPassword, { ...attributes, ...attributesFromCustomer });
 
         if (result.success) {
             await db.query(
@@ -282,9 +301,11 @@ router.post('/sync-all-customers', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [customers] = await db.query(
+        const customersResult = await db.query(
             'SELECT * FROM customers WHERE radius_enabled = 1 AND (radius_username IS NOT NULL OR pppoe_username IS NOT NULL) AND radius_password IS NOT NULL'
         );
+
+        const customers = Array.isArray(customersResult) ? customersResult : [];
 
         let successCount = 0;
         let failureCount = 0;
@@ -304,13 +325,13 @@ router.post('/sync-all-customers', async (req, res) => {
                     }
                 }
 
-                const result = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
+                const syncResult = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
 
-                if (result.success) {
+                if (syncResult.success) {
                     successCount++;
                 } else {
                     failureCount++;
-                    errors.push({ customer: customer.username, error: result.message });
+                    errors.push({ customer: customer.username, error: syncResult.message });
                 }
             } catch (error) {
                 failureCount++;
@@ -616,9 +637,13 @@ router.get('/clients', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [clients] = await db.query(
+        const result = await db.query(
             'SELECT * FROM radius_clients ORDER BY created_at DESC'
         );
+
+        // Get clients array from result - db.query() returns rows directly
+        const clients = Array.isArray(result) ? result : [];
+
         res.json({ success: true, clients });
     } catch (error) {
         logger.error(`Error getting RADIUS clients: ${error.message}`);
@@ -640,20 +665,20 @@ router.post('/clients', async (req, res) => {
 
         // Check if IP address already exists
         try {
-            const result = await db.query(
+            const checkResult = await db.query(
                 'SELECT id, name FROM radius_clients WHERE ipaddr = ?',
                 [ipaddr]
             );
 
             // Debug logging
-            logger.info(`Checking IP ${ipaddr}, result:`, JSON.stringify(result));
+            logger.info(`Checking IP ${ipaddr}, result:`, JSON.stringify(checkResult));
 
             // Check if result exists and has data
-            if (result && result[0] && result[0].length > 0) {
+            if (checkResult && checkResult.length > 0) {
                 return res.status(409).json({
                     success: false,
-                    message: `IP address ${ipaddr} already exists as client "${result[0][0].name}". Please delete the existing client first or use a different IP address.`,
-                    existingClient: result[0][0]
+                    message: `IP address ${ipaddr} already exists as client "${checkResult[0].name}". Please delete the existing client first or use a different IP address.`,
+                    existingClient: checkResult[0]
                 });
             }
         } catch (queryError) {
@@ -661,12 +686,12 @@ router.post('/clients', async (req, res) => {
             // Continue with insert even if check fails
         }
 
-        const [result] = await db.query(
+        const insertResult = await db.query(
             'INSERT INTO radius_clients (name, ipaddr, secret, shortname, nas_type) VALUES (?, ?, ?, ?, ?)',
             [name, ipaddr, secret, shortname || name, nas_type || 'other']
         );
 
-        res.json({ success: true, message: 'RADIUS client added successfully', id: result.insertId });
+        res.json({ success: true, message: 'RADIUS client added successfully', id: insertResult.insertId });
     } catch (error) {
         logger.error(`Error adding RADIUS client: ${error.message}`);
         
@@ -691,12 +716,12 @@ router.put('/clients/:id', async (req, res) => {
         const id = req.params.id;
         const { name, ipaddr, secret, shortname, nas_type, is_active } = req.body;
 
-        const [result] = await db.query(
+        const updateResult = await db.query(
             'UPDATE radius_clients SET name = ?, ipaddr = ?, secret = ?, shortname = ?, nas_type = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
             [name, ipaddr, secret, shortname, nas_type, is_active !== undefined ? (is_active ? 1 : 0) : 1, id]
         );
 
-        if (result.affectedRows === 0) {
+        if (updateResult.changes === 0) {
             return res.status(404).json({ success: false, message: 'Client not found' });
         }
 
@@ -715,9 +740,9 @@ router.delete('/clients/:id', async (req, res) => {
 
         const id = req.params.id;
 
-        const [result] = await db.query('DELETE FROM radius_clients WHERE id = ?', [id]);
+        const deleteResult = await db.query('DELETE FROM radius_clients WHERE id = ?', [id]);
 
-        if (result.affectedRows === 0) {
+        if (deleteResult.changes === 0) {
             return res.status(404).json({ success: false, message: 'Client not found' });
         }
 
@@ -795,9 +820,11 @@ router.get('/clients/diagnostic', async (req, res) => {
         }
 
         // Get all clients
-        const [clients] = await db.query(
+        const clientsResult = await db.query(
             'SELECT id, name, ipaddr, secret, shortname, nas_type, is_active, created_at FROM radius_clients ORDER BY id'
         );
+
+        const clients = Array.isArray(clientsResult) ? clientsResult : [];
 
         res.json({ success: true, clients, count: clients.length });
     } catch (error) {
