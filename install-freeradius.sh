@@ -277,8 +277,17 @@ EOF
 
 # Setup MySQL database
 setup_database() {
+    # Check database type from settings.json
+    DB_TYPE=$(grep -oP '(?<="db_type": ")[^"]*' settings.json || echo "sqlite")
+
+    # Skip MySQL setup if using SQLite
+    if [ "$DB_TYPE" != "mysql" ]; then
+        print_info "SQLite mode detected - skipping MySQL database setup"
+        return 0
+    fi
+
     print_header "Setting up MySQL Database"
-    
+
     # Check if MySQL is installed
     if ! command -v mysql &> /dev/null; then
         print_warning "MySQL not found. Installing MySQL..."
