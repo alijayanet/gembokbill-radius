@@ -495,35 +495,61 @@ EOF
 run_gembok_migration() {
     print_header "Running Gembok Bill Database Migration"
     
-    # Cek apakah file migration ada
-    if [ ! -f "migrations/create_radius_integration.sql" ]; then
-        print_warning "Migration file not found, skipping..."
-        return 0
-    fi
-    
     # Tentukan database type dari settings.json
     DB_TYPE=$(grep -oP '(?<="db_type": ")[^"]*' settings.json || echo "sqlite")
     
-    if [ "$DB_TYPE" = "mysql" ]; then
-        print_info "Running MySQL migration..."
-        DB_HOST=$(grep -oP '(?<="db_host": ")[^"]*' settings.json || echo "localhost")
-        DB_USER=$(grep -oP '(?<="db_user": ")[^"]*' settings.json || echo "root")
-        DB_PASSWORD=$(grep -oP '(?<="db_password": ")[^"]*' settings.json || echo "")
-        DB_NAME=$(grep -oP '(?<="db_name": ")[^"]*' settings.json || echo "gembok_bill")
-        
-        # Run migration and handle errors
-        if mysql -u root -p'Gembok@2024' $DB_NAME < migrations/create_radius_integration.sql 2>/dev/null; then
-            print_success "MySQL migration completed successfully"
+    # Run create_radius_integration.sql
+    if [ -f "migrations/create_radius_integration.sql" ]; then
+        print_info "Running RADIUS integration migration..."
+        if [ "$DB_TYPE" = "mysql" ]; then
+            print_info "Running MySQL migration..."
+            DB_HOST=$(grep -oP '(?<="db_host": ")[^"]*' settings.json || echo "localhost")
+            DB_USER=$(grep -oP '(?<="db_user": ")[^"]*' settings.json || echo "root")
+            DB_PASSWORD=$(grep -oP '(?<="db_password": ")[^"]*' settings.json || echo "")
+            DB_NAME=$(grep -oP '(?<="db_name": ")[^"]*' settings.json || echo "gembok_bill")
+            
+            if mysql -u root -p'Gembok@2024' $DB_NAME < migrations/create_radius_integration.sql 2>/dev/null; then
+                print_success "MySQL RADIUS integration migration completed successfully"
+            else
+                print_warning "MySQL migration had some errors (this is normal if columns already exist)"
+            fi
         else
-            print_warning "MySQL migration had some errors (this is normal if columns already exist)"
+            print_info "Running SQLite migration..."
+            if sqlite3 data/billing.db < migrations/create_radius_integration.sql 2>/dev/null; then
+                print_success "SQLite RADIUS integration migration completed successfully"
+            else
+                print_warning "SQLite migration had some errors (this is normal if columns already exist)"
+            fi
         fi
     else
-        print_info "Running SQLite migration..."
-        if sqlite3 data/billing.db < migrations/create_radius_integration.sql 2>/dev/null; then
-            print_success "SQLite migration completed successfully"
+        print_warning "Migration file create_radius_integration.sql not found, skipping..."
+    fi
+    
+    # Run create_radius_clients_table.sql
+    if [ -f "migrations/create_radius_clients_table.sql" ]; then
+        print_info "Running RADIUS clients table migration..."
+        if [ "$DB_TYPE" = "mysql" ]; then
+            print_info "Running MySQL migration..."
+            DB_HOST=$(grep -oP '(?<="db_host": ")[^"]*' settings.json || echo "localhost")
+            DB_USER=$(grep -oP '(?<="db_user": ")[^"]*' settings.json || echo "root")
+            DB_PASSWORD=$(grep -oP '(?<="db_password": ")[^"]*' settings.json || echo "")
+            DB_NAME=$(grep -oP '(?<="db_name": ")[^"]*' settings.json || echo "gembok_bill")
+            
+            if mysql -u root -p'Gembok@2024' $DB_NAME < migrations/create_radius_clients_table.sql 2>/dev/null; then
+                print_success "MySQL RADIUS clients table migration completed successfully"
+            else
+                print_warning "MySQL migration had some errors (this is normal if table already exists)"
+            fi
         else
-            print_warning "SQLite migration had some errors (this is normal if columns already exist)"
+            print_info "Running SQLite migration..."
+            if sqlite3 data/billing.db < migrations/create_radius_clients_table.sql 2>/dev/null; then
+                print_success "SQLite RADIUS clients table migration completed successfully"
+            else
+                print_warning "SQLite migration had some errors (this is normal if table already exists)"
+            fi
         fi
+    else
+        print_warning "Migration file create_radius_clients_table.sql not found, skipping..."
     fi
 }
 
