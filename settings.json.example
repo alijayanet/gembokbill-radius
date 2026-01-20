@@ -1,0 +1,49 @@
+{
+  "app_name": "Gembok Bill",
+  "app_version": "2.2.0",
+  "port": 4555,
+  "host": "0.0.0.0",
+
+  "database": {
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "Gembok@2024",
+    "name": "gembok_bill"
+  },
+
+  "radius": {
+    "host": "localhost",
+    "port": 1812,
+    "secret": "testing123",
+    "enabled": true
+  },
+
+  "radius_host": "localhost",
+  "radius_user": "radius",
+  "radius_password": "radpassword",
+  "radius_database": "radius",
+  "isolir_radius_group": "isolir",
+  "suspension_bandwidth_limit": "1k/1k",
+
+  "admin": {
+    "username": "admin",
+    "password": "admin123"
+  },
+
+  "session": {
+    "secret": "gembok-bill-secret-key-change-in-production",
+    "maxAge": 86400000
+  },
+
+  "logging": {
+    "level": "info",
+    "file": "logs/app.log"
+  },
+
+  "hotspot": {
+    "enabled": true,
+    "check_interval": 60000
+  }
+}

@@ -78,7 +78,7 @@ SETLID admin123
 
 - **Node.js** >= 20.0.0
 - **npm** >= 6.0.0
-- **Database** SQLite (for development) or MySQL (for production)
+- **Database** MySQL (for production)
 - **FreeRADIUS** >= 3.0 (for RADIUS authentication)
 - **WhatsApp Business Access** (for WhatsApp Gateway features)
 - **Mikrotik RouterOS** >= 6.x (for network management)
@@ -89,8 +89,6 @@ SETLID admin123
 ### 1. Clone Repository
 ```bash
 git clone https://github.com/alijayanet/gembokbill-radius.git
-```
-```bash
 cd gembokbill-radius
 ```
 
@@ -99,7 +97,43 @@ cd gembokbill-radius
 npm install
 ```
 
-### 3. Install and Configure RADIUS Server
+### 3. Configure Database (MySQL Recommended)
+
+#### Option A: MySQL (Recommended for Production)
+
+Copy and edit the settings file:
+```bash
+cp settings.json.example settings.json
+nano settings.json
+```
+
+Update the database configuration:
+```json
+{
+  "database": {
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "Gembok@2024",
+    "name": "gembok_bill"
+  }
+}
+```
+
+#### Option B: SQLite (Development Only)
+
+For development, you can use SQLite (default):
+```json
+{
+  "database": {
+    "type": "sqlite",
+    "path": "./data/billing.db"
+  }
+}
+```
+
+### 4. Install and Configure RADIUS Server
 
 ```bash
 sudo bash install-freeradius.sh
@@ -107,9 +141,24 @@ sudo bash install-freeradius.sh
 
 Script ini akan otomatis:
 - Install FreeRADIUS dan dependencies
-- Configure database MySQL
+- Install dan configure MySQL (jika dipilih)
+- Configure database MySQL untuk RADIUS
 - Setup FreeRADIUS configuration
+- Migrate data dari SQLite ke MySQL (jika diperlukan)
 - Start dan enable FreeRADIUS service
+
+**Untuk migrasi dari SQLite ke MySQL:**
+
+Jika Anda sudah punya data di SQLite dan ingin migrate ke MySQL:
+
+```bash
+# Update settings.json untuk menggunakan MySQL
+# Lalu jalankan install script
+sudo bash install-freeradius.sh
+
+# Script akan menawarkan opsi untuk migrate data dari SQLite ke MySQL
+# Pilih 'y' untuk melanjutkan migrasi
+```
 
 Untuk detail konfigurasi manual, lihat `FREERADIUS_SETUP.md`
 
