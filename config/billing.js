@@ -1870,13 +1870,54 @@ class BillingManager {
         return new Promise((resolve, reject) => {
             // First get the invoice details before deleting
             this.getInvoiceById(id).then(invoice => {
-                const sql = `DELETE FROM invoices WHERE id = ?`;
-                this.db.run(sql, [id], function (err) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(invoice);
-                    }
+                // Use a transaction to delete related records first
+                this.db.serialize(() => {
+                    this.db.run('BEGIN TRANSACTION', (err) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        // Delete related records in order
+                        const deleteRelated = [
+                            'DELETE FROM payment_gateway_transactions WHERE invoice_id = ?',
+                            'DELETE FROM payments WHERE invoice_id = ?',
+                            'DELETE FROM collector_payments WHERE invoice_id = ?',
+                            'DELETE FROM agent_commissions WHERE invoice_id = ?',
+                            'DELETE FROM agent_payments WHERE invoice_id = ?',
+                            'DELETE FROM invoice_items WHERE invoice_id = ?',
+                            'DELETE FROM invoices WHERE id = ?'
+                        ];
+
+                        let currentIndex = 0;
+
+                        const executeDelete = () => {
+                            if (currentIndex >= deleteRelated.length) {
+                                // All deletions done, commit
+                                this.db.run('COMMIT', (commitErr) => {
+                                    if (commitErr) {
+                                        this.db.run('ROLLBACK');
+                                        reject(commitErr);
+                                    } else {
+                                        resolve(invoice);
+                                    }
+                                });
+                                return;
+                            }
+
+                            this.db.run(deleteRelated[currentIndex], [id], (err) => {
+                                if (err) {
+                                    this.db.run('ROLLBACK');
+                                    reject(err);
+                                } else {
+                                    currentIndex++;
+                                    executeDelete();
+                                }
+                            });
+                        };
+
+                        executeDelete();
+                    });
                 });
             }).catch(reject);
         });
