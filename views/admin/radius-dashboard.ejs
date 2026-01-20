@@ -415,6 +415,13 @@
                     <input type="password" class="form-input" id="password" required>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">RADIUS Profile</label>
+                    <select class="form-input" id="profileId">
+                        <option value="">-- Select Profile --</option>
+                    </select>
+                    <small class="form-text text-muted">Select bandwidth profile for this user</small>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Framed-IP-Address (Optional)</label>
                     <input type="text" class="form-input" id="framedIP" placeholder="e.g., 192.168.1.100">
                 </div>
@@ -576,6 +583,7 @@
 
         function openAddUserModal() {
             $('#addUserModal').css('display', 'flex');
+            loadProfilesForDropdown();
         }
 
         function openAddProfileModal() {
@@ -1081,10 +1089,28 @@
             }
         }
 
+        async function loadProfilesForDropdown() {
+            try {
+                const response = await fetch('/admin/radius/profiles');
+                const result = await response.json();
+                if (result.success && result.profiles) {
+                    const dropdown = $('#profileId');
+                    dropdown.empty();
+                    dropdown.append('<option value="">-- Select Profile --</option>');
+                    result.profiles.forEach(profile => {
+                        dropdown.append(`<option value="${profile.id}">${profile.name} (${profile.download_speed}/${profile.upload_speed})</option>`);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading profiles:', error);
+            }
+        }
+
         $('#addUserForm').on('submit', async function(e) {
             e.preventDefault();
             const username = $('#username').val();
             const password = $('#password').val();
+            const profileId = $('#profileId').val();
             const framedIP = $('#framedIP').val();
             const framedPool = $('#framedPool').val();
 
@@ -1098,7 +1124,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, password, attributes })
+                    body: JSON.stringify({ username, password, profile_id: profileId, attributes })
                 });
                 const result = await response.json();
                 if (result.success) {

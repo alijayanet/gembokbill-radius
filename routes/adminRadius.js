@@ -83,10 +83,33 @@ router.post('/users', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const { username, password, attributes = {} } = req.body;
+        const { username, password, profile_id, attributes = {} } = req.body;
 
         if (!username || !password) {
             return res.status(400).json({ success: false, message: 'Username and password are required' });
+        }
+
+        // If profile_id is provided, fetch profile and add its attributes
+        if (profile_id) {
+            try {
+                const profile = await new Promise((resolve, reject) => {
+                    db.get('SELECT * FROM radius_profiles WHERE id = ? AND is_active = 1', [profile_id], (err, row) => {
+                        if (err) reject(err);
+                        else resolve(row);
+                    });
+                });
+
+                if (profile) {
+                    // Add profile attributes
+                    attributes['Mikrotik-Rate-Limit'] = profile.rate_limit || `${profile.download_speed}/${profile.upload_speed}`;
+                    if (profile.burst_limit) {
+                        attributes['Mikrotik-Burst-Limit'] = profile.burst_limit;
+                    }
+                    logger.info(`Applied profile "${profile.name}" to user "${username}"`);
+                }
+            } catch (error) {
+                logger.error(`Error fetching profile: ${error.message}`);
+            }
         }
 
         const result = await radius.addRadiusUser(username, password, attributes);
