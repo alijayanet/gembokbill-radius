@@ -269,6 +269,35 @@
 
         <div class="card">
             <div class="card-header">
+                <h2 class="card-title">RADIUS Clients (Mikrotik/Routers)</h2>
+                <div>
+                    <button class="btn btn-success" onclick="openAddClientModal()">
+                        <i class="fas fa-plus"></i> Add Client
+                    </button>
+                    <button class="btn btn-primary" onclick="generateClientsConfig()">
+                        <i class="fas fa-sync"></i> Generate Config
+                    </button>
+                </div>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>IP Address</th>
+                        <th>Secret</th>
+                        <th>Shortname</th>
+                        <th>NAS Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="clientsTable">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
                 <h2 class="card-title">RADIUS Users</h2>
                 <button class="btn btn-primary" onclick="openAddUserModal()">
                     <i class="fas fa-plus"></i> Add User
@@ -506,6 +535,58 @@
         </div>
     </div>
 
+    <div id="addClientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add RADIUS Client</h3>
+                <button class="close-btn" onclick="closeModal('addClientModal')">&times;</button>
+            </div>
+            <form id="addClientForm">
+                <div class="form-group">
+                    <label class="form-label">Client Name</label>
+                    <input type="text" class="form-input" id="clientName" required placeholder="e.g., mikrotik-main">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">IP Address</label>
+                    <input type="text" class="form-input" id="clientIpaddr" required placeholder="e.g., 192.168.1.1">
+                    <small class="form-text text-muted">IP address or network (e.g., 192.168.1.0/24)</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RADIUS Secret</label>
+                    <input type="text" class="form-input" id="clientSecret" required placeholder="e.g., gembokbill-radius">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Shortname</label>
+                    <input type="text" class="form-input" id="clientShortname" placeholder="e.g., mikrotik">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">NAS Type</label>
+                    <select class="form-input" id="clientNasType">
+                        <option value="other">Other</option>
+                        <option value="cisco">Cisco</option>
+                        <option value="mikrotik">Mikrotik</option>
+                        <option value="livingston">Livingston</option>
+                        <option value="computon">Computon</option>
+                        <option value="max40xx">Max40xx</option>
+                        <option value="multitech">Multitech</option>
+                        <option value="usrhiper">USRhiper</option>
+                        <option value="portslave">Portslave</option>
+                        <option value="tc">Total Control</option>
+                        <option value="pathras">Pathras</option>
+                        <option value="ascend">Ascend</option>
+                        <option value="shiva">Shiva</option>
+                        <option value="apc">APC</option>
+                        <option value="tnt">TNT</option>
+                        <option value="cisco_vpn3000">Cisco VPN 3000</option>
+                        <option value="cisco_vpn5000">Cisco VPN 5000</option>
+                        <option value="cisco_asa">Cisco ASA</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Client</button>
+            </form>
+        </div>
+    </div>
+
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -584,6 +665,10 @@
         function openAddUserModal() {
             $('#addUserModal').css('display', 'flex');
             loadProfilesForDropdown();
+        }
+
+        function openAddClientModal() {
+            $('#addClientModal').css('display', 'flex');
         }
 
         function openAddProfileModal() {
@@ -1106,6 +1191,110 @@
             }
         }
 
+        async function loadClients() {
+            try {
+                const response = await fetch('/admin/radius/clients');
+                const result = await response.json();
+                if (result.success && result.clients) {
+                    const tbody = $('#clientsTable');
+                    tbody.empty();
+                    result.clients.forEach(client => {
+                        const statusBadge = client.is_active 
+                            ? '<span class="status-badge status-connected">Active</span>'
+                            : '<span class="status-badge status-disconnected">Inactive</span>';
+                        tbody.append(`
+                            <tr>
+                                <td>${client.name}</td>
+                                <td>${client.ipaddr}</td>
+                                <td>•••••••••</td>
+                                <td>${client.shortname}</td>
+                                <td>${client.nas_type}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteClient(${client.id}, '${client.name}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading clients:', error);
+            }
+        }
+
+        async function generateClientsConfig() {
+            if (!confirm('This will generate /etc/freeradius/3.0/clients.conf and restart FreeRADIUS. Continue?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/radius/clients/generate-config', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showAlert(`Config generated successfully! ${result.clientsGenerated} clients added. FreeRADIUS restarted.`, 'success');
+                } else {
+                    showAlert(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error generating config: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteClient(clientId, clientName) {
+            if (!confirm(`Are you sure you want to delete client "${clientName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/radius/clients/${clientId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showAlert(`Client "${clientName}" deleted successfully`, 'success');
+                    loadClients();
+                } else {
+                    showAlert(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error deleting client: ${error.message}`, 'error');
+            }
+        }
+
+        $('#addClientForm').on('submit', async function(e) {
+            e.preventDefault();
+            const name = $('#clientName').val();
+            const ipaddr = $('#clientIpaddr').val();
+            const secret = $('#clientSecret').val();
+            const shortname = $('#clientShortname').val();
+            const nas_type = $('#clientNasType').val();
+
+            try {
+                const response = await fetch('/admin/radius/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, ipaddr, secret, shortname, nas_type })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('Client added successfully. Don\'t forget to click "Generate Config" to apply changes!', 'success');
+                    closeModal('addClientModal');
+                    $('#addClientForm')[0].reset();
+                    loadClients();
+                } else {
+                    showAlert(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error adding client: ${error.message}`, 'error');
+            }
+        });
+
         $('#addUserForm').on('submit', async function(e) {
             e.preventDefault();
             const username = $('#username').val();
@@ -1302,6 +1491,7 @@
         $(document).ready(function() {
             loadUsers();
             loadProfiles();
+            loadClients();
             loadSettings();
             loadAccountingUsers();
             loadAccounting();

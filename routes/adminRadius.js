@@ -609,4 +609,138 @@ router.delete('/hotspot-profiles/:name', async (req, res) => {
     }
 });
 
+// RADIUS Clients Management
+router.get('/clients', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const [clients] = await db.query(
+            'SELECT * FROM radius_clients ORDER BY created_at DESC'
+        );
+        res.json({ success: true, clients });
+    } catch (error) {
+        logger.error(`Error getting RADIUS clients: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/clients', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const { name, ipaddr, secret, shortname, nas_type } = req.body;
+
+        if (!name || !ipaddr || !secret) {
+            return res.status(400).json({ success: false, message: 'Name, IP address, and secret are required' });
+        }
+
+        const [result] = await db.query(
+            'INSERT INTO radius_clients (name, ipaddr, secret, shortname, nas_type) VALUES (?, ?, ?, ?, ?)',
+            [name, ipaddr, secret, shortname || name, nas_type || 'other']
+        );
+
+        res.json({ success: true, message: 'RADIUS client added successfully', id: result.insertId });
+    } catch (error) {
+        logger.error(`Error adding RADIUS client: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.put('/clients/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const id = req.params.id;
+        const { name, ipaddr, secret, shortname, nas_type, is_active } = req.body;
+
+        const [result] = await db.query(
+            'UPDATE radius_clients SET name = ?, ipaddr = ?, secret = ?, shortname = ?, nas_type = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [name, ipaddr, secret, shortname, nas_type, is_active !== undefined ? (is_active ? 1 : 0) : 1, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        res.json({ success: true, message: 'RADIUS client updated successfully' });
+    } catch (error) {
+        logger.error(`Error updating RADIUS client: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.delete('/clients/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const id = req.params.id;
+
+        const [result] = await db.query('DELETE FROM radius_clients WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        res.json({ success: true, message: 'RADIUS client deleted successfully' });
+    } catch (error) {
+        logger.error(`Error deleting RADIUS client: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/clients/generate-config', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const fs = require('fs');
+        const path = require('path');
+
+        // Get all active clients
+        const [clients] = await db.query(
+            'SELECT * FROM radius_clients WHERE is_active = 1 ORDER BY name'
+        );
+
+        // Generate clients.conf content
+        let config = '# Gembok Bill RADIUS Clients\n';
+        config += '# Auto-generated from database\n';
+        config += '# Format: client <name> { ipaddr = <ip> secret = <secret> }\n\n';
+
+        clients.forEach(client => {
+            config += `client ${client.name} {\n`;
+            config += `    ipaddr = ${client.ipaddr}\n`;
+            config += `    secret = ${client.secret}\n`;
+            config += `    shortname = ${client.shortname}\n`;
+            config += `    nas_type = ${client.nas_type}\n`;
+            config += `}\n\n`;
+        });
+
+        // Write to clients.conf
+        const clientsConfPath = '/etc/freeradius/3.0/clients.conf';
+        fs.writeFileSync(clientsConfPath, config, 'utf8');
+
+        // Restart FreeRADIUS
+        const { exec } = require('child_process');
+        exec('systemctl restart freeradius', (error, stdout, stderr) => {
+            if (error) {
+                logger.error(`Error restarting FreeRADIUS: ${error.message}`);
+                return res.status(500).json({ success: false, message: 'Config generated but failed to restart FreeRADIUS' });
+            }
+            res.json({ success: true, message: 'RADIUS clients config generated and FreeRADIUS restarted successfully', clientsGenerated: clients.length });
+        });
+    } catch (error) {
+        logger.error(`Error generating RADIUS clients config: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 module.exports = router;
