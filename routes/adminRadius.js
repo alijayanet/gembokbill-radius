@@ -738,9 +738,21 @@ router.post('/clients/generate-config', async (req, res) => {
         const path = require('path');
 
         // Get all active clients
-        const [clients] = await db.query(
+        const result = await db.query(
             'SELECT * FROM radius_clients WHERE is_active = 1 ORDER BY name'
         );
+
+        // Debug logging
+        logger.info('Query result:', JSON.stringify(result));
+
+        // Get clients array from result
+        const clients = result && result[0] ? result[0] : [];
+
+        // Check if clients is an array
+        if (!Array.isArray(clients)) {
+            logger.error('Clients is not an array:', clients);
+            return res.status(500).json({ success: false, message: 'Failed to retrieve clients from database' });
+        }
 
         // Generate clients.conf content
         let config = '# Gembok Bill RADIUS Clients\n';
