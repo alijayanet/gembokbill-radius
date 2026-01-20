@@ -147,27 +147,43 @@ install_freeradius() {
 # Configure FreeRADIUS
 configure_freeradius() {
     print_header "Configuring FreeRADIUS"
-    
+
     # Read settings from settings.json
+    DB_TYPE=$(grep -oP '(?<="db_type": ")[^"]*' settings.json || echo "sqlite")
     RADIUS_HOST=$(grep -oP '(?<="radius_host": ")[^"]*' settings.json || echo "localhost")
     RADIUS_USER=$(grep -oP '(?<="radius_user": ")[^"]*' settings.json || echo "radius")
     RADIUS_PASSWORD=$(grep -oP '(?<="radius_password": ")[^"]*' settings.json || echo "radpassword")
     RADIUS_DATABASE=$(grep -oP '(?<="radius_database": ")[^"]*' settings.json || echo "radius")
-    
+
+    print_info "Database Type: $DB_TYPE"
     print_info "RADIUS Configuration:"
     print_info "  Host: $RADIUS_HOST"
     print_info "  User: $RADIUS_USER"
     print_info "  Database: $RADIUS_DATABASE"
-    
+
     # Backup original configs
     print_info "Backing up original configurations..."
     cp /etc/freeradius/3.0/radiusd.conf /etc/freeradius/3.0/radiusd.conf.backup 2>/dev/null || true
     cp /etc/freeradius/3.0/sites-available/default /etc/freeradius/3.0/sites-available/default.backup 2>/dev/null || true
     cp /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-available/sql.backup 2>/dev/null || true
-    
-    # Create SQL configuration
-    print_info "Creating SQL module configuration..."
-    cat > /etc/freeradius/3.0/mods-available/sql << 'EOF'
+
+    # Configure based on database type
+    if [ "$DB_TYPE" = "mysql" ]; then
+        # Check if MySQL is installed and running
+        if ! command -v mysql &> /dev/null; then
+            print_warning "MySQL is not installed. Installing MySQL..."
+            apt-get install -y mysql-server
+        fi
+
+        # Check if MySQL is running
+        if ! systemctl is-active --quiet mysql; then
+            print_warning "MySQL is not running. Starting MySQL..."
+            systemctl start mysql
+        fi
+
+        # Create SQL configuration for MySQL
+        print_info "Creating SQL module configuration for MySQL..."
+        cat > /etc/freeradius/3.0/mods-available/sql << 'EOF'
 sql {
     driver = "rlm_sql_mysql"
     server = "localhost"
@@ -175,16 +191,16 @@ sql {
     login = "radius"
     password = "radpassword"
     radius_db = "radius"
-    
+
     # Table names
     read_groups = yes
     read_profiles = yes
     read_clients = yes
-    
+
     # Authentication queries
     authorize_check_query = "SELECT id, username, attribute, value, op FROM radcheck WHERE username = '%{SQL-User-Name}' ORDER BY id"
     authorize_reply_query = "SELECT id, username, attribute, value, op FROM radreply WHERE username = '%{SQL-User-Name}' ORDER BY id"
-    
+
     # Accounting queries
     accounting_onoff_query = "UPDATE radacct SET acctstoptime = '%S', acctsessiontime = unix_timestamp('%S') - unix_timestamp(acctstarttime), acctterminatecause = '%{Acct-Terminate-Cause}', acctstopdelay = %{%{Acct-Delay-Time}:-0} WHERE acctsessionid = '%{Acct-Session-Id}' AND username = '%{SQL-User-Name}' AND nasipaddress = '%{NAS-IP-Address}'"
     accounting_update_query = "UPDATE radacct SET framedipaddress = '%{Framed-IP-Address}', acctsessiontime = '%{Acct-Session-Time}', acctinputoctets = '%{Acct-Input-Octets}', acctoutputoctets = '%{Acct-Output-Octets}' WHERE acctsessionid = '%{Acct-Session-Id}' AND username = '%{SQL-User-Name}' AND nasipaddress = '%{NAS-IP-Address}'"
@@ -193,25 +209,43 @@ sql {
     accounting_start_query_alt = "UPDATE radacct SET acctstarttime = '%S', acctupdatetime = '%S', acctsessiontime = '0', acctauthentic = '%{Acct-Authentic}', connectinfo_start = '%{Connect-Info}', connectinfo_stop = '', acctinputoctets = '0', acctoutputoctets = '0', calledstationid = '%{Called-Station-Id}', callingstationid = '%{Calling-Station-Id}', servicetype = '%{Service-Type}', framedprotocol = '%{Framed-Protocol}', framedipaddress = '%{Framed-IP-Address}' WHERE acctsessionid = '%{Acct-Session-Id}' AND username = '%{SQL-User-Name}' AND nasipaddress = '%{NAS-IP-Address}'"
     accounting_stop_query = "UPDATE radacct SET acctstoptime = '%S', acctsessiontime = '%{Acct-Session-Time}', acctinputoctets = '%{Acct-Input-Octets}', acctoutputoctets = '%{Acct-Output-Octets}', acctterminatecause = '%{Acct-Terminate-Cause}', acctstopdelay = %{%{Acct-Delay-Time}:-0}, connectinfo_stop = '%{Connect-Info}' WHERE acctsessionid = '%{Acct-Session-Id}' AND username = '%{SQL-User-Name}' AND nasipaddress = '%{NAS-IP-Address}'"
     accounting_stop_query_alt = "INSERT INTO radacct (acctsessionid, acctuniqueid, username, realm, nasipaddress, nasportid, nasporttype, acctstarttime, acctstoptime, acctsessiontime, acctauthentic, connectinfo_start, connectinfo_stop, acctinputoctets, acctoutputoctets, calledstationid, callingstationid, acctterminatecause, servicetype, framedprotocol, framedipaddress) VALUES ('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port}', '%{NAS-Port-Type}', '%S', '%S', '%{Acct-Session-Time}', '%{Acct-Authentic}', '', '%{Connect-Info}', '%{Acct-Input-Octets}', '%{Acct-Output-Octets}', '%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}')"
-    
+
     # Post-auth queries
     postauth_query = "INSERT INTO radpostauth (username, pass, reply, authdate) VALUES ('%{User-Name}', '%{%{User-Password}:-%{Chap-Password}}', '%{Reply-Message}', '%S')"
 }
 EOF
-    
-    # Update SQL config with actual values
-    sed -i "s/server = \"localhost\"/server = \"$RADIUS_HOST\"/g" /etc/freeradius/3.0/mods-available/sql
-    sed -i "s/login = \"radius\"/login = \"$RADIUS_USER\"/g" /etc/freeradius/3.0/mods-available/sql
-    sed -i "s/password = \"radpassword\"/password = \"$RADIUS_PASSWORD\"/g" /etc/freeradius/3.0/mods-available/sql
-    sed -i "s/radius_db = \"radius\"/radius_db = \"$RADIUS_DATABASE\"/g" /etc/freeradius/3.0/mods-available/sql
-    
-    # Enable SQL module
-    ln -sf /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/sql
-    
-    # Configure default site
-    print_info "Configuring default site..."
-    sed -i 's/#sql/sql/g' /etc/freeradius/3.0/sites-available/default
-    sed -i 's/#sql/sql/g' /etc/freeradius/3.0/sites-available/inner-tunnel
+
+        # Update SQL config with actual values
+        sed -i "s/server = \"localhost\"/server = \"$RADIUS_HOST\"/g" /etc/freeradius/3.0/mods-available/sql
+        sed -i "s/login = \"radius\"/login = \"$RADIUS_USER\"/g" /etc/freeradius/3.0/mods-available/sql
+        sed -i "s/password = \"radpassword\"/password = \"$RADIUS_PASSWORD\"/g" /etc/freeradius/3.0/mods-available/sql
+        sed -i "s/radius_db = \"radius\"/radius_db = \"$RADIUS_DATABASE\"/g" /etc/freeradius/3.0/mods-available/sql
+
+        # Enable SQL module
+        ln -sf /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/sql
+
+        # Configure default site
+        print_info "Configuring default site..."
+        sed -i 's/#sql/sql/g' /etc/freeradius/3.0/sites-available/default
+        sed -i 's/#sql/sql/g' /etc/freeradius/3.0/sites-available/inner-tunnel
+
+        print_success "FreeRADIUS configured for MySQL"
+    else
+        # SQLite mode - disable SQL module for now
+        print_info "SQLite mode detected - SQL module will be disabled"
+        print_warning "FreeRADIUS will use files-based authentication"
+        print_warning "For full RADIUS functionality, consider using MySQL"
+
+        # Disable SQL module
+        rm -f /etc/freeradius/3.0/mods-enabled/sql
+
+        # Configure default site to not use SQL
+        print_info "Configuring default site without SQL..."
+        sed -i 's/^sql/#sql/g' /etc/freeradius/3.0/sites-available/default
+        sed -i 's/^sql/#sql/g' /etc/freeradius/3.0/sites-available/inner-tunnel
+
+        print_success "FreeRADIUS configured for files-based authentication"
+    fi
     
     # Configure clients
     print_info "Creating clients configuration..."
