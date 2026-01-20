@@ -645,11 +645,15 @@ router.post('/clients', async (req, res) => {
                 [ipaddr]
             );
 
+            // Debug logging
+            logger.info(`Checking IP ${ipaddr}, result:`, JSON.stringify(result));
+
             // Check if result exists and has data
             if (result && result[0] && result[0].length > 0) {
                 return res.status(409).json({
                     success: false,
-                    message: `IP address ${ipaddr} already exists as client "${result[0][0].name}". Please delete the existing client first or use a different IP address.`
+                    message: `IP address ${ipaddr} already exists as client "${result[0][0].name}". Please delete the existing client first or use a different IP address.`,
+                    existingClient: result[0][0]
                 });
             }
         } catch (queryError) {
@@ -767,6 +771,25 @@ router.post('/clients/generate-config', async (req, res) => {
         });
     } catch (error) {
         logger.error(`Error generating RADIUS clients config: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Diagnostic endpoint to check database state
+router.get('/clients/diagnostic', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // Get all clients
+        const [clients] = await db.query(
+            'SELECT id, name, ipaddr, secret, shortname, nas_type, is_active, created_at FROM radius_clients ORDER BY id'
+        );
+
+        res.json({ success: true, clients, count: clients.length });
+    } catch (error) {
+        logger.error(`Error getting diagnostic info: ${error.message}`);
         res.status(500).json({ success: false, message: error.message });
     }
 });
