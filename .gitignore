@@ -9,6 +9,7 @@ yarn-error.log*
 data/billing.db
 data/billing.db-wal
 data/billing.db-shm
+data/billing.db.backup
 data/test-*.db
 
 # Logs
