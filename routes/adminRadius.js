@@ -745,8 +745,8 @@ router.post('/clients/generate-config', async (req, res) => {
         // Debug logging
         logger.info('Query result:', JSON.stringify(result));
 
-        // Get clients array from result
-        const clients = result && result[0] ? result[0] : [];
+        // Get clients array from result - db.query() returns rows directly
+        const clients = Array.isArray(result) ? result : [];
 
         // Check if clients is an array
         if (!Array.isArray(clients)) {
