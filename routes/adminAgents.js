@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const AgentManager = require('../config/agentManager');
 const { getSettingsWithCache, getSetting } = require('../config/settingsManager');
+const { getVersionInfo, getVersionBadge } = require('../config/version-utils');
 const logger = require('../config/logger');
 
 // Import adminAuth middleware
@@ -35,7 +36,9 @@ const agentManager = new AgentManager();
 router.get('/agents', adminAuth, async (req, res) => {
     try {
         res.render('admin/agents', {
-            appSettings: getSettingsWithCache()
+            appSettings: getSettingsWithCache(),
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     } catch (error) {
         logger.error('Admin agents page error:', error);
@@ -47,7 +50,9 @@ router.get('/agents', adminAuth, async (req, res) => {
 router.get('/agent-registrations', adminAuth, async (req, res) => {
     try {
         res.render('admin/agent-registrations', {
-            appSettings: getSettingsWithCache()
+            appSettings: getSettingsWithCache(),
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     } catch (error) {
         logger.error('Admin agent registrations page error:', error);

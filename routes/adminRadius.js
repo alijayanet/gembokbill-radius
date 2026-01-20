@@ -4,6 +4,7 @@ const radius = require('../config/radius');
 const logger = require('../config/logger');
 const db = require('../config/database');
 const { getSettingsWithCache } = require('../config/settingsManager');
+const { getVersionInfo, getVersionBadge } = require('../config/version-utils');
 const mikrotik = require('../config/mikrotik');
 
 router.get('/', async (req, res) => {
@@ -21,7 +22,9 @@ router.get('/', async (req, res) => {
             testResult,
             users,
             userCount: users.length,
-            appSettings
+            appSettings,
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     } catch (error) {
         logger.error(`Error loading RADIUS dashboard: ${error.message}`);
