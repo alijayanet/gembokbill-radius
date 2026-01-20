@@ -696,10 +696,52 @@ print_summary() {
     print_info "RADIUS Dashboard: http://localhost:4555/admin/radius"
 }
 
+# Migrate SQLite to MySQL
+migrate_sqlite_to_mysql() {
+    # Check if migration script exists
+    if [ ! -f "migrate-to-mysql.sh" ]; then
+        print_warning "Migration script not found. Skipping migration."
+        return 0
+    fi
+
+    # Check if SQLite database exists
+    if [ ! -f "data/billing.db" ]; then
+        print_info "No SQLite database found. Skipping migration."
+        return 0
+    fi
+
+    print_header "Migrating SQLite to MySQL"
+
+    # Ask user if they want to migrate
+    print_warning "This will migrate all data from SQLite to MySQL"
+    print_warning "Make sure you have a backup of your data"
+    echo ""
+    read -p "Do you want to proceed with migration? (y/n): " -n 1 -r
+    echo ""
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Migration skipped by user"
+        return 0
+    fi
+
+    # Make migration script executable
+    chmod +x migrate-to-mysql.sh
+
+    # Run migration script
+    bash migrate-to-mysql.sh
+
+    if [ $? -eq 0 ]; then
+        print_success "Migration completed successfully"
+    else
+        print_error "Migration failed. Please check the errors above."
+        return 1
+    fi
+}
+
 # Main execution
 main() {
     print_header "FreeRADIUS Installation for Gembok Bill"
-    
+
     check_root
     detect_os
     check_prerequisites
@@ -707,6 +749,13 @@ main() {
     configure_freeradius
     setup_database
     setup_radius_groups
+
+    # Check if migration is needed
+    DB_TYPE=$(grep -oP '(?<="db_type": ")[^"]*' settings.json || echo "sqlite")
+    if [ "$DB_TYPE" = "mysql" ] && [ -f "data/billing.db" ]; then
+        migrate_sqlite_to_mysql
+    fi
+
     run_gembok_migration
     update_settings_json
     start_service
