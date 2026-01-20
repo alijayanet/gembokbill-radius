@@ -639,16 +639,22 @@ router.post('/clients', async (req, res) => {
         }
 
         // Check if IP address already exists
-        const [existing] = await db.query(
-            'SELECT id, name FROM radius_clients WHERE ipaddr = ?',
-            [ipaddr]
-        );
+        try {
+            const result = await db.query(
+                'SELECT id, name FROM radius_clients WHERE ipaddr = ?',
+                [ipaddr]
+            );
 
-        if (existing.length > 0) {
-            return res.status(409).json({
-                success: false,
-                message: `IP address ${ipaddr} already exists as client "${existing[0].name}". Please delete the existing client first or use a different IP address.`
-            });
+            // Check if result exists and has data
+            if (result && result[0] && result[0].length > 0) {
+                return res.status(409).json({
+                    success: false,
+                    message: `IP address ${ipaddr} already exists as client "${result[0][0].name}". Please delete the existing client first or use a different IP address.`
+                });
+            }
+        } catch (queryError) {
+            logger.error(`Error checking existing client: ${queryError.message}`);
+            // Continue with insert even if check fails
         }
 
         const [result] = await db.query(
