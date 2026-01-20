@@ -1,6 +1,6 @@
 {
   "name": "gembok-bill",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Sistem Manajemen ISP Terintegrasi dengan WhatsApp Gateway untuk GenieACS, Mikrotik PPPoE, dan Hotspot Management",
   "main": "app.js",
   "scripts": {
