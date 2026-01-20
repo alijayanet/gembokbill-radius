@@ -1,7 +1,7 @@
 {
-  "name": "gembok-bill",
+  "name": "gembokbill-radius",
   "version": "2.2.0",
-  "description": "Sistem Manajemen ISP Terintegrasi dengan WhatsApp Gateway untuk GenieACS, Mikrotik PPPoE, dan Hotspot Management",
+  "description": "Sistem Manajemen ISP Terintegrasi dengan WhatsApp Gateway untuk GenieACS, Mikrotik PPPoE, Hotspot, dan RADIUS Management",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -64,6 +64,8 @@
     "mikrotik",
     "pppoe",
     "hotspot",
+    "radius",
+    "freeradius",
     "nodejs",
     "express"
   ],
@@ -71,10 +73,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alijayanet/gembok-bill.git"
+    "url": "https://github.com/alijayanet/gembokbill-radius.git"
   },
   "bugs": {
-    "url": "https://github.com/alijayanet/gembok-bill/issues"
+    "url": "https://github.com/alijayanet/gembokbill-radius/issues"
   },
-  "homepage": "https://github.com/alijayanet/gembok-bill#readme"
+  "homepage": "https://github.com/alijayanet/gembokbill-radius#readme"
 }
