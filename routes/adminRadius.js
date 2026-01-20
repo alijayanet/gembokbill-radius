@@ -638,6 +638,19 @@ router.post('/clients', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Name, IP address, and secret are required' });
         }
 
+        // Check if IP address already exists
+        const [existing] = await db.query(
+            'SELECT id, name FROM radius_clients WHERE ipaddr = ?',
+            [ipaddr]
+        );
+
+        if (existing.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `IP address ${ipaddr} already exists as client "${existing[0].name}". Please delete the existing client first or use a different IP address.`
+            });
+        }
+
         const [result] = await db.query(
             'INSERT INTO radius_clients (name, ipaddr, secret, shortname, nas_type) VALUES (?, ?, ?, ?, ?)',
             [name, ipaddr, secret, shortname || name, nas_type || 'other']
@@ -646,6 +659,15 @@ router.post('/clients', async (req, res) => {
         res.json({ success: true, message: 'RADIUS client added successfully', id: result.insertId });
     } catch (error) {
         logger.error(`Error adding RADIUS client: ${error.message}`);
+        
+        // Handle specific database errors
+        if (error.message.includes('UNIQUE constraint failed')) {
+            return res.status(409).json({
+                success: false,
+                message: 'IP address already exists. Please use a different IP address or delete the existing client first.'
+            });
+        }
+        
         res.status(500).json({ success: false, message: error.message });
     }
 });
