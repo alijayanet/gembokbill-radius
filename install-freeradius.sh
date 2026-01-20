@@ -76,21 +76,51 @@ detect_os() {
 # Check prerequisites
 check_prerequisites() {
     print_header "Checking Prerequisites"
-    
+
     # Check if Node.js is installed
-    if ! command -v node &> /dev/null; then
+    NODE_CMD=""
+    if command -v node &> /dev/null; then
+        NODE_CMD="node"
+    elif command -v nodejs &> /dev/null; then
+        NODE_CMD="nodejs"
+    elif [ -f "/usr/bin/node" ]; then
+        NODE_CMD="/usr/bin/node"
+    elif [ -f "/usr/local/bin/node" ]; then
+        NODE_CMD="/usr/local/bin/node"
+    elif [ -f "/opt/nodejs/bin/node" ]; then
+        NODE_CMD="/opt/nodejs/bin/node"
+    fi
+
+    if [ -z "$NODE_CMD" ]; then
         print_error "Node.js is not installed. Please install Node.js first."
+        print_info "If Node.js is installed but not detected, try running without sudo:"
+        print_info "  bash install-freeradius.sh"
         exit 1
     fi
-    print_success "Node.js found: $(node --version)"
-    
+
+    NODE_VERSION=$($NODE_CMD --version 2>/dev/null || echo "unknown")
+    print_success "Node.js found: $NODE_VERSION (path: $NODE_CMD)"
+
     # Check if npm is installed
-    if ! command -v npm &> /dev/null; then
+    NPM_CMD=""
+    if command -v npm &> /dev/null; then
+        NPM_CMD="npm"
+    elif [ -f "/usr/bin/npm" ]; then
+        NPM_CMD="/usr/bin/npm"
+    elif [ -f "/usr/local/bin/npm" ]; then
+        NPM_CMD="/usr/local/bin/npm"
+    elif [ -f "/opt/nodejs/bin/npm" ]; then
+        NPM_CMD="/opt/nodejs/bin/npm"
+    fi
+
+    if [ -z "$NPM_CMD" ]; then
         print_error "npm is not installed. Please install npm first."
         exit 1
     fi
-    print_success "npm found: $(npm --version)"
-    
+
+    NPM_VERSION=$($NPM_CMD --version 2>/dev/null || echo "unknown")
+    print_success "npm found: $NPM_VERSION (path: $NPM_CMD)"
+
     # Check if settings.json exists
     if [ ! -f "settings.json" ]; then
         print_error "settings.json not found in current directory"
