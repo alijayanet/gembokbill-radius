@@ -4,6 +4,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { adminAuth } = require('./adminAuth');
 const { getSetting } = require('../config/settingsManager');
+const { getVersionInfo, getVersionBadge } = require('../config/version-utils');
 const logger = require('../config/logger');
 
 // Database connection
@@ -131,16 +132,8 @@ router.get('/', adminAuth, async (req, res) => {
                 logo_filename: getSetting('logo_filename', 'logo.png'),
                 company_header: getSetting('company_header', 'GEMBOK')
             },
-            versionInfo: {
-                version: require('../package.json').version || '1.0.0',
-                buildNumber: '20260118',
-                versionDate: new Date().toISOString().split('T')[0],
-                companyHeader: getSetting('company_header', 'GEMBOK')
-            },
-            versionBadge: {
-                class: 'badge-success',
-                text: 'v' + (require('../package.json').version || '1.0.0')
-            }
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
 
     } catch (error) {
@@ -174,16 +167,8 @@ router.get('/create', adminAuth, async (req, res) => {
                 logo_filename: getSetting('logo_filename', 'logo.png'),
                 company_header: getSetting('company_header', 'GEMBOK')
             },
-            versionInfo: {
-                version: '1.0.0',
-                buildNumber: '001',
-                versionDate: '2024-01-01',
-                companyHeader: getSetting('company_header', 'GEMBOK')
-            },
-            versionBadge: {
-                class: 'badge-primary',
-                text: 'v1.0.0'
-            }
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
 
     } catch (error) {
@@ -406,16 +391,8 @@ router.get('/edit/:id', adminAuth, async (req, res) => {
                 logo_filename: getSetting('logo_filename', 'logo.png'),
                 company_header: getSetting('company_header', 'GEMBOK')
             },
-            versionInfo: {
-                version: '1.0.0',
-                buildNumber: '001',
-                versionDate: '2024-01-01',
-                companyHeader: getSetting('company_header', 'GEMBOK')
-            },
-            versionBadge: {
-                class: 'badge-primary',
-                text: 'v1.0.0'
-            }
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
 
     } catch (error) {
@@ -805,16 +782,8 @@ router.get('/view/:id', adminAuth, async (req, res) => {
                     logo_filename: getSetting('logo_filename', 'logo.png'),
                     company_header: getSetting('company_header', 'GEMBOK')
                 },
-                versionInfo: {
-                    version: '1.0.0',
-                    buildNumber: '001',
-                    versionDate: '2024-01-01',
-                    companyHeader: getSetting('company_header', 'GEMBOK')
-                },
-                versionBadge: {
-                    class: 'badge-primary',
-                    text: 'v1.0.0'
-                }
+                versionInfo: getVersionInfo(),
+                versionBadge: getVersionBadge()
             });
         }
 
@@ -847,16 +816,8 @@ router.get('/view/:id', adminAuth, async (req, res) => {
                 logo_filename: getSetting('logo_filename', 'logo.png'),
                 company_header: getSetting('company_header', 'GEMBOK')
             },
-            versionInfo: {
-                version: '1.0.0',
-                buildNumber: '001',
-                versionDate: '2024-01-01',
-                companyHeader: getSetting('company_header', 'GEMBOK')
-            },
-            versionBadge: {
-                class: 'badge-primary',
-                text: 'v1.0.0'
-            }
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
 
     } catch (error) {
@@ -868,16 +829,8 @@ router.get('/view/:id', adminAuth, async (req, res) => {
                 logo_filename: getSetting('logo_filename', 'logo.png'),
                 company_header: getSetting('company_header', 'GEMBOK')
             },
-            versionInfo: {
-                version: '1.0.0',
-                buildNumber: '001',
-                versionDate: '2024-01-01',
-                companyHeader: getSetting('company_header', 'GEMBOK')
-            },
-            versionBadge: {
-                class: 'badge-primary',
-                text: 'v1.0.0'
-            }
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     }
 });
