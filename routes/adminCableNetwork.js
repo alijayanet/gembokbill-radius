@@ -5,6 +5,7 @@ const path = require('path');
 const logger = require('../config/logger');
 const { adminAuth } = require('./adminAuth');
 const { getSetting } = require('../config/settingsManager');
+const { getVersionInfo, getVersionBadge } = require('../config/version-utils');
 const CableNetworkUtils = require('../utils/cableNetworkUtils');
 
 // Middleware untuk mendapatkan pengaturan aplikasi
@@ -92,6 +93,8 @@ router.get('/', adminAuth, getAppSettings, async (req, res) => {
             stats,
             recentODPs,
             recentCables,
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge(),
             appSettings: req.appSettings
         });
 
@@ -150,7 +153,9 @@ router.get('/odp', adminAuth, getAppSettings, async (req, res) => {
             page: 'cable-network-odp',
             appSettings: req.appSettings,
             odps: odps,
-            parentOdps: parentOdps
+            parentOdps: parentOdps,
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     } catch (error) {
         logger.error('Error loading ODP page:', error);
@@ -469,7 +474,9 @@ router.get('/cables', adminAuth, getAppSettings, async (req, res) => {
             appSettings: req.appSettings,
             cableRoutes: cableRoutes,
             odps: odps,
-            customersWithoutCable: customersWithoutCable
+            customersWithoutCable: customersWithoutCable,
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     } catch (error) {
         logger.error('Error loading cable routes page:', error);
@@ -764,7 +771,9 @@ router.get('/analytics', adminAuth, getAppSettings, async (req, res) => {
         res.render('admin/cable-network/analytics', {
             title: 'Cable Network Analytics',
             page: 'cable-network-analytics',
-            appSettings: req.appSettings
+            appSettings: req.appSettings,
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
     } catch (error) {
         logger.error('Error loading analytics page:', error);
@@ -1069,7 +1078,9 @@ router.get('/odp-connections', adminAuth, getAppSettings, async (req, res) => {
             title: 'ODP Backbone Connections',
             connections: connections,
             odps: odps,
-            settings: req.settings
+            settings: req.settings,
+            versionInfo: getVersionInfo(),
+            versionBadge: getVersionBadge()
         });
         
     } catch (error) {
