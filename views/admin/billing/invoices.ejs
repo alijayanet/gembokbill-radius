@@ -173,7 +173,7 @@
                                             <% if (package.tax_rate === 0) { %>
                                                 (No Ada PPN)
                                             <% } else if (package.tax_rate) { %>
-                                                (PPN <%= package.tax_rate.toFixed(2) %>%)
+                                                (PPN <%= parseFloat(package.tax_rate).toFixed(2) %>%)
                                             <% } else { %>
                                                 (PPN 11.00%)
                                             <% } %>

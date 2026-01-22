@@ -78,7 +78,7 @@
                                                     <% if (package.tax_rate === 0) { %>
                                                         <span class="badge bg-secondary">0% (No Ada PPN)</span>
                                                     <% } else if (package.tax_rate) { %>
-                                                        <span class="badge bg-warning"><%= package.tax_rate.toFixed(2) %>%</span>
+                                                        <span class="badge bg-warning"><%= parseFloat(package.tax_rate).toFixed(2) %>%</span>
                                                     <% } else { %>
                                                         <span class="badge bg-warning">11.00%</span>
                                                     <% } %>
@@ -88,7 +88,7 @@
                                                         Rp <%= parseFloat(package.price).toLocaleString('id-ID') %>
                                                         <small class="text-muted d-block">(Price sama, tidak ada PPN)</small>
                                                     <% } else if (package.tax_rate) { %>
-                                                        Rp <%= ((parseFloat(package.price) * (1 + package.tax_rate / 100)).toFixed(0)).toLocaleString('id-ID') %>
+                                                        Rp <%= ((parseFloat(package.price) * (1 + parseFloat(package.tax_rate) / 100)).toFixed(0)).toLocaleString('id-ID') %>
                                                     <% } else { %>
                                                         Rp <%= ((parseFloat(package.price) * 1.11).toFixed(0)).toLocaleString('id-ID') %>
                                                     <% } %>
