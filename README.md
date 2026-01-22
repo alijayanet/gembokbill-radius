@@ -100,7 +100,9 @@ cd gembokbill-radius
 chmod x+ install.sh
 chmod x+ install-freeradius.sh
 ```
-
+```bash
+npm install
+```
 ```bash
 sudo bash install.sh
 ```
@@ -378,5 +380,6 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
 
 
 \u003c/div\u003e
+
 
 
