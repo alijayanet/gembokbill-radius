@@ -134,9 +134,44 @@ class Database {
 
         const promise = (async () => {
             if (this.dbType === 'mysql') {
+                // Skip PRAGMA commands for MySQL
+                if (sql.trim().toUpperCase().startsWith('PRAGMA')) {
+                    return { lastID: 0, changes: 0 };
+                }
+                
+                // Skip SQLite-specific transaction commands for MySQL
+                if (sql.trim().toUpperCase().startsWith('BEGIN IMMEDIATE TRANSACTION') ||
+                    sql.trim().toUpperCase().startsWith('BEGIN TRANSACTION') ||
+                    sql.trim().toUpperCase().startsWith('COMMIT') ||
+                    sql.trim().toUpperCase().startsWith('ROLLBACK')) {
+                    return { lastID: 0, changes: 0 };
+                }
+                
                 let finalSql = sql.replace(/INSERT OR IGNORE/gi, 'INSERT IGNORE');
                 finalSql = finalSql.replace(/INSERT OR REPLACE/gi, 'REPLACE');
                 finalSql = finalSql.replace(/AUTOINCREMENT/gi, 'AUTO_INCREMENT');
+                
+                // Convert SQLite date/time functions to MySQL
+                finalSql = finalSql.replace(/DATE\('now'\)/gi, 'CURRENT_DATE()');
+                finalSql = finalSql.replace(/DATETIME\('now'\)/gi, 'NOW()');
+                finalSql = finalSql.replace(/'now'/gi, 'NOW()');
+                
+                // Convert SQLite string concatenation operator (||) to MySQL CONCAT function
+                // This handles various patterns like:
+                // - 'prefix' || column || 'suffix'
+                // - column || 'suffix'
+                // - 'prefix' || column
+                // - column1 || column2
+                const convertConcatenation = (match) => {
+                    // Split by || and trim whitespace
+                    const parts = match.split(/\|\|/).map(p => p.trim());
+                    // Wrap in CONCAT() and join with commas
+                    return `CONCAT(${parts.join(', ')})`;
+                };
+                
+                // Match patterns with || operator
+                // This regex matches: 'string' || 'string' OR 'string' || column OR column || 'string' OR column || column
+                finalSql = finalSql.replace(/'[^']*'\s*\|\|\s*'[^']*'|'[^']*'\s*\|\|\s*[a-zA-Z_][a-zA-Z0-9_]*|[a-zA-Z_][a-zA-Z0-9_]*\s*\|\|\s*'|[a-zA-Z_][a-zA-Z0-9_]*\s*\|\|\s*[a-zA-Z_][a-zA-Z0-9_]*/g, convertConcatenation);
 
                 const [result] = await this.pool.execute(finalSql, params);
                 return {

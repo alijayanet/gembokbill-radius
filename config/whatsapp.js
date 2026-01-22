@@ -470,127 +470,9 @@ async function connectToWhatsApp() {
                     const activePort = global.appSettings?.port || getSetting('server_port', '3001');
                     const serverHost = global.appSettings?.host || getSetting('server_host', 'localhost');
 
-                    // Ambil header pendek untuk template sambutan
-                    const companyHeaderShort = getSetting('company_header_short', 'ALIJAYA NETWORK');
-
-                    // Pesan notifikasi (sesuai template permintaan)
-                    const notificationMessage = `📋 *BOT WHATSAPP ${companyHeaderShort}*\n\n` +
-                        `✅ *Status:* Bot telah berhasil terhubung\n` +
-                        `⏰ *Waktu:* ${connectedSince.toLocaleString()}\n\n` +
-                        `📝 *Perintah Tersedia:*\n` +
-                        `• Ketik *menu* untuk melihat daftar perintah\n` +
-                        `• Ketik *admin* untuk menu khusus admin\n\n` +
-                        `📞 *Dukungan Pengembang:*\n` +
-                        `• E-WALLET: 081947215703\n` +
-                        `• BRI: 420601003953531 a.n WARJAYA\n\n` +
-                        `🙏 Terima kasih telah menggunakan Aplikasi kami.\n` +
-                        `🏢 *ALIJAYA DIGITAL NETWORK*`;
-
-                    // Kirim ke admin dari environment variable
-                    const adminNumber = getSetting('admins.0', '');
-                    if (adminNumber) {
-                        setTimeout(async () => {
-                            try {
-                                await sock.sendMessage(`${adminNumber}@s.whatsapp.net`, {
-                                    text: notificationMessage
-                                });
-                                console.log(`Pesan notifikasi terkirim ke admin ${adminNumber}`);
-                                // Kirim gambar QR donasi (jika tersedia)
-                                try {
-                                    const fs = require('fs');
-                                    const path = require('path');
-                                    // Prefer non-public path inside config
-                                    let qrPath = path.join(__dirname, 'qr-donasi.jpg');
-                                    if (!fs.existsSync(qrPath)) {
-                                        // Fallback to historical public path if config copy not found
-                                        const fallback = path.join(__dirname, '../public/img/qr-donasi.jpg');
-                                        if (fs.existsSync(fallback)) qrPath = fallback;
-                                    }
-                                    if (fs.existsSync(qrPath)) {
-                                        const qrBuffer = fs.readFileSync(qrPath);
-                                        await sock.sendMessage(`${adminNumber}@s.whatsapp.net`, {
-                                            image: qrBuffer,
-                                            caption: 'QR Donasi Aplikasi'
-                                        });
-                                        console.log('Gambar QR donasi terkirim ke admin');
-                                    } else {
-                                        console.log('📱 QR donasi tidak tersedia, skip pengiriman gambar');
-                                    }
-                                } catch (e) {
-                                    console.error('Gagal mengirim QR donasi ke admin:', e);
-                                }
-                            } catch (error) {
-                                console.error('Error sending connection notification to admin:', error);
-                            }
-                        }, 5000);
-                    }
-
-                    // Kirim ke admin utama (dari .env)
-                    if (adminNumber) {
-                        setTimeout(async () => {
-                            try {
-                                await sock.sendMessage(`${adminNumber}@s.whatsapp.net`, {
-                                    text: notificationMessage
-                                });
-                                const maskedEnvNumber = adminNumber.substring(0, 4) + '****' + adminNumber.substring(adminNumber.length - 4);
-                                console.log(`Pesan notifikasi terkirim ke admin utama ${maskedEnvNumber}`);
-                            } catch (error) {
-                                console.error(`Error sending connection notification to admin utama:`, error);
-                            }
-                        }, 3000);
-                    }
-                    // Kirim juga ke super admin (jika berbeda dengan admin utama)
-                    const currentSuperAdminNumber = getSuperAdminNumber();
-                    if (currentSuperAdminNumber && currentSuperAdminNumber !== adminNumber) {
-                        setTimeout(async () => {
-                            try {
-                                // Pesan startup untuk super admin menggunakan template yang sama
-                                const startupMessage = `📋 *BOT WHATSAPP ${companyHeaderShort}*\n\n` +
-                                    `✅ *Status:* Bot telah berhasil terhubung\n` +
-                                    `⏰ *Waktu:* ${connectedSince.toLocaleString()}\n\n` +
-                                    `📝 *Perintah Tersedia:*\n` +
-                                    `• Ketik *menu* untuk melihat daftar perintah\n` +
-                                    `• Ketik *admin* untuk menu khusus admin\n\n` +
-                                    `📞 *Dukungan Pengembang:*\n` +
-                                    `• E-WALLET: 081947215703\n` +
-                                    `• BRI: 420601003953531 a.n WARJAYA\n\n` +
-                                    `🙏 Terima kasih telah menggunakan Aplikasi kami.\n` +
-                                    `🏢 *ALIJAYA DIGITAL NETWORK*`;
-
-                                await sock.sendMessage(`${currentSuperAdminNumber}@s.whatsapp.net`, {
-                                    text: startupMessage
-                                });
-                                const maskedNumber = currentSuperAdminNumber.substring(0, 4) + '****' + currentSuperAdminNumber.substring(currentSuperAdminNumber.length - 4);
-                                console.log(`Pesan notifikasi terkirim ke super admin ${maskedNumber}`);
-                                // Kirim gambar QR donasi (jika tersedia)
-                                try {
-                                    const fs = require('fs');
-                                    const path = require('path');
-                                    // Prefer non-public path inside config
-                                    let qrPath = path.join(__dirname, 'qr-donasi.jpg');
-                                    if (!fs.existsSync(qrPath)) {
-                                        // Fallback to historical public path if config copy not found
-                                        const fallback = path.join(__dirname, '../public/img/qr-donasi.jpg');
-                                        if (fs.existsSync(fallback)) qrPath = fallback;
-                                    }
-                                    if (fs.existsSync(qrPath)) {
-                                        const qrBuffer = fs.readFileSync(qrPath);
-                                        await sock.sendMessage(`${currentSuperAdminNumber}@s.whatsapp.net`, {
-                                            image: qrBuffer,
-                                            caption: '📱 QR Donasi Aplikasi\n\n🙏 Dukungan Anda sangat berarti untuk pengembangan aplikasi ini'
-                                        });
-                                        console.log('✅ Gambar QR donasi terkirim ke super admin');
-                                    } else {
-                                        console.log('📱 QR donasi tidak tersedia, skip pengiriman gambar');
-                                    }
-                                } catch (e) {
-                                    console.error('❌ Gagal mengirim QR donasi ke super admin:', e);
-                                }
-                            } catch (error) {
-                                console.error(`Error sending connection notification to super admin:`, error);
-                            }
-                        }, 5000);
-                    }
+                    // Silent startup - notifications disabled
+                    console.log(`✅ WhatsApp bot connected successfully at ${connectedSince.toLocaleString()}`);
+                    // Super admin notifications disabled
                 } catch (error) {
                     console.error('Error sending connection notification:', error);
                 }
@@ -4428,18 +4310,7 @@ async function handleVoucherCommand(remoteJid, params) {
 
 // Fungsi untuk menangani pesan masuk dengan penanganan error dan logging yang lebih baik
 async function handleIncomingMessage(sock, message) {
-    // Kirim pesan selamat datang ke super admin saat aplikasi pertama kali berjalan
-    if (!global.superAdminWelcomeSent) {
-        try {
-            await sock.sendMessage(superAdminNumber + '@s.whatsapp.net', {
-                text: `${getSetting('company_header', 'ALIJAYA BOT MANAGEMENT ISP')}\n👋 *Selamat datang, Super Admin!*\n\nAplikasi WhatsApp Bot berhasil dijalankan.\n\nRekening Donasi Untuk Pembangunan Masjid\n# 4206 0101 2214 534 BRI an DKM BAITUR ROHMAN\n\n${getSetting('footer_info', 'Internet Tanpa Batas')}`
-            });
-            global.superAdminWelcomeSent = true;
-            console.log('Pesan selamat datang terkirim ke super admin');
-        } catch (err) {
-            console.error('Gagal mengirim pesan selamat datang ke super admin:', err);
-        }
-    }
+    // Super admin welcome message disabled (silent startup)
     try {
         // Skip if message already processed by agent handler
         if (message._agentProcessed) {
@@ -4510,19 +4381,28 @@ async function handleIncomingMessage(sock, message) {
             senderLid = remoteJid; // Format: 85280887435270@lid
             logger.debug(`WhatsApp LID detected`, { lid: senderLid });
 
-            // Try to resolve phone number from LID to allow admin recognition
-            try {
-                const BillingManager = require('./billing');
-                const billing = new BillingManager();
-                const customer = await billing.getCustomerByWhatsAppLid(senderLid);
-                if (customer) {
-                    senderNumber = customer.phone;
-                    // Normalize
-                    if (senderNumber.startsWith('0')) senderNumber = '62' + senderNumber.slice(1);
-                    logger.info(`✅ Resolved LID ${senderLid} to phone: ${senderNumber}`);
+            // PRIORITY 1: Try to get real number from remoteJidAlt (fastest, most reliable)
+            if (message.key?.remoteJidAlt) {
+                const actualJid = message.key.remoteJidAlt;
+                senderNumber = actualJid.replace('@s.whatsapp.net', '');
+                logger.info(`✅ Got real number from remoteJidAlt: ${senderNumber}`);
+            } else {
+                // FALLBACK: Try to resolve from database
+                try {
+                    const BillingManager = require('./billing');
+                    const billing = new BillingManager();
+                    const customer = await billing.getCustomerByWhatsAppLid(senderLid);
+                    if (customer) {
+                        senderNumber = customer.phone;
+                        // Normalize
+                        if (senderNumber.startsWith('0')) senderNumber = '62' + senderNumber.slice(1);
+                        logger.info(`✅ Resolved LID ${senderLid} from database to phone: ${senderNumber}`);
+                    } else {
+                        logger.warn(`⚠️ LID ${senderLid} not found in database and no remoteJidAlt available`);
+                    }
+                } catch (err) {
+                    logger.warn(`⚠️ Could not resolve LID ${senderLid}:`, err.message);
                 }
-            } catch (err) {
-                // Ignore errors, proceed with raw senderNumber
             }
         }
 

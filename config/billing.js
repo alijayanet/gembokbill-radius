@@ -501,7 +501,18 @@ class BillingManager {
         // });
 
         // Update existing customers to have username if null (for backward compatibility)
-        this.db.run("UPDATE customers SET username = 'cust_' || substr(phone, -4, 4) || '_' || strftime('%s','now') WHERE username IS NULL OR username = ''", (err) => {
+        const dbType = getSetting('db_type', 'sqlite');
+        let updateUsernameSQL;
+        
+        if (dbType === 'mysql') {
+            // MySQL syntax
+            updateUsernameSQL = "UPDATE customers SET username = CONCAT('cust_', SUBSTRING(phone, -4), '_', UNIX_TIMESTAMP()) WHERE username IS NULL OR username = ''";
+        } else {
+            // SQLite syntax
+            updateUsernameSQL = "UPDATE customers SET username = 'cust_' || substr(phone, -4, 4) || '_' || strftime('%s','now') WHERE username IS NULL OR username = ''";
+        }
+        
+        this.db.run(updateUsernameSQL, (err) => {
             if (err) {
                 console.error('Error updating null usernames:', err);
             } else {
@@ -675,12 +686,33 @@ class BillingManager {
             END`
         ];
 
+        const dbType = getSetting('db_type', 'sqlite');
+        
         triggers.forEach(triggerSQL => {
-            this.db.run(triggerSQL, (err) => {
-                if (err) {
-                    console.error('Error creating ODP trigger:', err);
-                }
-            });
+            // For MySQL, triggers need to be executed without prepared statements
+            if (dbType === 'mysql') {
+                // Get a direct connection from the pool and execute raw SQL without prepared statement
+                this.db.pool.getConnection((err, connection) => {
+                    if (err) {
+                        console.error('Error getting connection for trigger:', err);
+                        return;
+                    }
+                    // Use unprepare() to execute without prepared statement protocol
+                    connection.unprepare(triggerSQL).execute((err) => {
+                        if (err) {
+                            console.error('Error creating ODP trigger:', err);
+                        }
+                        connection.release();
+                    });
+                });
+            } else {
+                // SQLite can use run method
+                this.db.run(triggerSQL, (err) => {
+                    if (err) {
+                        console.error('Error creating ODP trigger:', err);
+                    }
+                });
+            }
         });
     }
 
@@ -916,25 +948,19 @@ class BillingManager {
             const sql = `
                 SELECT c.*, p.name as package_name, p.price as package_price, p.image_filename as package_image,
                        c.latitude, c.longitude,
-                       CASE 
-                           WHEN EXISTS (
-                               SELECT 1 FROM invoices i 
-                               WHERE i.customer_id = c.id 
-                               AND i.status = 'unpaid' 
-                               AND i.due_date < date('now')
-                           ) THEN 'overdue'
-                           WHEN EXISTS (
-                               SELECT 1 FROM invoices i 
-                               WHERE i.customer_id = c.id 
-                               AND i.status = 'unpaid'
-                           ) THEN 'unpaid'
-                           WHEN EXISTS (
-                               SELECT 1 FROM invoices i 
-                               WHERE i.customer_id = c.id 
-                               AND i.status = 'paid'
-                           ) THEN 'paid'
-                           ELSE 'no_invoice'
-                       END as payment_status
+                       (
+                           SELECT 
+                               CASE 
+                                   WHEN i.status = 'unpaid' AND i.due_date < CURRENT_DATE() THEN 'overdue'
+                                   WHEN i.status = 'unpaid' THEN 'unpaid'
+                                   WHEN i.status = 'paid' THEN 'paid'
+                                   ELSE 'no_invoice'
+                               END
+                           FROM invoices i
+                           WHERE i.customer_id = c.id
+                           ORDER BY i.due_date DESC
+                           LIMIT 1
+                       ) as payment_status
                 FROM customers c 
                 LEFT JOIN packages p ON c.package_id = p.id 
                 ORDER BY c.name ASC
@@ -1836,7 +1862,7 @@ class BillingManager {
 
     async updateInvoiceStatus(id, status, paymentMethod = null) {
         return new Promise((resolve, reject) => {
-            const paymentDate = status === 'paid' ? new Date().toISOString() : null;
+            const paymentDate = status === 'paid' ? new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, '') : null;
             const sql = `UPDATE invoices SET status = ?, payment_date = ?, payment_method = ? WHERE id = ?`;
 
             this.db.run(sql, [status, paymentDate, paymentMethod, id], function (err) {
@@ -1867,60 +1893,35 @@ class BillingManager {
     }
 
     async deleteInvoice(id) {
-        return new Promise((resolve, reject) => {
+        try {
             // First get the invoice details before deleting
-            this.getInvoiceById(id).then(invoice => {
-                // Use a transaction to delete related records first
-                this.db.serialize(() => {
-                    this.db.run('BEGIN TRANSACTION', (err) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
+            const invoice = await this.getInvoiceById(id);
+            
+            // Delete related records in order (wrap each in try-catch to handle missing tables/columns)
+            const deleteRelated = [
+                'DELETE FROM payment_gateway_transactions WHERE invoice_id = ?',
+                'DELETE FROM payments WHERE invoice_id = ?',
+                'DELETE FROM collector_payments WHERE invoice_id = ?',
+                'DELETE FROM agent_commissions WHERE invoice_id = ?',
+                'DELETE FROM agent_payments WHERE invoice_id = ?',
+                'DELETE FROM invoice_items WHERE invoice_id = ?',
+                'DELETE FROM invoices WHERE id = ?'
+            ];
 
-                        // Delete related records in order
-                        const deleteRelated = [
-                            'DELETE FROM payment_gateway_transactions WHERE invoice_id = ?',
-                            'DELETE FROM payments WHERE invoice_id = ?',
-                            'DELETE FROM collector_payments WHERE invoice_id = ?',
-                            'DELETE FROM agent_commissions WHERE invoice_id = ?',
-                            'DELETE FROM agent_payments WHERE invoice_id = ?',
-                            'DELETE FROM invoice_items WHERE invoice_id = ?',
-                            'DELETE FROM invoices WHERE id = ?'
-                        ];
-
-                        let currentIndex = 0;
-
-                        const executeDelete = () => {
-                            if (currentIndex >= deleteRelated.length) {
-                                // All deletions done, commit
-                                this.db.run('COMMIT', (commitErr) => {
-                                    if (commitErr) {
-                                        this.db.run('ROLLBACK');
-                                        reject(commitErr);
-                                    } else {
-                                        resolve(invoice);
-                                    }
-                                });
-                                return;
-                            }
-
-                            this.db.run(deleteRelated[currentIndex], [id], (err) => {
-                                if (err) {
-                                    this.db.run('ROLLBACK');
-                                    reject(err);
-                                } else {
-                                    currentIndex++;
-                                    executeDelete();
-                                }
-                            });
-                        };
-
-                        executeDelete();
-                    });
-                });
-            }).catch(reject);
-        });
+            for (const sql of deleteRelated) {
+                try {
+                    await this.db.run(sql, [id]);
+                } catch (err) {
+                    // Ignore errors for tables that don't exist or columns that don't exist
+                    // This allows the delete to proceed even if some tables are missing
+                    console.log(`Warning: ${err.message}`);
+                }
+            }
+            
+            return invoice;
+        } catch (error) {
+            throw error;
+        }
     }
 
     // Payment Management
@@ -2062,12 +2063,34 @@ class BillingManager {
     }
 
     async getCollectorById(collectorId) {
-        return new Promise((resolve, reject) => {
-            this.db.get('SELECT * FROM collectors WHERE id = ?', [collectorId], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        console.log('[getCollectorById] Looking for collector ID:', collectorId);
+        console.log('[getCollectorById] Database initialized:', this.db.isInitialized);
+        console.log('[getCollectorById] Database type:', this.db.dbType);
+        
+        try {
+            // Ensure database is initialized
+            await this.db.init();
+            console.log('[getCollectorById] Database init completed');
+            
+            // First check collectors table
+            console.log('[getCollectorById] Querying collectors table...');
+            const collector = await this.db.get('SELECT * FROM collectors WHERE id = ?', [collectorId]);
+            console.log('[getCollectorById] Collector from collectors table:', collector);
+            
+            if (collector) {
+                return collector;
+            }
+            
+            // If not found in collectors table, check technicians table with role='collector'
+            console.log('[getCollectorById] Querying technicians table...');
+            const technician = await this.db.get('SELECT * FROM technicians WHERE id = ? AND role = "collector"', [collectorId]);
+            console.log('[getCollectorById] Technician from technicians table:', technician);
+            
+            return technician;
+        } catch (error) {
+            console.error('[getCollectorById] Error:', error);
+            throw error;
+        }
     }
 
     async recordCollectorPaymentRecord(paymentData) {
@@ -3682,7 +3705,6 @@ class BillingManager {
                 FROM collectors c
                 LEFT JOIN payments p ON c.id = p.collector_id 
                     AND p.payment_type = 'collector'
-                    AND p.remittance_status IS NULL
                 WHERE c.status = 'active'
                 GROUP BY c.id, c.name, c.phone, c.commission_rate
                 ORDER BY c.name

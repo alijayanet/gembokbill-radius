@@ -361,6 +361,88 @@ async function deleteHotspotProfileRadius(name) {
     }
 }
 
+// NAS Client Management Functions
+async function syncRadiusClientToNAS(client) {
+    try {
+        const pool = getRadiusPool();
+        const { name, ipaddr, secret, shortname, nas_type } = client;
+        
+        await pool.query(
+            'INSERT INTO nas (nasname, shortname, type, secret, description) VALUES (?, ?, ?, ?, ?) ' +
+            'ON DUPLICATE KEY UPDATE shortname = VALUES(shortname), type = VALUES(type), secret = VALUES(secret), description = VALUES(description)',
+            [ipaddr, shortname || name, nas_type || 'other', secret, `RADIUS Client: ${name}`]
+        );
+        
+        logger.info(`NAS client synced: ${name} (${ipaddr})`);
+        return { success: true, message: 'NAS client synced successfully' };
+    } catch (error) {
+        logger.error(`Error syncing NAS client: ${error.message}`);
+        return { success: false, message: error.message };
+    }
+}
+
+async function deleteNASClient(ipaddr) {
+    try {
+        const pool = getRadiusPool();
+        
+        await pool.query('DELETE FROM nas WHERE nasname = ?', [ipaddr]);
+        
+        logger.info(`NAS client deleted from RADIUS database: ${ipaddr}`);
+        return { success: true, message: 'NAS client deleted successfully' };
+    } catch (error) {
+        logger.error(`Error deleting NAS client: ${error.message}`);
+        return { success: false, message: error.message };
+    }
+}
+
+async function syncAllRadiusClientsToNAS(clients) {
+    try {
+        const pool = getRadiusPool();
+        
+        for (const client of clients) {
+            const { name, ipaddr, secret, shortname, nas_type, is_active } = client;
+            
+            if (is_active) {
+                await pool.query(
+                    'INSERT INTO nas (nasname, shortname, type, secret, description) VALUES (?, ?, ?, ?, ?) ' +
+                    'ON DUPLICATE KEY UPDATE shortname = VALUES(shortname), type = VALUES(type), secret = VALUES(secret), description = VALUES(description)',
+                    [ipaddr, shortname || name, nas_type || 'other', secret, `RADIUS Client: ${name}`]
+                );
+            } else {
+                await pool.query('DELETE FROM nas WHERE nasname = ?', [ipaddr]);
+            }
+        }
+        
+        logger.info(`Synced ${clients.length} RADIUS clients to NAS table`);
+        return { success: true, message: `Synced ${clients.length} clients to NAS table` };
+    } catch (error) {
+        logger.error(`Error syncing all RADIUS clients: ${error.message}`);
+        return { success: false, message: error.message };
+    }
+}
+
+async function getNASClients() {
+    try {
+        const pool = getRadiusPool();
+        
+        const [rows] = await pool.query(
+            'SELECT nasname, shortname, secret, type, description FROM nas ORDER BY nasname'
+        );
+        
+        return rows.map(row => ({
+            ipaddr: row.nasname,
+            name: row.shortname || row.nasname,
+            secret: row.secret,
+            shortname: row.shortname,
+            nas_type: row.type,
+            description: row.description
+        }));
+    } catch (error) {
+        logger.error(`Error getting NAS clients: ${error.message}`);
+        return [];
+    }
+}
+
 module.exports = {
     getRadiusPool,
     addRadiusUser,
@@ -375,5 +457,9 @@ module.exports = {
     getHotspotProfilesRadius,
     addHotspotProfileRadius,
     updateHotspotProfileRadius,
-    deleteHotspotProfileRadius
+    deleteHotspotProfileRadius,
+    syncRadiusClientToNAS,
+    deleteNASClient,
+    syncAllRadiusClientsToNAS,
+    getNASClients
 };
