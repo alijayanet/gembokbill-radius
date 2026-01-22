@@ -86,76 +86,26 @@ SETLID admin123
 
 ## Installation Guide
 
-### 1. Clone Repository
+###  Clone Repository
 
 ```bash
 git clone https://github.com/alijayanet/gembokbill-radius.git
 cd gembokbill-radius
 ```
 
-### 2. Install System Dependencies
-
-#### Install Node.js 20+
+###  Install System Dependencies
 
 ```bash
 # Ubuntu/Debian
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# CentOS/RHEL
-curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-sudo yum install -y nodejs
-
-# Verify
-node --version
-npm --version
+chmod x+ install.sh
+chmod x+ install-freeradius.sh
+sudo bash install.sh
 ```
 
-#### Install MySQL Server
-
+# Start  verifikation MySQL
 ```bash
-# Ubuntu/Debian
-sudo apt install -y mysql-server mysql-client
-
-# CentOS/RHEL
-sudo yum install -y mysql-server mysql
-
-# Start MySQL
 sudo systemctl start mysql
 sudo systemctl enable mysql
-```
-
-#### Install Git
-
-```bash
-# Ubuntu/Debian
-sudo apt install -y git
-
-# CentOS/RHEL
-sudo yum install -y git
-```
-
-### 3. Install Application Dependencies
-
-```bash
-npm install
-
-# Install PM2 for production (recommended)
-sudo npm install -g pm2
-```
-
-### 4. Setup MySQL Database
-
-#### Create Database & User
-
-```bash
-sudo mysql -u root << 'EOF'
-CREATE DATABASE gembok_bill CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gembokbill'@'localhost' IDENTIFIED BY 'GantiDenganPasswordYangKuat123!';
-GRANT ALL PRIVILEGES ON gembok_bill.* TO 'gembokbill'@'localhost';
-FLUSH PRIVILEGES;
-exit;
-EOF
 ```
 
 #### Verify Connection
@@ -164,40 +114,7 @@ EOF
 mysql -u gembokbill -p gembokbill
 ```
 
-### 5. Configure Application Settings
-
-Copy and edit the settings file:
-
-```bash
-cp settings.server.template.json settings.json
-# ATAU
-cp settings.json.example settings.json
-```
-
-Edit `settings.json`:
-
-```json
-{
-  "db_type": "mysql",
-  "db_host": "localhost",
-  "db_user": "gembokbill",
-  "db_password": "GantiDenganPasswordYangKuat123!",
-  "db_name": "gembok_bill",
-  
-  "radius_host": "localhost",
-  "radius_user": "radius",
-  "radius_password": "radpassword",
-  
-  "mikrotik_host": "192.168.1.1",
-  "mikrotik_user": "admin",
-  "mikrotik_password": "password",
-  
-  "port": 3000,
-  "host": "0.0.0.0"
-}
-```
-
-### 6. Initialize Database
+###  Initialize Database
 
 Run the setup script to create all tables and insert default data:
 
@@ -216,7 +133,7 @@ This will:
 - Insert default packages
 - Create admin user (username: admin, password: admin123)
 
-### 7. Install and Configure FreeRADIUS (Optional)
+###  Install and Configure FreeRADIUS (Optional)
 
 If using RADIUS for PPPoE/Hotspot authentication:
 
@@ -464,3 +381,4 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
 
 
 \u003c/div\u003e
+
