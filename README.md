@@ -124,10 +124,6 @@ node scripts/new-server-setup-mysql.js
 # ATAU use comprehensive migration
 node migrate-to-mysql-comprehensive.js
 ```
-```bash
-# Run aplikasi
-npm start
-```
 
 This will:
 - Create all required tables
@@ -151,7 +147,7 @@ The installer will:
 - Setup RADIUS authentication
 - Test connection
 
-### 8. Run Database Migration (Important for New Servers)
+###  Run Database Migration (Important for New Servers)
 To ensure all required tables and columns exist in the database, run migration commands:
 
 ```bash
@@ -161,8 +157,12 @@ node scripts/run-all-migrations.js
 # Verify database structure
 node scripts/verify-production-database.js
 ```
+```bash
+# Run aplikasi
+npm start
+```
 
-### 8. Access the Application
+### Access the Application
 
 After starting the application, you can access different portals through these URLs:
 
@@ -384,6 +384,7 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
 
 
 \u003c/div\u003e
+
 
 
 
