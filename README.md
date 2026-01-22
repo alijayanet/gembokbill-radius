@@ -1,7 +1,4 @@
-\u003c!-- Improved modern README with vibrant colors and enhanced structure --\u003e
-\u003cdiv align="center"\u003e
-  \u003cimg src="public/img/logo.png" alt="Gembok Bill Logo" width="120" height="120"\u003e
-  
+
   # Gembok Bill Radius
   **Integrated ISP Management System with RADIUS Server**
   
@@ -10,7 +7,7 @@
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](https://github.com/alijayanet/gembokbill-radius/pulls)
   [![GitHub Stars](https://img.shields.io/github/stars/alijayanet/gembokbill-radius?style=for-the-badge)](https://github.com/alijayanet/gembokbill-radius/stargazers)
   [![Version](https://img.shields.io/badge/v2.2.0-orange?style=for-the-badge)](https://github.com/alijayanet/gembokbill-radius/releases)
-\u003c/div\u003e
+
 
 ## 🌐 About Gembok Bill
 
@@ -464,5 +461,6 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
   
   [Report Bug](https://github.com/alijayanet/gembok-bill/issues) · [Request Feature](https://github.com/alijayanet/gembok-bill/issues) · [Documentation](DEPLOYMENT_GUIDE.md)
   
+
 
 \u003c/div\u003e
