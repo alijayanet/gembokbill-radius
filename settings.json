@@ -44,7 +44,7 @@
   "offline_notification_interval": "43200000",
   "offline_device_threshold_hours": "24",
   "user_auth_mode": "mikrotik",
-  "db_type": "sqlite",
+  "db_type": "mysql",
   "db_host": "localhost",
   "db_user": "root",
   "db_password": "",

@@ -533,40 +533,7 @@ router.get('/mobile/collector/payment', getAppSettings, async (req, res) => {
 router.get('/collector-reports', getAppSettings, async (req, res) => {
     try {
         const { dateFrom, dateTo, collector } = req.query;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
-        // Check if collectors table exists
-        const tableExists = await new Promise((resolve, reject) => {
-            db.get(`
-                SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='collectors'
-            `, (err, row) => {
-                if (err) reject(err);
-                else resolve(!!row);
-            });
-        });
-        
-        if (!tableExists) {
-            db.close();
-            return res.render('admin/billing/collector-reports', {
-                title: 'Laporan Kolektor',
-                appSettings: req.appSettings,
-                collectors: [],
-                summary: {
-                    total_collectors: 0,
-                    total_payments: 0,
-                    total_commissions: 0,
-                    total_setoran: 0
-                },
-                filters: {
-                    dateFrom: dateFrom || '',
-                    dateTo: dateTo || '',
-                    collector: collector || ''
-                },
-                error: 'Tabel kolektor belum tersedia. Silakan tambahkan kolektor terlebih dahulu.'
-            });
-        }
+        const db = require('../config/database');
         
         // Set default date range (last 30 days)
         const defaultDateTo = new Date();
@@ -583,59 +550,39 @@ router.get('/collector-reports', getAppSettings, async (req, res) => {
         const collectorFilter = collector ? `AND c.id = ${collector}` : '';
         
         // Get collectors with statistics
-        const collectors = await new Promise((resolve, reject) => {
-            db.all(`
-                SELECT c.*, 
-                       COUNT(cp.id) as total_payments,
-                       COALESCE(SUM(cp.payment_amount), 0) as total_payment_amount,
-                       COALESCE(SUM(cp.commission_amount), 0) as total_commission,
-                       COALESCE(SUM(cp.payment_amount - cp.commission_amount), 0) as total_setoran
-                FROM collectors c
-                LEFT JOIN collector_payments cp ON c.id = cp.collector_id 
-                    AND cp.status = 'completed'
-                    ${dateFilter}
-                WHERE c.status = 'active' ${collectorFilter}
-                GROUP BY c.id
-                ORDER BY c.name
-            `, (err, rows) => {
-                if (err) {
-                    console.error('Error in collectors query:', err);
-                    reject(err);
-                } else {
-                    resolve(rows || []);
-                }
-            });
-        });
+        const collectors = await db.all(`
+            SELECT c.*, 
+                   COUNT(cp.id) as total_payments,
+                   COALESCE(SUM(cp.payment_amount), 0) as total_payment_amount,
+                   COALESCE(SUM(cp.commission_amount), 0) as total_commission,
+                   COALESCE(SUM(cp.payment_amount - cp.commission_amount), 0) as total_setoran
+            FROM collectors c
+            LEFT JOIN collector_payments cp ON c.id = cp.collector_id 
+                AND cp.status = 'completed'
+                ${dateFilter}
+            WHERE c.status = 'active' ${collectorFilter}
+            GROUP BY c.id
+            ORDER BY c.name
+        `);
         
         // Get summary statistics
-        const summary = await new Promise((resolve, reject) => {
-            db.get(`
-                SELECT 
-                    COUNT(DISTINCT c.id) as total_collectors,
-                    COALESCE(SUM(cp.payment_amount), 0) as total_payments,
-                    COALESCE(SUM(cp.commission_amount), 0) as total_commissions,
-                    COALESCE(SUM(cp.payment_amount - cp.commission_amount), 0) as total_setoran
-                FROM collectors c
-                LEFT JOIN collector_payments cp ON c.id = cp.collector_id 
-                    AND cp.status = 'completed'
-                    ${dateFilter}
-                WHERE c.status = 'active' ${collectorFilter}
-            `, (err, row) => {
-                if (err) {
-                    console.error('Error in summary query:', err);
-                    reject(err);
-                } else {
-                    resolve(row || {
-                        total_collectors: 0,
-                        total_payments: 0,
-                        total_commissions: 0,
-                        total_setoran: 0
-                    });
-                }
-            });
-        });
-        
-        db.close();
+        const summary = await db.get(`
+            SELECT 
+                COUNT(DISTINCT c.id) as total_collectors,
+                COALESCE(SUM(cp.payment_amount), 0) as total_payments,
+                COALESCE(SUM(cp.commission_amount), 0) as total_commissions,
+                COALESCE(SUM(cp.payment_amount - cp.commission_amount), 0) as total_setoran
+            FROM collectors c
+            LEFT JOIN collector_payments cp ON c.id = cp.collector_id 
+                AND cp.status = 'completed'
+                ${dateFilter}
+            WHERE c.status = 'active' ${collectorFilter}
+        `) || {
+            total_collectors: 0,
+            total_payments: 0,
+            total_commissions: 0,
+            total_setoran: 0
+        };
         
         res.render('admin/billing/collector-reports', {
             title: 'Laporan Kolektor',
@@ -663,8 +610,7 @@ router.get('/collector-details/:id', getAppSettings, async (req, res) => {
     try {
         const { id } = req.params;
         const { dateFrom, dateTo } = req.query;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
+        const db = require('../config/database');
         
         // Set default date range (last 30 days)
         const defaultDateTo = new Date();
@@ -675,15 +621,9 @@ router.get('/collector-details/:id', getAppSettings, async (req, res) => {
         const endDate = dateTo || defaultDateTo.toISOString().split('T')[0];
         
         // Get collector details
-        const collector = await new Promise((resolve, reject) => {
-            db.get('SELECT * FROM collectors WHERE id = ?', [id], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        const collector = await db.get('SELECT * FROM collectors WHERE id = ?', [id]);
         
         if (!collector) {
-            db.close();
             return res.status(404).render('error', { 
                 message: 'Kolektor tidak ditemukan',
                 error: {}
@@ -691,46 +631,34 @@ router.get('/collector-details/:id', getAppSettings, async (req, res) => {
         }
         
         // Get collector payments with date filter
-        const payments = await new Promise((resolve, reject) => {
-            db.all(`
-                SELECT cp.*, c.name as customer_name, c.phone as customer_phone
-                FROM collector_payments cp
-                LEFT JOIN customers c ON cp.customer_id = c.id
-                WHERE cp.collector_id = ? 
-                AND cp.collected_at >= ? 
-                AND cp.collected_at <= ?
-                ORDER BY cp.collected_at DESC
-            `, [id, startDate, endDate + ' 23:59:59'], (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows || []);
-            });
-        });
+        const payments = await db.all(`
+            SELECT cp.*, c.name as customer_name, c.phone as customer_phone
+            FROM collector_payments cp
+            LEFT JOIN customers c ON cp.customer_id = c.id
+            WHERE cp.collector_id = ? 
+            AND cp.collected_at >= ? 
+            AND cp.collected_at <= ?
+            ORDER BY cp.collected_at DESC
+        `, [id, startDate, endDate + ' 23:59:59']);
         
         // Get collector statistics
-        const stats = await new Promise((resolve, reject) => {
-            db.get(`
-                SELECT 
-                    COUNT(*) as total_payments,
-                    COALESCE(SUM(payment_amount), 0) as total_payment_amount,
-                    COALESCE(SUM(commission_amount), 0) as total_commission,
-                    COALESCE(SUM(payment_amount - commission_amount), 0) as total_setoran
-                FROM collector_payments 
-                WHERE collector_id = ? 
-                AND collected_at >= ? 
-                AND collected_at <= ?
-                AND status = 'completed'
-            `, [id, startDate, endDate + ' 23:59:59'], (err, row) => {
-                if (err) reject(err);
-                else resolve(row || {
-                    total_payments: 0,
-                    total_payment_amount: 0,
-                    total_commission: 0,
-                    total_setoran: 0
-                });
-            });
-        });
-        
-        db.close();
+        const stats = await db.get(`
+            SELECT 
+                COUNT(*) as total_payments,
+                COALESCE(SUM(payment_amount), 0) as total_payment_amount,
+                COALESCE(SUM(commission_amount), 0) as total_commission,
+                COALESCE(SUM(payment_amount - commission_amount), 0) as total_setoran
+            FROM collector_payments 
+            WHERE collector_id = ? 
+            AND collected_at >= ? 
+            AND collected_at <= ?
+            AND status = 'completed'
+        `, [id, startDate, endDate + ' 23:59:59']) || {
+            total_payments: 0,
+            total_payment_amount: 0,
+            total_commission: 0,
+            total_setoran: 0
+        };
         
         res.render('admin/billing/collector-details', {
             title: `Detail Kolektor - ${collector.name}`,

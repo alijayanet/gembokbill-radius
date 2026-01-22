@@ -5,38 +5,27 @@
 
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const bcrypt = require('bcrypt');
+const db = require('../config/database');
 const { getSetting } = require('../config/settingsManager');
 const { adminAuth } = require('./adminAuth');
 
 // List collectors
 router.get('/', adminAuth, async (req, res) => {
     try {
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
         // Get collectors with statistics
-        const collectors = await new Promise((resolve, reject) => {
-            db.all(`
-                SELECT c.*, 
-                       COUNT(cp.id) as total_payments,
-                       COALESCE(SUM(cp.commission_amount), 0) as total_commission
-                FROM collectors c
-                LEFT JOIN collector_payments cp ON c.id = cp.collector_id 
-                    AND cp.status = 'completed'
-                GROUP BY c.id
-                ORDER BY c.name
-            `, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows || []);
-            });
-        });
+        const collectors = await db.all(`
+            SELECT c.*, 
+                   COUNT(cp.id) as total_payments,
+                   COALESCE(SUM(cp.commission_amount), 0) as total_commission
+            FROM collectors c
+            LEFT JOIN collector_payments cp ON c.id = cp.collector_id 
+                AND cp.status = 'completed'
+            GROUP BY c.id
+            ORDER BY c.name
+        `);
         
         const appSettings = await getAppSettings();
-        
-        db.close();
         
         res.render('admin/collectors', {
             title: 'Kelola Tukang Tagih',
@@ -78,26 +67,16 @@ router.get('/add', adminAuth, async (req, res) => {
 router.get('/:id/edit', adminAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
         
-        const collector = await new Promise((resolve, reject) => {
-            db.get('SELECT * FROM collectors WHERE id = ?', [id], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        const collector = await db.get('SELECT * FROM collectors WHERE id = ?', [id]);
         
         if (!collector) {
-            db.close();
             return res.status(404).render('error', { 
                 message: 'Tukang tagih tidak ditemukan'
             });
         }
         
         const appSettings = await getAppSettings();
-        
-        db.close();
         
         res.render('admin/collector-form', {
             title: 'Edit Tukang Tagih',
@@ -134,19 +113,10 @@ router.post('/', adminAuth, async (req, res) => {
             });
         }
         
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
         // Check if phone already exists
-        const existingCollector = await new Promise((resolve, reject) => {
-            db.get('SELECT id FROM collectors WHERE phone = ?', [phone], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        const existingCollector = await db.get('SELECT id FROM collectors WHERE phone = ?', [phone]);
         
         if (existingCollector) {
-            db.close();
             return res.status(400).json({
                 success: false,
                 message: 'Nomor telepon sudah digunakan'
@@ -157,22 +127,15 @@ router.post('/', adminAuth, async (req, res) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
         
         // Insert new collector
-        const collectorId = await new Promise((resolve, reject) => {
-            db.run(`
-                INSERT INTO collectors (name, phone, email, address, commission_rate, status, password)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `, [name, phone, email, address, commission_rate || 5, status || 'active', hashedPassword], function(err) {
-                if (err) reject(err);
-                else resolve(this.lastID);
-            });
-        });
-        
-        db.close();
+        const result = await db.run(`
+            INSERT INTO collectors (name, phone, email, address, commission_rate, status, password)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [name, phone, email, address, commission_rate || 5, status || 'active', hashedPassword]);
         
         res.json({
             success: true,
             message: 'Tukang tagih berhasil ditambahkan',
-            collector_id: collectorId
+            collector_id: result.lastID
         });
         
     } catch (error) {
@@ -204,19 +167,10 @@ router.put('/:id', adminAuth, async (req, res) => {
             });
         }
         
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
         // Check if phone already exists (excluding current collector)
-        const existingCollector = await new Promise((resolve, reject) => {
-            db.get('SELECT id FROM collectors WHERE phone = ? AND id != ?', [phone, id], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        const existingCollector = await db.get('SELECT id FROM collectors WHERE phone = ? AND id != ?', [phone, id]);
         
         if (existingCollector) {
-            db.close();
             return res.status(400).json({
                 success: false,
                 message: 'Nomor telepon sudah digunakan'
@@ -246,14 +200,7 @@ router.put('/:id', adminAuth, async (req, res) => {
         }
         
         // Update collector
-        await new Promise((resolve, reject) => {
-            db.run(updateQuery, updateParams, (err) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
-        
-        db.close();
+        await db.run(updateQuery, updateParams);
         
         res.json({
             success: true,
@@ -273,19 +220,11 @@ router.put('/:id', adminAuth, async (req, res) => {
 router.delete('/:id', adminAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
         
         // Check if collector has payments
-        const paymentCount = await new Promise((resolve, reject) => {
-            db.get('SELECT COUNT(*) as count FROM collector_payments WHERE collector_id = ?', [id], (err, row) => {
-                if (err) reject(err);
-                else resolve(row ? row.count : 0);
-            });
-        });
+        const paymentCount = await db.get('SELECT COUNT(*) as count FROM collector_payments WHERE collector_id = ?', [id]);
         
-        if (paymentCount > 0) {
-            db.close();
+        if (paymentCount.count > 0) {
             return res.status(400).json({
                 success: false,
                 message: 'Tidak dapat menghapus tukang tagih yang sudah memiliki riwayat pembayaran'
@@ -293,14 +232,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
         }
         
         // Delete collector
-        await new Promise((resolve, reject) => {
-            db.run('DELETE FROM collectors WHERE id = ?', [id], (err) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
-        
-        db.close();
+        await db.run('DELETE FROM collectors WHERE id = ?', [id]);
         
         res.json({
             success: true,

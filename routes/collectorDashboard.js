@@ -5,7 +5,6 @@
 
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 const { getSetting } = require('../config/settingsManager');
@@ -14,15 +13,23 @@ const billingManager = require('../config/billing');
 const serviceSuspension = require('../config/serviceSuspension');
 const whatsappNotifications = require('../config/whatsapp-notifications');
 
+// Database connection using MySQL wrapper
+const db = require('../config/database');
+
 // Dashboard
 router.get('/dashboard', collectorAuth, async (req, res) => {
     try {
         const collectorId = req.collector.id;
         
+        console.log('Loading dashboard for collector ID:', collectorId);
+        
         // Get collector info menggunakan BillingManager
         const collector = await billingManager.getCollectorById(collectorId);
         
+        console.log('Collector data:', collector);
+        
         if (!collector) {
+            console.error('Collector not found for ID:', collectorId);
             return res.status(404).render('error', { 
                 message: 'Collector not found',
                 error: {}
@@ -80,9 +87,6 @@ router.get('/dashboard', collectorAuth, async (req, res) => {
 // Payment form
 router.get('/payment', collectorAuth, async (req, res) => {
     try {
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
         // Get active customers
         const customers = await new Promise((resolve, reject) => {
             db.all('SELECT * FROM customers WHERE status = "active" ORDER BY name', (err, rows) => {
@@ -93,8 +97,6 @@ router.get('/payment', collectorAuth, async (req, res) => {
         
         const appSettings = await getAppSettings();
         const collector = req.collector;
-        
-        db.close();
         
         res.render('collector/payment', {
             title: 'Input Pembayaran',
@@ -116,23 +118,15 @@ router.get('/payment', collectorAuth, async (req, res) => {
 router.get('/api/customer-invoices/:customerId', collectorAuth, async (req, res) => {
     try {
         const { customerId } = req.params;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
+        const db = require('../config/database');
         
-        const invoices = await new Promise((resolve, reject) => {
-            db.all(`
-                SELECT i.*, p.name as package_name
-                FROM invoices i
-                LEFT JOIN packages p ON i.package_id = p.id
-                WHERE i.customer_id = ? AND i.status = 'unpaid'
-                ORDER BY i.created_at DESC
-            `, [customerId], (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows || []);
-            });
-        });
-        
-        db.close();
+        const invoices = await db.all(`
+            SELECT i.*, p.name as package_name
+            FROM invoices i
+            LEFT JOIN packages p ON i.package_id = p.id
+            WHERE i.customer_id = ? AND i.status = 'unpaid'
+            ORDER BY i.created_at DESC
+        `, [customerId]);
         
         res.json({
             success: true,
@@ -219,8 +213,6 @@ router.get('/customers', collectorAuth, async (req, res) => {
 router.get('/profile', collectorAuth, async (req, res) => {
     try {
         const collectorId = req.collector.id;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
         
         // Get collector info
         const collector = await new Promise((resolve, reject) => {
@@ -231,8 +223,6 @@ router.get('/profile', collectorAuth, async (req, res) => {
         });
         
         const appSettings = await getAppSettings();
-        
-        db.close();
         
         res.render('collector/profile', {
             title: 'Profil Saya',
@@ -253,8 +243,6 @@ router.get('/profile', collectorAuth, async (req, res) => {
 router.get('/profile/edit', collectorAuth, async (req, res) => {
     try {
         const collectorId = req.collector.id;
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
         
         // Get collector info
         const collector = await new Promise((resolve, reject) => {
@@ -265,8 +253,6 @@ router.get('/profile/edit', collectorAuth, async (req, res) => {
         });
         
         const appSettings = await getAppSettings();
-        
-        db.close();
         
         res.render('collector/profile-edit', {
             title: 'Edit Profil',
@@ -296,9 +282,6 @@ router.post('/api/profile/update', collectorAuth, async (req, res) => {
             });
         }
         
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
         // Update collector info
         await new Promise((resolve, reject) => {
             db.run(`
@@ -310,8 +293,6 @@ router.post('/api/profile/update', collectorAuth, async (req, res) => {
                 else resolve();
             });
         });
-        
-        db.close();
         
         res.json({
             success: true,
@@ -347,9 +328,6 @@ router.post('/api/profile/update-password', collectorAuth, async (req, res) => {
             });
         }
         
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
-        
         // Get current collector data
         const collector = await new Promise((resolve, reject) => {
             db.get('SELECT * FROM collectors WHERE id = ?', [collectorId], (err, row) => {
@@ -359,7 +337,6 @@ router.post('/api/profile/update-password', collectorAuth, async (req, res) => {
         });
         
         if (!collector) {
-            db.close();
             return res.status(404).json({
                 success: false,
                 message: 'Tukang tagih tidak ditemukan'
@@ -370,7 +347,6 @@ router.post('/api/profile/update-password', collectorAuth, async (req, res) => {
         const validPassword = collector.password ? bcrypt.compareSync(currentPassword, collector.password) : false;
         
         if (!validPassword) {
-            db.close();
             return res.status(400).json({
                 success: false,
                 message: 'Password lama tidak benar'
@@ -391,8 +367,6 @@ router.post('/api/profile/update-password', collectorAuth, async (req, res) => {
                 else resolve();
             });
         });
-        
-        db.close();
         
         res.json({
             success: true,

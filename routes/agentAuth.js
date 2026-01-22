@@ -384,9 +384,6 @@ router.post('/profile', requireAgentAuth, async (req, res) => {
         const { name, email, address, phone } = req.body;
         
         // Update agent profile
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
-        
         const updateSql = `
             UPDATE agents 
             SET name = ?, email = ?, address = ?, phone = ?, updated_at = CURRENT_TIMESTAMP 
@@ -394,8 +391,6 @@ router.post('/profile', requireAgentAuth, async (req, res) => {
         `;
         
         db.run(updateSql, [name, email, address, phone, agentId], function(err) {
-            db.close();
-            
             if (err) {
                 logger.error('Profile update error:', err);
                 return res.json({ success: false, message: 'Gagal mengupdate profil' });
@@ -432,13 +427,10 @@ router.post('/change-password', requireAgentAuth, async (req, res) => {
         
         // Verify current password
         const agent = await agentManager.getAgentById(agentId);
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
         
         const getPasswordSql = 'SELECT password FROM agents WHERE id = ?';
         db.get(getPasswordSql, [agentId], async (err, row) => {
             if (err) {
-                db.close();
                 return res.json({ success: false, message: 'Terjadi kesalahan' });
             }
             
@@ -446,7 +438,6 @@ router.post('/change-password', requireAgentAuth, async (req, res) => {
             const isValid = await bcrypt.compare(currentPassword, row.password);
             
             if (!isValid) {
-                db.close();
                 return res.json({ success: false, message: 'Password lama salah' });
             }
             
@@ -455,7 +446,6 @@ router.post('/change-password', requireAgentAuth, async (req, res) => {
             const updateSql = 'UPDATE agents SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
             
             db.run(updateSql, [hashedPassword, agentId], function(err) {
-                db.close();
                 
                 if (err) {
                     return res.json({ success: false, message: 'Gagal mengupdate password' });

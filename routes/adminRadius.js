@@ -83,10 +83,33 @@ router.post('/users', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const { username, password, attributes = {} } = req.body;
+        const { username, password, profile_id, attributes = {} } = req.body;
 
         if (!username || !password) {
             return res.status(400).json({ success: false, message: 'Username and password are required' });
+        }
+
+        // If profile_id is provided, fetch profile and add its attributes
+        if (profile_id) {
+            try {
+                const profile = await new Promise((resolve, reject) => {
+                    db.get('SELECT * FROM radius_profiles WHERE id = ? AND is_active = 1', [profile_id], (err, row) => {
+                        if (err) reject(err);
+                        else resolve(row);
+                    });
+                });
+
+                if (profile) {
+                    // Add profile attributes
+                    attributes['Mikrotik-Rate-Limit'] = profile.rate_limit || `${profile.download_speed}/${profile.upload_speed}`;
+                    if (profile.burst_limit) {
+                        attributes['Mikrotik-Burst-Limit'] = profile.burst_limit;
+                    }
+                    logger.info(`Applied profile "${profile.name}" to user "${username}"`);
+                }
+            } catch (error) {
+                logger.error(`Error fetching profile: ${error.message}`);
+            }
         }
 
         const result = await radius.addRadiusUser(username, password, attributes);
@@ -205,10 +228,12 @@ router.post('/sync-customer/:customerId', async (req, res) => {
 
         const customerId = req.params.customerId;
 
-        const [customers] = await db.query(
+        const customerResult = await db.query(
             'SELECT * FROM customers WHERE id = ?',
             [customerId]
         );
+
+        const customers = Array.isArray(customerResult) ? customerResult : [];
 
         if (customers.length === 0) {
             return res.status(404).json({ success: false, message: 'Customer not found' });
@@ -224,20 +249,37 @@ router.post('/sync-customer/:customerId', async (req, res) => {
         const radiusPassword = customer.radius_password;
 
         if (!radiusUsername || !radiusPassword) {
-            return res.status(400).json({ success: false, message: 'RADIUS username or password not set' });
+            return res.status(400).json({ success: false, message: 'RADIUS username or password not set for this customer' });
         }
 
-        let attributes = {};
+        const attributes = {};
+        if (customer.radius_profile_id) {
+            const profileResult = await db.query(
+                'SELECT * FROM radius_profiles WHERE id = ? AND is_active = 1',
+                [customer.radius_profile_id]
+            );
+
+            const profiles = Array.isArray(profileResult) ? profileResult : [];
+            if (profiles.length > 0) {
+                const profile = profiles[0];
+                attributes['Mikrotik-Rate-Limit'] = profile.rate_limit || `${profile.download_speed}/${profile.upload_speed}`;
+                if (profile.burst_limit) {
+                    attributes['Mikrotik-Burst-Limit'] = profile.burst_limit;
+                }
+            }
+        }
+
+        let attributesFromCustomer = {};
 
         if (customer.radius_attributes) {
             try {
-                attributes = JSON.parse(customer.radius_attributes);
+                attributesFromCustomer = JSON.parse(customer.radius_attributes);
             } catch (e) {
                 logger.error(`Error parsing radius_attributes: ${e.message}`);
             }
         }
 
-        const result = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
+        const result = await radius.addRadiusUser(radiusUsername, radiusPassword, { ...attributes, ...attributesFromCustomer });
 
         if (result.success) {
             await db.query(
@@ -259,9 +301,11 @@ router.post('/sync-all-customers', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const [customers] = await db.query(
+        const customersResult = await db.query(
             'SELECT * FROM customers WHERE radius_enabled = 1 AND (radius_username IS NOT NULL OR pppoe_username IS NOT NULL) AND radius_password IS NOT NULL'
         );
+
+        const customers = Array.isArray(customersResult) ? customersResult : [];
 
         let successCount = 0;
         let failureCount = 0;
@@ -281,13 +325,13 @@ router.post('/sync-all-customers', async (req, res) => {
                     }
                 }
 
-                const result = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
+                const syncResult = await radius.addRadiusUser(radiusUsername, radiusPassword, attributes);
 
-                if (result.success) {
+                if (syncResult.success) {
                     successCount++;
                 } else {
                     failureCount++;
-                    errors.push({ customer: customer.username, error: result.message });
+                    errors.push({ customer: customer.username, error: syncResult.message });
                 }
             } catch (error) {
                 failureCount++;
@@ -582,6 +626,284 @@ router.delete('/hotspot-profiles/:name', async (req, res) => {
         res.json(result);
     } catch (error) {
         logger.error(`Error deleting hotspot profile: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// RADIUS Clients Management
+router.get('/clients', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const result = await db.query(
+            'SELECT * FROM radius_clients ORDER BY created_at DESC'
+        );
+
+        // Get clients array from result - db.query() returns rows directly
+        const clients = Array.isArray(result) ? result : [];
+
+        res.json({ success: true, clients });
+    } catch (error) {
+        logger.error(`Error getting RADIUS clients: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/clients', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const { name, ipaddr, secret, shortname, nas_type } = req.body;
+
+        if (!name || !ipaddr || !secret) {
+            return res.status(400).json({ success: false, message: 'Name, IP address, and secret are required' });
+        }
+
+        // Check if IP address already exists
+        try {
+            const checkResult = await db.query(
+                'SELECT id, name FROM radius_clients WHERE ipaddr = ?',
+                [ipaddr]
+            );
+
+            // Debug logging
+            logger.info(`Checking IP ${ipaddr}, result:`, JSON.stringify(checkResult));
+
+            // Check if result exists and has data
+            if (checkResult && checkResult.length > 0) {
+                return res.status(409).json({
+                    success: false,
+                    message: `IP address ${ipaddr} already exists as client "${checkResult[0].name}". Please delete the existing client first or use a different IP address.`,
+                    existingClient: checkResult[0]
+                });
+            }
+        } catch (queryError) {
+            logger.error(`Error checking existing client: ${queryError.message}`);
+            // Continue with insert even if check fails
+        }
+
+        const insertResult = await db.query(
+            'INSERT INTO radius_clients (name, ipaddr, secret, shortname, nas_type) VALUES (?, ?, ?, ?, ?)',
+            [name, ipaddr, secret, shortname || name, nas_type || 'other']
+        );
+
+        // Sync to RADIUS database
+        const syncResult = await radius.syncRadiusClientToNAS({ name, ipaddr, secret, shortname, nas_type });
+        
+        if (!syncResult.success) {
+            logger.warn(`Client added but sync to RADIUS failed: ${syncResult.message}`);
+        }
+
+        res.json({ success: true, message: 'RADIUS client added successfully', id: insertResult.insertId, syncResult });
+    } catch (error) {
+        logger.error(`Error adding RADIUS client: ${error.message}`);
+        
+        // Handle specific database errors
+        if (error.message.includes('UNIQUE constraint failed')) {
+            return res.status(409).json({
+                success: false,
+                message: 'IP address already exists. Please use a different IP address or delete the existing client first.'
+            });
+        }
+        
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.put('/clients/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const id = req.params.id;
+        const { name, ipaddr, secret, shortname, nas_type, is_active } = req.body;
+
+        const updateResult = await db.query(
+            'UPDATE radius_clients SET name = ?, ipaddr = ?, secret = ?, shortname = ?, nas_type = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [name, ipaddr, secret, shortname, nas_type, is_active !== undefined ? (is_active ? 1 : 0) : 1, id]
+        );
+
+        if (updateResult.changes === 0) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        // Sync to RADIUS database
+        if (is_active !== undefined && !is_active) {
+            // If deactivating, delete from RADIUS database
+            await radius.deleteNASClient(ipaddr);
+        } else {
+            // Sync or update in RADIUS database
+            const syncResult = await radius.syncRadiusClientToNAS({ name, ipaddr, secret, shortname, nas_type });
+            if (!syncResult.success) {
+                logger.warn(`Client updated but sync to RADIUS failed: ${syncResult.message}`);
+            }
+        }
+
+        res.json({ success: true, message: 'RADIUS client updated successfully' });
+    } catch (error) {
+        logger.error(`Error updating RADIUS client: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.delete('/clients/:id', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const id = req.params.id;
+
+        // Get client info before deletion
+        const clientResult = await db.query('SELECT ipaddr FROM radius_clients WHERE id = ?', [id]);
+        
+        if (!clientResult || clientResult.length === 0) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        const ipaddr = clientResult[0].ipaddr;
+
+        const deleteResult = await db.query('DELETE FROM radius_clients WHERE id = ?', [id]);
+
+        if (deleteResult.changes === 0) {
+            return res.status(404).json({ success: false, message: 'Client not found' });
+        }
+
+        // Delete from RADIUS database
+        await radius.deleteNASClient(ipaddr);
+
+        res.json({ success: true, message: 'RADIUS client deleted successfully' });
+    } catch (error) {
+        logger.error(`Error deleting RADIUS client: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/clients/generate-config', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const fs = require('fs');
+        const path = require('path');
+
+        // Get all active clients
+        const result = await db.query(
+            'SELECT * FROM radius_clients WHERE is_active = 1 ORDER BY name'
+        );
+
+        // Debug logging
+        logger.info('Query result:', JSON.stringify(result));
+
+        // Get clients array from result - db.query() returns rows directly
+        const clients = Array.isArray(result) ? result : [];
+
+        // Check if clients is an array
+        if (!Array.isArray(clients)) {
+            logger.error('Clients is not an array:', clients);
+            return res.status(500).json({ success: false, message: 'Failed to retrieve clients from database' });
+        }
+
+        // Sync all clients to RADIUS database
+        const syncResult = await radius.syncAllRadiusClientsToNAS(clients);
+        if (!syncResult.success) {
+            logger.warn(`Sync to RADIUS database failed: ${syncResult.message}`);
+        }
+
+        // Generate clients.conf content
+        let config = '# Gembok Bill RADIUS Clients\n';
+        config += '# Auto-generated from database\n';
+        config += '# Format: client <name> { ipaddr = <ip> secret = <secret> }\n\n';
+
+        clients.forEach(client => {
+            config += `client ${client.name} {\n`;
+            config += `    ipaddr = ${client.ipaddr}\n`;
+            config += `    secret = ${client.secret}\n`;
+            config += `    shortname = ${client.shortname}\n`;
+            config += `    nas_type = ${client.nas_type}\n`;
+            config += `}\n\n`;
+        });
+
+        // Write to clients.conf
+        const clientsConfPath = '/etc/freeradius/3.0/clients.conf';
+        fs.writeFileSync(clientsConfPath, config, 'utf8');
+
+        // Restart FreeRADIUS
+        const { exec } = require('child_process');
+        exec('systemctl restart freeradius', (error, stdout, stderr) => {
+            if (error) {
+                logger.error(`Failed to restart FreeRADIUS: ${error.message}`);
+                return res.status(500).json({ success: false, message: 'Failed to restart FreeRADIUS' });
+            }
+            logger.info('FreeRADIUS restarted successfully');
+            res.json({ success: true, message: 'Clients configuration generated and FreeRADIUS restarted' });
+        });
+    } catch (error) {
+        logger.error(`Error generating clients config: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Sync NAS Clients to RADIUS database
+router.post('/clients/sync-nas', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // Get all active clients from database
+        const result = await db.query(
+            'SELECT * FROM radius_clients WHERE is_active = 1 ORDER BY name'
+        );
+
+        const clients = Array.isArray(result) ? result : [];
+
+        if (!Array.isArray(clients)) {
+            logger.error('Clients is not an array:', clients);
+            return res.status(500).json({ success: false, message: 'Failed to retrieve clients from database' });
+        }
+
+        // Sync all clients to RADIUS database
+        const syncResult = await radius.syncAllRadiusClientsToNAS(clients);
+
+        if (syncResult.success) {
+            res.json({ 
+                success: true, 
+                message: syncResult.message || 'NAS clients synced successfully',
+                syncedCount: clients.length
+            });
+        } else {
+            res.status(500).json({ success: false, message: syncResult.message });
+        }
+    } catch (error) {
+        logger.error(`Error syncing NAS clients: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Diagnostic endpoint to check database state
+router.get('/clients/diagnostic', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // Get all clients
+        const clientsResult = await db.query(
+            'SELECT id, name, ipaddr, secret, shortname, nas_type, is_active, created_at FROM radius_clients ORDER BY id'
+        );
+
+        const clients = Array.isArray(clientsResult) ? clientsResult : [];
+
+        res.json({ success: true, clients, count: clients.length });
+    } catch (error) {
+        logger.error(`Error getting diagnostic info: ${error.message}`);
         res.status(500).json({ success: false, message: error.message });
     }
 });

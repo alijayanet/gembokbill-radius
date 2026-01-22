@@ -1,22 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { getSetting } = require('../config/settingsManager');
 const { technicianAuth, authManager } = require('./technicianAuth');
-const logger = require('../config/logger');
 
-// Database connection
-const dbPath = path.join(__dirname, '../data/billing.db');
-const db = new sqlite3.Database(dbPath);
+// Database connection using MySQL wrapper
+const db = require('../config/database');
 
 // Billing manager untuk akses data
 const billingManager = require('../config/billing');
 const { addPPPoESecret, getPPPoEProfiles } = require('../config/mikrotik');
-
-function getDb() {
-    return typeof billingManager.getDb === 'function' ? billingManager.getDb() : billingManager.db;
-}
 
 /**
  * Dashboard Teknisi - Halaman utama terpisah dari admin
@@ -245,7 +238,6 @@ router.get('/customers', technicianAuth, async (req, res) => {
         
         // Get ODPs for dropdown selection (termasuk sub ODP)
         const odps = await new Promise((resolve, reject) => {
-            const db = getDb();
             db.all(`
                 SELECT o.id, o.name, o.code, o.capacity, o.used_ports, o.status, o.parent_odp_id,
                        p.name as parent_name, p.code as parent_code
@@ -491,7 +483,6 @@ router.put('/api/customers/:id', technicianAuth, async (req, res) => {
 
         // Validate ODP if provided
         if (odp_id) {
-            const db = getDb();
             const odp = await new Promise((resolve, reject) => {
                 db.get('SELECT id FROM odps WHERE id = ? AND status = "active"', [odp_id], (err, row) => {
                     if (err) reject(err);
@@ -640,7 +631,6 @@ router.get('/api/packages', technicianAuth, async (req, res) => {
 // API untuk mendapatkan ODPs
 router.get('/api/odps', technicianAuth, async (req, res) => {
     try {
-        const db = getDb();
         const odps = await new Promise((resolve, reject) => {
             db.all(`
                 SELECT id, name, code, capacity, used_ports, status
@@ -960,7 +950,7 @@ router.get('/api/mapping/devices', technicianAuth, async (req, res) => {
         // Ambil data ODP connections untuk backbone visualization
         let odpConnections = [];
         try {
-            const db = new sqlite3.Database(dbPath);
+            const db = require('../config/database');
             odpConnections = await new Promise((resolve, reject) => {
                 db.all(`
                     SELECT oc.*, 
@@ -978,7 +968,7 @@ router.get('/api/mapping/devices', technicianAuth, async (req, res) => {
                     else resolve(rows || []);
                 });
             });
-            db.close();
+            
         } catch (error) {
             console.log('Error getting ODP connections for technician:', error.message);
         }
@@ -1485,7 +1475,7 @@ router.get('/payments/:id', technicianAuth, async (req, res) => {
             return res.status(403).json({ success: false, message: 'Akses ditolak' });
         }
 
-        const db = getDb();
+        
         
         const payment = await new Promise((resolve, reject) => {
             const sql = `
@@ -1538,7 +1528,7 @@ router.put('/payments/:id', technicianAuth, async (req, res) => {
             });
         }
 
-        const db = getDb();
+        
 
         // Cek apakah payment ada dan milik collector ini
         const existingPayment = await new Promise((resolve, reject) => {
@@ -2265,9 +2255,8 @@ router.get('/mobile/mapping', technicianAuth, async (req, res) => {
 router.get('/api/mapping-data', technicianAuth, async (req, res) => {
     try {
         // Fix database connection issue
-        const sqlite3 = require('sqlite3').verbose();
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
+    
+        const db = require('../config/database');
         
         // Get ODPs data from database
         const odps = await new Promise((resolve, reject) => {
@@ -2392,7 +2381,7 @@ router.get('/api/mapping-data', technicianAuth, async (req, res) => {
         logger.info(`✅ Loaded mapping data: ${odps.length} ODPs, ${customers.length} customers, ${dynamicCables.length} cables, ${formattedBackbone.length} backbone routes`);
         
         // Close database connection
-        db.close();
+    
         
         res.json({
             success: true,
@@ -2406,9 +2395,9 @@ router.get('/api/mapping-data', technicianAuth, async (req, res) => {
     } catch (error) {
         // Ensure database is closed on error
         try {
-            if (db) db.close();
+    
         } catch (closeError) {
-            logger.error('Error closing database:', closeError);
+            // Ignore close error
         }
         
         logger.error('Error getting mapping data:', error);
@@ -2423,9 +2412,7 @@ router.get('/api/mapping-data', technicianAuth, async (req, res) => {
 router.get('/api/test-mapping-data', async (req, res) => {
     try {
         // Fix database connection issue
-        const sqlite3 = require('sqlite3').verbose();
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
+        const db = require('../config/database');
         
         // Get ODPs data from database
         const odps = await new Promise((resolve, reject) => {
@@ -2436,7 +2423,7 @@ router.get('/api/test-mapping-data', async (req, res) => {
         });
         
         // Close database connection
-        db.close();
+    
         
         console.log(`✅ Test mapping data: ${odps.length} ODPs found`);
         
@@ -2974,7 +2961,7 @@ router.get('/mobile/customers', technicianAuth, async (req, res) => {
         
         // Get ODPs for dropdown selection (termasuk sub ODP)
         const odps = await new Promise((resolve, reject) => {
-            const db = getDb();
+    
             db.all(`
                 SELECT o.id, o.name, o.code, o.capacity, o.used_ports, o.status, o.parent_odp_id,
                        p.name as parent_name, p.code as parent_code

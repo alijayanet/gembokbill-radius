@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const crypto = require('crypto');
 const { getSetting } = require('../config/settingsManager');
 const logger = require('../config/logger');
 
-// Database connection
-const dbPath = path.join(__dirname, '../data/billing.db');
-const db = new sqlite3.Database(dbPath);
+// Database connection using MySQL wrapper
+const db = require('../config/database');
 
 // Simple OTP store (following customer portal pattern)
 const otpStore = {};
@@ -132,16 +130,16 @@ class TechnicianAuthManager {
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 jam
 
         return new Promise((resolve, reject) => {
-            const sql = `INSERT INTO technician_sessions (session_id, technician_id, expires_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)`;
+            const sql = `INSERT INTO technician_sessions (id, session_id, technician_id, expires_at, ip_address, user_agent) VALUES (NULL, ?, ?, ?, ?, ?)`;
             const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
             const userAgent = req.get('User-Agent') || 'unknown';
 
-            db.run(sql, [sessionId, technician.id, expiresAt.toISOString(), ipAddress, userAgent], function(err) {
+            db.run(sql, [sessionId, technician.id, expiresAt.toISOString().slice(0, 19).replace('T', ' '), ipAddress, userAgent], function(err) {
                 if (err) {
                     reject(err);
                 } else {
                     // Update last login teknisi
-                    const updateSql = `UPDATE technicians SET last_login = datetime('now') WHERE id = ?`;
+                    const updateSql = `UPDATE technicians SET last_login = NOW() WHERE id = ?`;
                     db.run(updateSql, [technician.id]);
 
                     resolve({ sessionId, expiresAt, sessionDbId: this.lastID });
@@ -157,7 +155,7 @@ class TechnicianAuthManager {
                 SELECT ts.*, t.* 
                 FROM technician_sessions ts 
                 JOIN technicians t ON ts.technician_id = t.id 
-                WHERE ts.session_id = ? AND ts.expires_at > datetime('now') AND ts.is_active = 1 AND t.is_active = 1
+                WHERE ts.session_id = ? AND ts.expires_at > NOW() AND ts.is_active = 1 AND t.is_active = 1
             `;
             
             db.get(sql, [sessionId], (err, row) => {
@@ -166,7 +164,7 @@ class TechnicianAuthManager {
                 } else {
                     if (row) {
                         // Update last activity
-                        const updateSql = `UPDATE technician_sessions SET last_activity = datetime('now') WHERE session_id = ?`;
+                        const updateSql = `UPDATE technician_sessions SET last_activity = NOW() WHERE session_id = ?`;
                         db.run(updateSql, [sessionId]);
                     }
                     resolve(row || null);
@@ -178,7 +176,7 @@ class TechnicianAuthManager {
     // Log aktivitas teknisi
     async logActivity(technicianId, activityType, description, metadata = null) {
         return new Promise((resolve, reject) => {
-            const sql = `INSERT INTO technician_activities (technician_id, activity_type, description, metadata) VALUES (?, ?, ?, ?)`;
+            const sql = `INSERT INTO technician_activities (id, technician_id, activity_type, description, metadata) VALUES (NULL, ?, ?, ?, ?)`;
             const metadataStr = metadata ? JSON.stringify(metadata) : null;
 
             db.run(sql, [technicianId, activityType, description, metadataStr], function(err) {

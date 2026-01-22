@@ -1,15 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const bcrypt = require('bcrypt');
 const { getSetting } = require('../config/settingsManager');
 const { getVersionInfo, getVersionBadge } = require('../config/version-utils');
 const { adminAuth } = require('./adminAuth');
 const logger = require('../config/logger');
 
-// Database connection
-const dbPath = path.join(__dirname, '../data/billing.db');
-const db = new sqlite3.Database(dbPath);
+// Database connection using MySQL wrapper
+const db = require('../config/database');
 
 /**
  * GET /admin/technicians - Halaman manajemen teknisi
@@ -98,7 +97,7 @@ router.get('/', adminAuth, async (req, res) => {
  */
 router.post('/add', adminAuth, async (req, res) => {
     try {
-        const { name, phone, role, notes, whatsapp_group_id } = req.body;
+        const { name, phone, role, notes, whatsapp_group_id, password } = req.body;
 
         // Validasi input
         if (!name || !phone || !role) {
@@ -115,6 +114,16 @@ router.post('/add', adminAuth, async (req, res) => {
                 success: false, 
                 message: 'Role tidak valid' 
             });
+        }
+
+        // Validasi password untuk role collector
+        if (role === 'collector') {
+            if (!password || password.length < 6) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Password minimal 6 karakter untuk kolektor' 
+                });
+            }
         }
 
         // Clean phone number
@@ -138,14 +147,20 @@ router.post('/add', adminAuth, async (req, res) => {
             });
         }
 
+        // Hash password untuk role collector
+        let hashedPassword = null;
+        if (role === 'collector' && password) {
+            hashedPassword = bcrypt.hashSync(password, 10);
+        }
+
         // Insert new technician
         const result = await new Promise((resolve, reject) => {
             const sql = `
-                INSERT INTO technicians (name, phone, role, area_coverage, whatsapp_group_id, is_active, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                INSERT INTO technicians (name, phone, role, area_coverage, whatsapp_group_id, password, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             `;
 
-            db.run(sql, [name, cleanPhone, role, notes || 'Area Default', whatsapp_group_id || null], function(err) {
+            db.run(sql, [name, cleanPhone, role, notes || 'Area Default', whatsapp_group_id || null, hashedPassword], function(err) {
                 if (err) reject(err);
                 else resolve({ id: this.lastID, changes: this.changes });
             });

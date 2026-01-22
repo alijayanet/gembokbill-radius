@@ -5,8 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const db = require('../config/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { getSetting } = require('../config/settingsManager');
@@ -58,19 +57,15 @@ router.post('/login', async (req, res) => {
             });
         }
         
-        const dbPath = path.join(__dirname, '../data/billing.db');
-        const db = new sqlite3.Database(dbPath);
+        // Find collector by phone (check both collectors and technicians tables)
+        let collector = await db.get('SELECT * FROM collectors WHERE phone = ? AND status = "active"', [phone]);
         
-        // Find collector by phone
-        const collector = await new Promise((resolve, reject) => {
-            db.get('SELECT * FROM collectors WHERE phone = ? AND status = "active"', [phone], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        // If not found in collectors table, check technicians table with role='collector'
+        if (!collector) {
+            collector = await db.get('SELECT * FROM technicians WHERE phone = ? AND role = "collector" AND is_active = 1', [phone]);
+        }
         
         if (!collector) {
-            db.close();
             return res.json({
                 success: false,
                 message: 'Nomor telepon tidak ditemukan atau akun tidak aktif'
@@ -81,7 +76,6 @@ router.post('/login', async (req, res) => {
         const validPassword = collector.password ? bcrypt.compareSync(password, collector.password) : false;
         
         if (!validPassword) {
-            db.close();
             return res.json({
                 success: false,
                 message: 'Password salah'
@@ -102,8 +96,6 @@ router.post('/login', async (req, res) => {
         
         // Store token in session
         req.session.collectorToken = token;
-        
-        db.close();
         
         res.json({
             success: true,

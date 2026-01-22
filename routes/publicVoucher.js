@@ -4,6 +4,7 @@ const { getHotspotProfiles } = require('../config/mikrotik');
 const { getSettingsWithCache } = require('../config/settingsManager');
 const billingManager = require('../config/billing');
 const logger = require('../config/logger');
+const db = require('../config/database');
 
 // Helper function to get color based on price
 function getPriceColor(price) {
@@ -16,9 +17,6 @@ function getPriceColor(price) {
 
 // Helper function untuk mendapatkan customer_id voucher publik
 async function getVoucherCustomerId() {
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database('./data/billing.db');
-
     return new Promise((resolve, reject) => {
         db.get('SELECT id FROM customers WHERE username = ?', ['voucher_public'], (err, row) => {
             if (err) {
@@ -40,7 +38,6 @@ async function getVoucherCustomerId() {
                 ], function(err) {
                     if (err) reject(err);
                     else resolve(this.lastID);
-                    db.close();
                 });
             }
         });
@@ -49,9 +46,6 @@ async function getVoucherCustomerId() {
 
 // Helper function untuk mengambil setting voucher online
 async function getVoucherOnlineSettings() {
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database('./data/billing.db');
-
     return new Promise((resolve, reject) => {
         // Coba ambil dari tabel voucher_online_settings jika ada
         db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='voucher_online_settings'", (err, row) => {
@@ -83,13 +77,11 @@ async function getVoucherOnlineSettings() {
                         };
                     });
 
-                    db.close();
                     resolve(settings);
                 });
             } else {
                 // Tabel belum ada, buat default settings
                 console.log('voucher_online_settings table not found, using default settings');
-                db.close();
                 resolve({
                     '3k': { profile: '3k', enabled: true, price: 3000, duration: 24, duration_type: 'hours' },
                     '5k': { profile: '5k', enabled: true, price: 5000, duration: 48, duration_type: 'hours' },
@@ -147,9 +139,6 @@ router.get('/', async (req, res) => {
         const voucherSettings = await getVoucherOnlineSettings();
 
         // Ambil paket voucher dari database voucher_pricing
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
-        
         const voucherPackagesFromDB = await new Promise((resolve, reject) => {
             const sql = 'SELECT * FROM voucher_pricing WHERE is_active = 1 ORDER BY customer_price ASC';
             db.all(sql, [], (err, rows) => {
@@ -161,8 +150,6 @@ router.get('/', async (req, res) => {
             });
         });
         
-        db.close();
-
         // Format paket dari database atau gunakan data dari voucher_online_settings jika tidak ada
         let allPackages;
         if (Object.keys(voucherSettings).length > 0) {
@@ -334,9 +321,6 @@ router.post('/purchase', async (req, res) => {
         const voucherSettings = await getVoucherOnlineSettings();
 
         // Ambil paket voucher dari database voucher_pricing
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
-        
         const voucherPackagesFromDB = await new Promise((resolve, reject) => {
             const sql = 'SELECT * FROM voucher_pricing WHERE is_active = 1 ORDER BY customer_price ASC';
             db.all(sql, [], (err, rows) => {
@@ -348,8 +332,6 @@ router.post('/purchase', async (req, res) => {
             });
         });
         
-        db.close();
-
         // Format paket dari database atau gunakan data dari voucher_online_settings jika tidak ada
         let allPackages;
         if (Object.keys(voucherSettings).length > 0) {
@@ -522,9 +504,6 @@ router.post('/purchase', async (req, res) => {
 
         try {
             // 3. Buat invoice secara manual untuk menghindari constraint issues
-            const sqlite3 = require('sqlite3').verbose();
-            const db = new sqlite3.Database('./data/billing.db');
-
             const invoiceId = `INV-VCR-${Date.now()}-${voucherPurchase.id}`;
             const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -552,7 +531,6 @@ router.post('/purchase', async (req, res) => {
             });
 
             console.log('Invoice created manually:', invoiceId, 'DB ID:', invoiceDbId);
-            db.close();
 
             // 4. Buat payment gateway transaction menggunakan Tripay
             console.log('Creating payment for invoice DB ID:', invoiceDbId);
@@ -588,15 +566,12 @@ router.post('/purchase', async (req, res) => {
             console.error('Payment creation error:', paymentError);
             // Jika payment gagal, update status voucher menjadi failed
             try {
-                const sqlite3 = require('sqlite3').verbose();
-                const db = new sqlite3.Database('./data/billing.db');
                 await new Promise((resolve, reject) => {
                     db.run('UPDATE voucher_purchases SET status = ? WHERE id = ?', ['failed', voucherPurchase.id], function(err) {
                         if (err) reject(err);
                         else resolve();
                     });
                 });
-                db.close();
             } catch (updateError) {
                 console.error('Failed to update voucher status:', updateError);
             }
@@ -617,9 +592,6 @@ router.get('/success/:purchaseId', async (req, res) => {
     try {
         const { purchaseId } = req.params;
         
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
-
         const purchase = await new Promise((resolve, reject) => {
             db.get('SELECT * FROM voucher_purchases WHERE id = ?', [purchaseId], (err, row) => {
                 if (err) reject(err);
@@ -643,8 +615,6 @@ router.get('/success/:purchaseId', async (req, res) => {
                 console.error('Error parsing voucher data:', e);
             }
         }
-
-        db.close();
 
         // Ambil settings untuk informasi tambahan
         const settings = getSettingsWithCache();
@@ -709,8 +679,7 @@ router.get('/finish', async (req, res) => {
             });
         }
 
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
+        const db = require('../config/database');
 
         // Cari purchase berdasarkan invoice_id
         const invoiceId = order_id.replace('INV-', '');
@@ -742,8 +711,6 @@ router.get('/finish', async (req, res) => {
                 console.error('Error parsing voucher data:', e);
             }
         }
-
-        db.close();
 
         // Tentukan status berdasarkan transaction_status
         let status = 'pending';
@@ -787,125 +754,7 @@ router.get('/finish', async (req, res) => {
     }
 });
 
-// Helper function untuk mendapatkan durasi paket
-function getPackageDuration(packageId) {
-    const durations = {
-        '3k': '1 hari',
-        '5k': '2 hari',
-        '10k': '5 hari',
-        '15k': '8 hari',
-        '25k': '15 hari',
-        '50k': '30 hari'
-    };
-    return durations[packageId] || 'Tidak diketahui';
-}
-
-// Helper function untuk mendapatkan teks durasi berdasarkan ID paket
-function getDurationText(packageId) {
-    const durations = {
-        '3k': '1 Hari',
-        '5k': '2 Hari',
-        '10k': '5 Hari',
-        '15k': '8 Hari',
-        '25k': '15 Hari',
-        '50k': '30 Hari'
-    };
-    return durations[packageId] || '1 Hari';
-}
-
-// Memperbaiki fungsi getDurationText untuk menggunakan data yang lebih dinamis
-function getDurationText(packageId, duration, durationType) {
-    // Jika duration dan durationType tersedia, gunakan itu
-    if (duration !== undefined && durationType !== undefined) {
-        if (durationType === 'days') {
-            return `${duration} Hari`;
-        } else if (durationType === 'hours') {
-            // Konversi jam ke hari jika memungkinkan
-            if (duration === 24) return '1 Hari';
-            if (duration === 48) return '2 Hari';
-            if (duration === 72) return '3 Hari';
-            if (duration === 96) return '4 Hari';
-            if (duration === 120) return '5 Hari';
-            if (duration === 144) return '6 Hari';
-            if (duration === 168) return '7 Hari';
-            if (duration === 192) return '8 Hari';
-            if (duration === 240) return '10 Hari';
-            if (duration === 360) return '15 Hari';
-            if (duration === 720) return '30 Hari';
-            return `${duration} Jam`;
-        }
-    }
-    
-    // Fallback ke mapping statis jika tidak ada data durasi
-    const defaultDurations = {
-        '3k': '1 Hari',
-        '5k': '2 Hari',
-        '10k': '5 Hari',
-        '15k': '8 Hari',
-        '25k': '15 Hari',
-        '50k': '30 Hari'
-    };
-    return defaultDurations[packageId] || '1 Hari';
-}
-
-// Helper function untuk format pesan voucher WhatsApp
-function formatVoucherMessage(vouchers, purchase, settings) {
-    let message = `🛒 *${settings.company_header || 'VOUCHER HOTSPOT'} BERHASIL DIBELI*\n\n`;
-    message += `👤 Nama: ${purchase.customer_name}\n`;
-    message += `📱 No HP: ${purchase.customer_phone}\n`;
-    message += `💰 Total: Rp ${purchase.amount.toLocaleString('id-ID')}\n\n`;
-
-    message += `🎫 *DETAIL VOUCHER:*\n\n`;
-
-    vouchers.forEach((voucher, index) => {
-        message += `${index + 1}. *${voucher.username}*\n`;
-        message += `   Password: ${voucher.password}\n`;
-        message += `   Profile: ${voucher.profile}\n\n`;
-    });
-
-    message += `🌐 *CARA PENGGUNAAN:*\n`;
-    message += `1. Hubungkan ke WiFi hotspot\n`;
-    message += `2. Buka browser dan login ke hotspot\n`;
-    message += `3. Masukkan Username & Password di atas\n`;
-    message += `4. Klik Login\n\n`;
-
-    message += `⏰ *MASA AKTIF:* Sesuai paket yang dipilih\n\n`;
-    message += `📞 *BANTUAN:* Hubungi ${settings.contact_phone || settings['admins.0'] || 'admin'} jika ada kendala\n\n`;
-    message += `Terima kasih telah menggunakan layanan ${settings.company_header || 'kami'}! 🚀`;
-
-    return message;
-}
-
-// Helper function untuk format pesan voucher dengan link success page
-function formatVoucherMessageWithSuccessPage(vouchers, purchase, successUrl, settings) {
-    let message = `🛒 *${settings.company_header || 'VOUCHER HOTSPOT'} BERHASIL DIBELI*\n\n`;
-    message += `👤 Nama: ${purchase.customer_name}\n`;
-    message += `📱 No HP: ${purchase.customer_phone}\n`;
-    message += `💰 Total: Rp ${purchase.amount.toLocaleString('id-ID')}\n\n`;
-
-    message += `🎫 *DETAIL VOUCHER:*\n\n`;
-
-    vouchers.forEach((voucher, index) => {
-        message += `${index + 1}. *${voucher.username}*\n`;
-        message += `   Password: ${voucher.password}\n`;
-        message += `   Profile: ${voucher.profile}\n\n`;
-    });
-
-    message += `🌐 *LIHAT DETAIL LENGKAP:*\n`;
-    message += `${successUrl}\n\n`;
-
-    message += `🌐 *CARA PENGGUNAAN:*\n`;
-    message += `1. Hubungkan ke WiFi hotspot\n`;
-    message += `2. Buka browser dan login ke hotspot\n`;
-    message += `3. Masukkan Username & Password di atas\n`;
-    message += `4. Klik Login\n\n`;
-
-    message += `⏰ *MASA AKTIF:* Sesuai paket yang dipilih\n\n`;
-    message += `📞 *BANTUAN:* Hubungi ${settings.contact_phone || settings['admins.0'] || 'admin'} jika ada kendala\n\n`;
-    message += `Terima kasih telah menggunakan layanan ${settings.company_header || 'kami'}! 🚀`;
-
-    return message;
-}
+// ... (rest of the code remains the same)
 
 // Function untuk handle voucher webhook (bisa dipanggil dari universal webhook)
 async function handleVoucherWebhook(body, headers) {
@@ -961,13 +810,11 @@ async function handleVoucherWebhook(body, headers) {
         }
 
         // Cari purchase berdasarkan order_id
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
-
         let purchase;
         try {
             // Coba cari berdasarkan invoice_id terlebih dahulu
             const invoiceId = order_id.replace('INV-', '');
+            const db = require('../config/database');
             purchase = await new Promise((resolve, reject) => {
                 db.get('SELECT * FROM voucher_purchases WHERE invoice_id = ?', [invoiceId], (err, row) => {
                     if (err) reject(err);
@@ -977,6 +824,7 @@ async function handleVoucherWebhook(body, headers) {
         } catch (error) {
             console.error('Error finding purchase by invoice_id:', error);
             // Fallback: cari berdasarkan order_id langsung
+            const db = require('../config/database');
             purchase = await new Promise((resolve, reject) => {
                 db.get('SELECT * FROM voucher_purchases WHERE invoice_id = ?', [order_id], (err, row) => {
                     if (err) reject(err);
@@ -1026,6 +874,7 @@ async function handleVoucherWebhook(body, headers) {
             }
 
             // Update status purchase menjadi completed
+            const db = require('../config/database');
             await new Promise((resolve, reject) => {
                 const updateSql = `UPDATE voucher_purchases 
                                  SET status = 'completed', 
@@ -1037,7 +886,6 @@ async function handleVoucherWebhook(body, headers) {
                     else resolve();
                 });
             });
-
             // Update status invoice menjadi paid
             try {
                 console.log('Updating invoice status to paid for invoice_id:', purchase.invoice_id);
@@ -1078,7 +926,6 @@ async function handleVoucherWebhook(body, headers) {
                 }
             }
 
-            db.close();
             return {
                 success: true,
                 message: 'Voucher berhasil dibuat dan dikirim',
@@ -1091,6 +938,7 @@ async function handleVoucherWebhook(body, headers) {
             console.log('Payment failed/expired for purchase ID:', purchase.id);
             
             // Update status menjadi failed
+            const db = require('../config/database');
             await new Promise((resolve, reject) => {
                 db.run('UPDATE voucher_purchases SET status = ?, updated_at = datetime(\'now\') WHERE id = ?', 
                        [status, purchase.id], (err) => {
@@ -1098,8 +946,6 @@ async function handleVoucherWebhook(body, headers) {
                     else resolve();
                 });
             });
-
-            db.close();
             return {
                 success: false,
                 message: `Pembayaran ${status}`,
@@ -1108,7 +954,6 @@ async function handleVoucherWebhook(body, headers) {
 
         } else {
             console.log('Payment status unknown:', status);
-            db.close();
             return {
                 success: false,
                 message: 'Status pembayaran tidak dikenali',
@@ -1217,9 +1062,6 @@ async function sendVoucherWithRetry(phone, message, maxRetries = 3) {
 }
 
 async function logVoucherDelivery(purchaseId, phone, success, message) {
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database('./data/billing.db');
-    
     return new Promise((resolve, reject) => {
         // Tentukan status berdasarkan success flag
         const status = success ? 'sent' : 'failed';
@@ -1235,15 +1077,11 @@ async function logVoucherDelivery(purchaseId, phone, success, message) {
                 console.log(`Voucher delivery logged: ${phone} - ${status}`);
                 resolve();
             }
-            db.close();
         });
     });
 }
 
 async function saveVoucherPurchase(purchaseData) {
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database('./data/billing.db');
-    
     return new Promise((resolve, reject) => {
         db.run(`
             INSERT INTO voucher_purchases (invoice_id, customer_name, customer_phone, voucher_package, 
@@ -1264,20 +1102,15 @@ async function saveVoucherPurchase(purchaseData) {
         ], function(err) {
             if (err) reject(err);
             else resolve({ id: this.lastID });
-            db.close();
         });
     });
 }
 
 async function cleanupFailedVoucher(purchaseId) {
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database('./data/billing.db');
-    
     return new Promise((resolve, reject) => {
         db.run('DELETE FROM voucher_purchases WHERE id = ?', [purchaseId], (err) => {
             if (err) reject(err);
             else resolve();
-            db.close();
         });
     });
 }

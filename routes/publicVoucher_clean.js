@@ -4,6 +4,7 @@ const { getHotspotProfiles } = require('../config/mikrotik');
 const { getSettingsWithCache } = require('../config/settingsManager');
 const billingManager = require('../config/billing');
 const logger = require('../config/logger');
+const db = require('../config/database');
 
 // Helper function untuk format pesan voucher WhatsApp
 function formatVoucherMessage(vouchers, purchase) {
@@ -101,9 +102,6 @@ async function handleVoucherWebhook(body, headers) {
         }
 
         // Cari purchase berdasarkan order_id
-        const sqlite3 = require('sqlite3').verbose();
-        const db = new sqlite3.Database('./data/billing.db');
-
         let purchase;
         try {
             // Coba cari berdasarkan invoice_id terlebih dahulu
@@ -200,7 +198,6 @@ async function handleVoucherWebhook(body, headers) {
                 }
             }
 
-            db.close();
             return {
                 success: true,
                 message: 'Voucher berhasil dibuat dan dikirim',
@@ -221,7 +218,6 @@ async function handleVoucherWebhook(body, headers) {
                 });
             });
 
-            db.close();
             return {
                 success: false,
                 message: `Pembayaran ${status}`,
@@ -230,7 +226,6 @@ async function handleVoucherWebhook(body, headers) {
 
         } else {
             console.log('Payment status unknown:', status);
-            db.close();
             return {
                 success: false,
                 message: 'Status pembayaran tidak dikenali',

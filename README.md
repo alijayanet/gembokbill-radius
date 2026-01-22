@@ -1,4 +1,7 @@
-
+\u003c!-- Improved modern README with vibrant colors and enhanced structure --\u003e
+\u003cdiv align="center"\u003e
+  \u003cimg src="public/img/logo.png" alt="Gembok Bill Logo" width="120" height="120"\u003e
+  
   # Gembok Bill Radius
   **Integrated ISP Management System with RADIUS Server**
   
@@ -7,7 +10,7 @@
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](https://github.com/alijayanet/gembokbill-radius/pulls)
   [![GitHub Stars](https://img.shields.io/github/stars/alijayanet/gembokbill-radius?style=for-the-badge)](https://github.com/alijayanet/gembokbill-radius/stargazers)
   [![Version](https://img.shields.io/badge/v2.2.0-orange?style=for-the-badge)](https://github.com/alijayanet/gembokbill-radius/releases)
-
+\u003c/div\u003e
 
 ## 🌐 About Gembok Bill
 
@@ -71,36 +74,167 @@ SETLID admin123
 | **Payment** | Midtrans, Xendit, Tripay |
 | **Logging** | Winston, Pino |
 
-## 📋 System Prerequisites
+## System Prerequisites
 
+- **OS**: Ubuntu 20.04+ / Debian 10+ / CentOS 7+
 - **Node.js** >= 20.0.0
-- **npm** >= 6.0.0
-- **Database** SQLite (for development) or MySQL (for production)
+- **npm** >= 9.0.0
+- **MySQL** >= 5.7 or MariaDB >= 10.3
+- **RAM**: Minimal 2GB (recommended 4GB+)
+- **Disk**: Minimal 20GB
 - **FreeRADIUS** >= 3.0 (for RADIUS authentication)
 - **WhatsApp Business Access** (for WhatsApp Gateway features)
 - **Mikrotik RouterOS** >= 6.x (for network management)
 - **PM2** (for production process management)
 
-## 🚀 Quick Installation
+## Installation Guide
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/alijayanet/gembokbill-radius.git
-```
-```bash
 cd gembokbill-radius
 ```
 
-### 2. Install Dependencies
+### 2. Install System Dependencies
+
+#### Install Node.js 20+
+
 ```bash
-npm install
-```
-### 3. Initialize Database
-```bash
-npm run setup
+# Ubuntu/Debian
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# CentOS/RHEL
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs
+
+# Verify
+node --version
+npm --version
 ```
 
-### 4. Run Database Migration (Important for New Servers)
+#### Install MySQL Server
+
+```bash
+# Ubuntu/Debian
+sudo apt install -y mysql-server mysql-client
+
+# CentOS/RHEL
+sudo yum install -y mysql-server mysql
+
+# Start MySQL
+sudo systemctl start mysql
+sudo systemctl enable mysql
+```
+
+#### Install Git
+
+```bash
+# Ubuntu/Debian
+sudo apt install -y git
+
+# CentOS/RHEL
+sudo yum install -y git
+```
+
+### 3. Install Application Dependencies
+
+```bash
+npm install
+
+# Install PM2 for production (recommended)
+sudo npm install -g pm2
+```
+
+### 4. Setup MySQL Database
+
+#### Create Database & User
+
+```bash
+sudo mysql -u root << 'EOF'
+CREATE DATABASE gembok_bill CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'gembokbill'@'localhost' IDENTIFIED BY 'GantiDenganPasswordYangKuat123!';
+GRANT ALL PRIVILEGES ON gembok_bill.* TO 'gembokbill'@'localhost';
+FLUSH PRIVILEGES;
+exit;
+EOF
+```
+
+#### Verify Connection
+
+```bash
+mysql -u gembokbill -p gembokbill
+```
+
+### 5. Configure Application Settings
+
+Copy and edit the settings file:
+
+```bash
+cp settings.server.template.json settings.json
+# ATAU
+cp settings.json.example settings.json
+```
+
+Edit `settings.json`:
+
+```json
+{
+  "db_type": "mysql",
+  "db_host": "localhost",
+  "db_user": "gembokbill",
+  "db_password": "GantiDenganPasswordYangKuat123!",
+  "db_name": "gembok_bill",
+  
+  "radius_host": "localhost",
+  "radius_user": "radius",
+  "radius_password": "radpassword",
+  
+  "mikrotik_host": "192.168.1.1",
+  "mikrotik_user": "admin",
+  "mikrotik_password": "password",
+  
+  "port": 3000,
+  "host": "0.0.0.0"
+}
+```
+
+### 6. Initialize Database
+
+Run the setup script to create all tables and insert default data:
+
+```bash
+# Run setup script
+node scripts/new-server-setup-mysql.js
+
+# ATAU use comprehensive migration
+node migrate-to-mysql-comprehensive.js
+```
+
+This will:
+- Create all required tables
+- Add AUTO_INCREMENT to id columns
+- Create database indexes
+- Insert default packages
+- Create admin user (username: admin, password: admin123)
+
+### 7. Install and Configure FreeRADIUS (Optional)
+
+If using RADIUS for PPPoE/Hotspot authentication:
+
+```bash
+# Run FreeRADIUS installer
+sudo bash install-freeradius.sh
+```
+
+The installer will:
+- Install FreeRADIUS
+- Configure database connection
+- Setup RADIUS authentication
+- Test connection
+
+### 8. Run Database Migration (Important for New Servers)
 To ensure all required tables and columns exist in the database, run migration commands:
 
 ```bash
@@ -109,54 +243,6 @@ node scripts/run-all-migrations.js
 
 # Verify database structure
 node scripts/verify-production-database.js
-```
-### 5. Install and Configure RADIUS Server
-
-```bash
-sudo bash install-freeradius.sh
-```
-
-Script ini akan otomatis:
-- Install FreeRADIUS dan dependencies
-- Configure database MySQL
-- Setup FreeRADIUS configuration
-- Start dan enable FreeRADIUS service
-
-Untuk detail konfigurasi manual, lihat `FREERADIUS_SETUP.md`
-
-### 6. Configure Application Settings
-
-Edit `settings.json` and update the following RADIUS-related settings:
-
-```json
-{
-  "radius_host": "localhost",
-  "radius_user": "radius",
-  "radius_password": "radpassword",
-  "radius_database": "radius",
-  "radius_auth_port": 1812,
-  "radius_acct_port": 1813
-}
-```
-
-### 7. Configure Mikrotik RADIUS Client
-
-#### Add RADIUS Client in Mikrotik
-```
-Radius → New
-Name: gembok-radius
-Address: [IP Server Gembok Bill]
-Secret: [RADIUS Secret dari settings.json]
-```
-
-#### Configure PPPoE to use RADIUS
-```
-PPP → Secrets → PPP Authentication & Accounting → Use Radius: Yes
-```
-
-#### Configure Hotspot to use RADIUS
-```
-IP → Hotspot → Server Profile → Login → Use Radius: Yes
 ```
 
 ### 8. Access the Application
@@ -379,7 +465,4 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
   [Report Bug](https://github.com/alijayanet/gembok-bill/issues) · [Request Feature](https://github.com/alijayanet/gembok-bill/issues) · [Documentation](DEPLOYMENT_GUIDE.md)
   
 
-
 \u003c/div\u003e
-
-
