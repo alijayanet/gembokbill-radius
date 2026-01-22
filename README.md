@@ -99,6 +99,9 @@ cd gembokbill-radius
 # Ubuntu/Debian
 chmod x+ install.sh
 chmod x+ install-freeradius.sh
+```
+
+```bash
 sudo bash install.sh
 ```
 
@@ -106,12 +109,6 @@ sudo bash install.sh
 ```bash
 sudo systemctl start mysql
 sudo systemctl enable mysql
-```
-
-#### Verify Connection
-
-```bash
-mysql -u gembokbill -p gembokbill
 ```
 
 ###  Initialize Database
@@ -381,4 +378,5 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
 
 
 \u003c/div\u003e
+
 
