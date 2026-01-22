@@ -124,6 +124,10 @@ node scripts/new-server-setup-mysql.js
 # ATAU use comprehensive migration
 node migrate-to-mysql-comprehensive.js
 ```
+```bash
+# Run aplikasi
+npm start
+```
 
 This will:
 - Create all required tables
@@ -380,6 +384,7 @@ This project is licensed under the ISC license - see the [LICENSE](LICENSE) file
 
 
 \u003c/div\u003e
+
 
 
 
