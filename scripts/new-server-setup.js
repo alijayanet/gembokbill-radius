@@ -3,18 +3,23 @@
 /**
  * New Server Setup - Setup awal untuk server baru
  * Membuat data default yang diperlukan untuk server baru tanpa data lama
+ * Mendukung SQLite dan MySQL
  */
 
-const sqlite3 = require('sqlite3').verbose();
+const db = require('../config/database');
+const { getSetting } = require('../config/settingsManager');
+const fs = require('fs');
 const path = require('path');
 
 // Function to ensure app_settings table exists
-async function ensureAppSettingsTable(db) {
+async function ensureAppSettingsTable() {
     console.log('🔧 Ensuring app_settings table exists...');
     
-    return new Promise((resolve, reject) => {
-        // Create app_settings table if it doesn't exist
-        const createTableSQL = `
+    const dbType = getSetting('db_type', 'sqlite');
+    let createTableSQL;
+    
+    if (dbType === 'sqlite') {
+        createTableSQL = `
             CREATE TABLE IF NOT EXISTS app_settings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 key TEXT UNIQUE NOT NULL,
@@ -23,17 +28,20 @@ async function ensureAppSettingsTable(db) {
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `;
-        
-        db.run(createTableSQL, (err) => {
-            if (err) {
-                console.error('❌ Failed to create app_settings table:', err.message);
-                reject(err);
-            } else {
-                console.log('   ✅ app_settings table ensured');
-                resolve();
-            }
-        });
-    });
+    } else {
+        createTableSQL = `
+            CREATE TABLE IF NOT EXISTS app_settings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                key VARCHAR(255) UNIQUE NOT NULL,
+                value TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `;
+    }
+    
+    await db.execute(createTableSQL);
+    console.log('   ✅ app_settings table ensured');
 }
 
 // Function to ensure essential tables exist

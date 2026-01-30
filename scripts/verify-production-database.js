@@ -3,13 +3,11 @@
 /**
  * Script verifikasi database untuk produksi
  * Memastikan semua tabel yang dibutuhkan ada dalam database
+ * Mendukung SQLite dan MySQL
  */
 
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-
-// Path to the billing database
-const dbPath = path.join(__dirname, '../data/billing.db');
+const db = require('../config/database');
+const { getSetting } = require('../config/settingsManager');
 
 // Tabel-tabel yang wajib ada di produksi
 const requiredTables = [
@@ -21,7 +19,7 @@ const requiredTables = [
     'odps',
     'cable_routes',
     'technicians',
-    'trouble_reports'  // Tabel yang baru ditambahkan
+    'trouble_reports'
 ];
 
 // Kolom-kolom yang wajib ada di tabel tertentu
@@ -44,84 +42,73 @@ const requiredColumns = {
 };
 
 // Fungsi untuk memverifikasi keberadaan tabel
-function verifyTablesExist(db) {
-    return new Promise((resolve, reject) => {
-        console.log('🔍 Memverifikasi keberadaan tabel yang dibutuhkan...');
+async function verifyTablesExist() {
+    console.log('🔍 Memverifikasi keberadaan tabel yang dibutuhkan...');
 
-        const missingTables = [];
-        let completed = 0;
+    const dbType = getSetting('db_type', 'sqlite');
+    const missingTables = [];
 
-        requiredTables.forEach(tableName => {
-            db.get("SELECT name FROM sqlite_master WHERE type='table' AND name=?", [tableName], (err, row) => {
-                if (err) {
-                    console.error(`❌ Error memeriksa tabel ${tableName}:`, err.message);
-                    missingTables.push(tableName);
-                } else if (!row) {
-                    console.error(`❌ Tabel ${tableName} tidak ditemukan`);
-                    missingTables.push(tableName);
-                } else {
-                    console.log(`✅ Tabel ${tableName} ditemukan`);
-                }
+    for (const tableName of requiredTables) {
+        let exists;
+        
+        if (dbType === 'sqlite') {
+            const row = await db.get("SELECT name FROM sqlite_master WHERE type='table' AND name=?", [tableName]);
+            exists = !!row;
+        } else {
+            const [rows] = await db.query(`SHOW TABLES LIKE ?`, [tableName]);
+            exists = rows.length > 0;
+        }
 
-                completed++;
-                if (completed === requiredTables.length) {
-                    if (missingTables.length > 0) {
-                        reject(new Error(`Tabel yang hilang: ${missingTables.join(', ')}`));
-                    } else {
-                        resolve();
-                    }
-                }
-            });
-        });
-    });
+        if (exists) {
+            console.log(`✅ Tabel ${tableName} ditemukan`);
+        } else {
+            console.error(`❌ Tabel ${tableName} tidak ditemukan`);
+            missingTables.push(tableName);
+        }
+    }
+
+    if (missingTables.length > 0) {
+        throw new Error(`Tabel yang hilang: ${missingTables.join(', ')}`);
+    }
 }
 
 // Fungsi untuk memverifikasi kolom dalam tabel
-function verifyTableColumns(db, tableName, requiredCols) {
-    return new Promise((resolve, reject) => {
-        console.log(`\n🔍 Memverifikasi kolom dalam tabel ${tableName}...`);
+async function verifyTableColumns(tableName, requiredCols) {
+    console.log(`\n🔍 Memverifikasi kolom dalam tabel ${tableName}...`);
 
-        db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
-            if (err) {
-                reject(new Error(`Error memeriksa kolom tabel ${tableName}: ${err.message}`));
-                return;
-            }
+    const dbType = getSetting('db_type', 'sqlite');
+    let existingColumns;
 
-            const existingColumns = columns.map(col => col.name);
-            const missingColumns = requiredCols.filter(col => !existingColumns.includes(col));
+    if (dbType === 'sqlite') {
+        const columns = await db.query(`PRAGMA table_info(${tableName})`);
+        existingColumns = columns.map(col => col.name);
+    } else {
+        const [columns] = await db.query(`SHOW COLUMNS FROM ${tableName}`);
+        existingColumns = columns.map(col => col.Field);
+    }
 
-            if (missingColumns.length > 0) {
-                console.error(`❌ Kolom yang hilang dalam tabel ${tableName}: ${missingColumns.join(', ')}`);
-                reject(new Error(`Kolom yang hilang dalam tabel ${tableName}: ${missingColumns.join(', ')}`));
-            } else {
-                console.log(`✅ Semua kolom dalam tabel ${tableName} lengkap`);
-                resolve();
-            }
-        });
-    });
+    const missingColumns = requiredCols.filter(col => !existingColumns.includes(col));
+
+    if (missingColumns.length > 0) {
+        console.error(`❌ Kolom yang hilang dalam tabel ${tableName}: ${missingColumns.join(', ')}`);
+        throw new Error(`Kolom yang hilang dalam tabel ${tableName}: ${missingColumns.join(', ')}`);
+    } else {
+        console.log(`✅ Semua kolom dalam tabel ${tableName} lengkap`);
+    }
 }
 
 // Fungsi utama verifikasi
 async function verifyProductionDatabase() {
-    let db;
-
     try {
         console.log('🚀 Memulai verifikasi database produksi...');
-
-        // Membuka koneksi database
-        db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                throw new Error(`Error membuka database: ${err.message}`);
-            }
-            console.log('✅ Terhubung ke database billing');
-        });
+        console.log(`📊 Database type: ${getSetting('db_type', 'sqlite')}\n`);
 
         // Memverifikasi tabel-tabel
-        await verifyTablesExist(db);
+        await verifyTablesExist();
 
         // Memverifikasi kolom-kolom penting
         for (const [tableName, columns] of Object.entries(requiredColumns)) {
-            await verifyTableColumns(db, tableName, columns);
+            await verifyTableColumns(tableName, columns);
         }
 
         console.log('\n🎉 Verifikasi database produksi berhasil!');
@@ -135,18 +122,6 @@ async function verifyProductionDatabase() {
         console.error('\n💥 Verifikasi database produksi gagal!');
         console.error('❌ Error:', error.message);
         return false;
-
-    } finally {
-        // Menutup koneksi database
-        if (db) {
-            db.close((err) => {
-                if (err) {
-                    console.error('❌ Error menutup database:', err.message);
-                } else {
-                    console.log('🔒 Koneksi database ditutup');
-                }
-            });
-        }
     }
 }
 

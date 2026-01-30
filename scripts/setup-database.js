@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Backward compatibility script for setup-database.js
- * This script simply calls the new-server-setup.js script
+ * Setup database script
+ * Mendukung SQLite dan MySQL
+ * Redirects to new-server-setup-mysql.js
  */
 
 console.log('🔄 Redirecting to new setup script...');
 
 // Import and run the new server setup
-const newServerSetup = require('./new-server-setup.js');
+const newServerSetup = require('./new-server-setup-mysql.js');
 
 // Run the setup
 newServerSetup()
